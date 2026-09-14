@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Toolstack"
+description = "A fast, editorial tools directory for discovering AI, design, development, productivity, media, and other useful tools, with an admin workspace for publishing categorized tool profiles."
+version = "1.0.0"
+id = "artifacts/toolstack"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25658
+
+[services.development]
+run = "pnpm --filter @workspace/toolstack run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/toolstack", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/toolstack/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25658"
+BASE_PATH = "/"

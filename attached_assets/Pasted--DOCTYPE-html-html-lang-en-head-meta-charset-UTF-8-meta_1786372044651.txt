@@ -1,0 +1,1080 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toolstack — the shared pegboard</title>
+<style>
+  :root{
+    --bg: #15171b;
+    --panel: #1c1f25;
+    --panel-hole: #0f1114;
+    --line: #2a2e36;
+    --text: #edeef0;
+    --muted: #868d9a;
+    --amber: #e8a33d;
+    --amber-dim: #4a3a1e;
+    --teal: #4fb8ae;
+    --danger: #d9695f;
+    --radius: 10px;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --display: 'Space Grotesk', 'Segoe UI', sans-serif;
+    --body: 'Inter', 'Segoe UI', sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 1.6px) 0 0/24px 24px,
+      var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  a { color: inherit; }
+
+  /* ---------- Header ---------- */
+  header {
+    padding: 56px 24px 32px;
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--amber);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--amber);
+    box-shadow: 0 0 0 3px var(--amber-dim);
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-size: clamp(34px, 5vw, 54px);
+    font-weight: 600;
+    margin: 0 0 12px;
+    letter-spacing: -0.01em;
+  }
+
+  h1 span { color: var(--amber); }
+
+  header p {
+    color: var(--muted);
+    font-size: 16px;
+    max-width: 560px;
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  /* ---------- Toolbelt (search + filters) ---------- */
+  .toolbelt {
+    max-width: 1080px;
+    margin: 0 auto 8px;
+    padding: 0 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    background: linear-gradient(var(--bg) 78%, transparent);
+  }
+
+  .search-wrap {
+    position: relative;
+    flex: 1 1 240px;
+    min-width: 200px;
+  }
+
+  .search-wrap::before {
+    content: "⌕";
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 16px;
+  }
+
+  #search {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 11px 16px 11px 36px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  #search::placeholder { color: var(--muted); }
+  #search:focus { border-color: var(--amber); }
+
+  .chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .chip {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .02em;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .15s;
+  }
+  .chip:hover { border-color: var(--amber); color: var(--text); }
+  .chip.active {
+    background: var(--amber);
+    border-color: var(--amber);
+    color: #17130a;
+    font-weight: 600;
+  }
+
+  .add-btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: transparent;
+    border: 1px solid var(--teal);
+    color: var(--teal);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .add-btn:hover { background: var(--teal); color: #0c1c1a; }
+
+  .import-btn {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: transparent;
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .import-btn:hover { background: var(--amber); color: #17130a; }
+
+  .modal.wide { max-width: 560px; }
+
+  .import-steps {
+    background: var(--panel-hole);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+  }
+  .import-steps p {
+    margin: 0 0 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .import-steps ol {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--muted);
+    font-size: 12.5px;
+    line-height: 1.7;
+  }
+  .import-steps b { color: var(--text); }
+
+  .file-drop {
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    padding: 18px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s;
+    margin-bottom: 16px;
+  }
+  .file-drop:hover { border-color: var(--amber); }
+  .file-drop input { display: none; }
+  .file-drop .fd-label {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .file-drop .fd-label b { color: var(--teal); }
+
+  .import-list {
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-bottom: 14px;
+    display: none;
+  }
+  .import-list.open { display: block; }
+
+  .import-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .import-row:last-child { border-bottom: none; }
+  .import-row input[type="checkbox"] {
+    margin-top: 3px;
+    accent-color: var(--amber);
+    flex-shrink: 0;
+  }
+  .import-row-text { min-width: 0; flex: 1; }
+  .import-row-name {
+    font-size: 13px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .import-row-url {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .import-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .import-controls .links {
+    display: flex;
+    gap: 12px;
+  }
+  .import-controls .links button {
+    background: none;
+    border: none;
+    color: var(--teal);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+  }
+  .import-controls select {
+    background: var(--panel-hole);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    padding: 6px 8px;
+  }
+
+  /* ---------- Board ---------- */
+  main {
+    max-width: 1080px;
+    margin: 24px auto 0;
+    padding: 0 24px;
+  }
+
+  .board-status {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 18px;
+    min-height: 16px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 18px 16px;
+  }
+
+  .card {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px 18px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text);
+    transition: transform .15s, border-color .15s, box-shadow .15s;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: var(--amber);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+  }
+
+  .peg {
+    position: absolute;
+    top: -7px;
+    left: 22px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--panel-hole);
+    border: 1px solid var(--line);
+    box-shadow: inset 0 2px 3px rgba(0,0,0,.6);
+  }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .card-name {
+    font-family: var(--display);
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .fav-btn {
+    background: none;
+    border: none;
+    color: var(--line);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: color .15s, transform .1s;
+  }
+  .fav-btn:hover { transform: scale(1.15); }
+  .fav-btn.active { color: var(--amber); }
+
+  .card-desc {
+    color: var(--muted);
+    font-size: 13.5px;
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  .card-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+  }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--teal);
+    background: rgba(79,184,174,0.1);
+    border: 1px solid rgba(79,184,174,0.3);
+    padding: 3px 8px;
+    border-radius: 5px;
+  }
+
+  .open-arrow {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    transition: color .15s, transform .15s;
+  }
+  .card:hover .open-arrow { color: var(--amber); transform: translateX(2px); }
+
+  .empty {
+    text-align: center;
+    padding: 70px 20px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 13px;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+  }
+  .empty strong { color: var(--text); display: block; font-family: var(--display); font-size: 18px; margin-bottom: 8px; font-weight: 600;}
+
+  /* ---------- Modal ---------- */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,11,13,0.75);
+    backdrop-filter: blur(3px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .overlay.open { display: flex; }
+
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    width: 100%;
+    max-width: 440px;
+    padding: 28px;
+    position: relative;
+  }
+
+  .modal h2 {
+    font-family: var(--display);
+    font-size: 21px;
+    margin: 0 0 4px;
+  }
+  .modal .sub {
+    color: var(--muted);
+    font-size: 13px;
+    margin: 0 0 20px;
+  }
+
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .field input, .field textarea, .field select {
+    width: 100%;
+    background: var(--panel-hole);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 14px;
+    outline: none;
+    resize: vertical;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--amber); }
+  .field select { appearance: none; cursor: pointer; }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .btn-primary, .btn-secondary {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 11px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .btn-primary {
+    background: var(--amber);
+    color: #17130a;
+    font-weight: 600;
+    border: none;
+  }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+  }
+  .btn-secondary:hover { color: var(--text); border-color: var(--muted); }
+
+  .close-x {
+    position: absolute;
+    top: 18px; right: 18px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .close-x:hover { color: var(--text); }
+
+  .form-msg {
+    font-family: var(--mono);
+    font-size: 12px;
+    margin-top: 10px;
+    display: none;
+  }
+  .form-msg.error { color: var(--danger); display: block; }
+  .form-msg.success { color: var(--teal); display: block; }
+
+  footer {
+    max-width: 1080px;
+    margin: 60px auto 0;
+    padding: 24px 24px 0;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    text-align: center;
+  }
+
+  @media (max-width: 520px) {
+    header { padding: 40px 18px 26px; }
+    main { padding: 0 18px; }
+    .toolbelt { padding: 14px 18px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">shared pegboard · live</div>
+  <h1>Tool<span>stack</span></h1>
+  <p>A public wall of tools worth keeping. Pin what you use, hang up what you find — everyone who visits sees the same board.</p>
+</header>
+
+<div class="toolbelt">
+  <div class="search-wrap">
+    <input id="search" type="text" placeholder="search the board…" autocomplete="off">
+  </div>
+  <div class="chips" id="chips"></div>
+  <button class="import-btn" id="openImport">⇪ Import bookmarks</button>
+  <button class="add-btn" id="openAdd">+ Hang a tool</button>
+</div>
+
+<main>
+  <div class="board-status" id="status"></div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer>toolstack — anything hung here is visible to everyone with the link</footer>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <button class="close-x" id="closeModal">×</button>
+    <h2>Hang a new tool</h2>
+    <p class="sub">This gets added to the shared board — visible to anyone who opens this page.</p>
+    <form id="toolForm">
+      <div class="field">
+        <label for="f-name">Name</label>
+        <input id="f-name" type="text" placeholder="e.g. Figma" required maxlength="60">
+      </div>
+      <div class="field">
+        <label for="f-url">Link</label>
+        <input id="f-url" type="text" placeholder="https://…" required maxlength="300">
+      </div>
+      <div class="field">
+        <label for="f-desc">What's it for</label>
+        <textarea id="f-desc" rows="2" placeholder="One short line." required maxlength="140"></textarea>
+      </div>
+      <div class="field">
+        <label for="f-cat">Category</label>
+        <select id="f-cat">
+          <option value="AI">AI</option>
+          <option value="UI/Design">UI / Design</option>
+          <option value="Dev">Dev</option>
+          <option value="Productivity">Productivity</option>
+          <option value="Media">Media</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="cancelAdd">Cancel</button>
+        <button type="submit" class="btn-primary" id="submitBtn">Hang it up</button>
+      </div>
+      <div class="form-msg" id="formMsg"></div>
+    </form>
+  </div>
+</div>
+
+<div class="overlay" id="importOverlay">
+  <div class="modal wide">
+    <button class="close-x" id="closeImport">×</button>
+    <h2>Import your bookmarks</h2>
+    <p class="sub">Browsers won't let a page read your live bookmarks directly — but you can export them once and drop the file here.</p>
+
+    <div class="import-steps">
+      <p>How to export</p>
+      <ol>
+        <li><b>Chrome / Edge:</b> Bookmarks → Bookmark manager → ⋮ menu → Export bookmarks</li>
+        <li><b>Firefox:</b> Bookmarks → Manage bookmarks → Import and Backup → Export Bookmarks to HTML</li>
+        <li><b>Safari:</b> File → Export → Bookmarks</li>
+      </ol>
+    </div>
+
+    <label class="file-drop" id="fileDrop">
+      <input type="file" id="fileInput" accept=".html,text/html">
+      <div class="fd-label" id="fdLabel">Drop the exported <b>bookmarks.html</b> file here, or click to choose it</div>
+    </label>
+
+    <div class="import-controls" id="importControls" style="display:none;">
+      <div class="links">
+        <button type="button" id="selectAll">Select all</button>
+        <button type="button" id="selectNone">Select none</button>
+      </div>
+      <select id="importCat">
+        <option value="Other">Tag as: Other</option>
+        <option value="AI">Tag as: AI</option>
+        <option value="UI/Design">Tag as: UI / Design</option>
+        <option value="Dev">Tag as: Dev</option>
+        <option value="Productivity">Tag as: Productivity</option>
+        <option value="Media">Tag as: Media</option>
+      </select>
+    </div>
+
+    <div class="import-list" id="importList"></div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" id="cancelImport">Cancel</button>
+      <button type="button" class="btn-primary" id="importBtn" disabled>Import selected</button>
+    </div>
+    <div class="form-msg" id="importMsg"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const CATEGORIES = ["All", "AI", "UI/Design", "Dev", "Productivity", "Media", "Other"];
+  const SEED = [
+    // AI
+    { name: "Claude", url: "https://claude.ai", desc: "Chat, code, and build with an AI assistant.", cat: "AI" },
+    { name: "Perplexity", url: "https://www.perplexity.ai", desc: "AI search that cites its sources.", cat: "AI" },
+    { name: "ChatGPT", url: "https://chat.openai.com", desc: "General-purpose AI chat and reasoning.", cat: "AI" },
+    { name: "Midjourney", url: "https://www.midjourney.com", desc: "Text-to-image generation via Discord or web.", cat: "AI" },
+    { name: "ElevenLabs", url: "https://elevenlabs.io", desc: "Realistic AI voice generation and cloning.", cat: "AI" },
+    { name: "Hugging Face", url: "https://huggingface.co", desc: "Open models, datasets, and demo spaces.", cat: "AI" },
+    // UI / Design
+    { name: "Figma", url: "https://figma.com", desc: "Design and prototype interfaces together.", cat: "UI/Design" },
+    { name: "Coolors", url: "https://coolors.co", desc: "Generate and lock in color palettes fast.", cat: "UI/Design" },
+    { name: "Excalidraw", url: "https://excalidraw.com", desc: "Hand-drawn style diagrams and wireframes.", cat: "UI/Design" },
+    { name: "Radix Icons", url: "https://www.radix-ui.com/icons", desc: "Clean, consistent open-source icon set.", cat: "UI/Design" },
+    { name: "Fontshare", url: "https://www.fontshare.com", desc: "Free, high-quality fonts for real projects.", cat: "UI/Design" },
+    { name: "Haikei", url: "https://haikei.app", desc: "Generate SVG blobs, waves, and backgrounds.", cat: "UI/Design" },
+    // Dev
+    { name: "GitHub", url: "https://github.com", desc: "Host, version, and ship code.", cat: "Dev" },
+    { name: "CodePen", url: "https://codepen.io", desc: "Prototype front-end snippets in the browser.", cat: "Dev" },
+    { name: "MDN Web Docs", url: "https://developer.mozilla.org", desc: "The reference for HTML, CSS, and JS.", cat: "Dev" },
+    { name: "Can I Use", url: "https://caniuse.com", desc: "Browser support tables for web features.", cat: "Dev" },
+    { name: "Regex101", url: "https://regex101.com", desc: "Build and test regular expressions live.", cat: "Dev" },
+    { name: "JSON Crack", url: "https://jsoncrack.com", desc: "Visualize JSON as an interactive graph.", cat: "Dev" },
+    // Productivity
+    { name: "Notion", url: "https://notion.so", desc: "Docs, notes, and light project tracking.", cat: "Productivity" },
+    { name: "Todoist", url: "https://todoist.com", desc: "Fast task lists with natural-language dates.", cat: "Productivity" },
+    { name: "Cron / Notion Calendar", url: "https://calendar.notion.so", desc: "A calendar built for quick scheduling.", cat: "Productivity" },
+    { name: "Excalidraw", url: "https://excalidraw.com", desc: "Also great for quick planning sketches.", cat: "Productivity" },
+    // Media
+    { name: "AniList", url: "https://anilist.co", desc: "Track anime and manga, browse by season.", cat: "Media" },
+    { name: "MyAnimeList", url: "https://myanimelist.net", desc: "The long-running anime/manga database.", cat: "Media" },
+    { name: "TMDB", url: "https://www.themoviedb.org", desc: "Movie and TV metadata, posters, and cast info.", cat: "Media" },
+    // Other
+    { name: "Wayback Machine", url: "https://web.archive.org", desc: "Browse archived snapshots of any site.", cat: "Other" },
+    { name: "TinyPNG", url: "https://tinypng.com", desc: "Compress PNGs and JPEGs without visible loss.", cat: "Other" }
+  ];
+
+  let allTools = [];
+  let activeCategory = "All";
+  let searchTerm = "";
+  let favorites = [];
+  let storageOK = true;
+
+  const grid = document.getElementById('grid');
+  const status = document.getElementById('status');
+  const chipsWrap = document.getElementById('chips');
+  const searchInput = document.getElementById('search');
+  const overlay = document.getElementById('overlay');
+  const form = document.getElementById('toolForm');
+  const formMsg = document.getElementById('formMsg');
+  const submitBtn = document.getElementById('submitBtn');
+
+  const importOverlay = document.getElementById('importOverlay');
+  const fileInput = document.getElementById('fileInput');
+  const fdLabel = document.getElementById('fdLabel');
+  const importList = document.getElementById('importList');
+  const importControls = document.getElementById('importControls');
+  const importCat = document.getElementById('importCat');
+  const importBtn = document.getElementById('importBtn');
+  const importMsg = document.getElementById('importMsg');
+  let parsedBookmarks = [];
+
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function normalizeUrl(u){
+    u = u.trim();
+    if(!/^https?:\/\//i.test(u)) u = 'https://' + u;
+    return u;
+  }
+
+  function renderChips(){
+    chipsWrap.innerHTML = CATEGORIES.map(c =>
+      `<button class="chip ${c===activeCategory?'active':''}" data-cat="${c}">${c}</button>`
+    ).join('');
+    chipsWrap.querySelectorAll('.chip').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        activeCategory = btn.dataset.cat;
+        renderChips();
+        renderGrid();
+      });
+    });
+  }
+
+  function renderGrid(){
+    const term = searchTerm.trim().toLowerCase();
+    const filtered = allTools.filter(t=>{
+      const matchesCat = activeCategory === "All" || t.cat === activeCategory;
+      const matchesTerm = !term ||
+        t.name.toLowerCase().includes(term) ||
+        t.desc.toLowerCase().includes(term) ||
+        t.cat.toLowerCase().includes(term);
+      return matchesCat && matchesTerm;
+    });
+
+    status.textContent = `${filtered.length} tool${filtered.length===1?'':'s'} on the board${activeCategory!=='All' ? ' · '+activeCategory : ''}`;
+
+    if(filtered.length === 0){
+      grid.innerHTML = `<div class="empty" style="grid-column:1/-1">
+        <strong>Nothing here yet</strong>
+        Try a different search, or be the first to hang a tool in this category.
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = filtered.map(t=>{
+      const isFav = favorites.includes(t.id);
+      return `
+      <a class="card" href="${escapeHtml(normalizeUrl(t.url))}" target="_blank" rel="noopener noreferrer" data-id="${t.id}">
+        <div class="peg"></div>
+        <div class="card-top">
+          <div class="card-name">${escapeHtml(t.name)}</div>
+          <button class="fav-btn ${isFav?'active':''}" data-id="${t.id}" title="Pin as favorite" type="button">${isFav ? '★' : '☆'}</button>
+        </div>
+        <div class="card-desc">${escapeHtml(t.desc)}</div>
+        <div class="card-bottom">
+          <span class="tag">${escapeHtml(t.cat)}</span>
+          <span class="open-arrow">open ↗</span>
+        </div>
+      </a>`;
+    }).join('');
+
+    grid.querySelectorAll('.fav-btn').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        toggleFavorite(btn.dataset.id);
+      });
+    });
+  }
+
+  async function toggleFavorite(id){
+    if(favorites.includes(id)){
+      favorites = favorites.filter(f=>f!==id);
+    } else {
+      favorites.push(id);
+    }
+    renderGrid();
+    if(storageOK){
+      try{
+        await window.storage.set('favorites', JSON.stringify(favorites), false);
+      }catch(e){ console.error('Could not save favorites', e); }
+    }
+  }
+
+  async function loadFavorites(){
+    try{
+      const res = await window.storage.get('favorites', false);
+      if(res && res.value) favorites = JSON.parse(res.value);
+    }catch(e){
+      favorites = [];
+    }
+  }
+
+  async function loadTools(){
+    status.textContent = "loading the board…";
+    try{
+      const listRes = await window.storage.list('tool:', true);
+      const keys = (listRes && listRes.keys) ? listRes.keys : [];
+
+      if(keys.length === 0){
+        // Seed the board for the first time
+        for(const t of SEED){
+          const id = 'seed-' + t.name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+          const record = { id, ...t };
+          try{
+            await window.storage.set('tool:' + id, JSON.stringify(record), true);
+          }catch(e){ console.error('Seed failed for', t.name, e); }
+        }
+        allTools = SEED.map(t => ({ id: 'seed-' + t.name.toLowerCase().replace(/[^a-z0-9]+/g,'-'), ...t }));
+      } else {
+        const results = await Promise.all(keys.map(async k=>{
+          try{
+            const r = await window.storage.get(k, true);
+            return r && r.value ? JSON.parse(r.value) : null;
+          }catch(e){ return null; }
+        }));
+        allTools = results.filter(Boolean).sort((a,b)=> (b.createdAt||0) - (a.createdAt||0));
+      }
+    }catch(e){
+      console.error('Storage unavailable, using local seed only', e);
+      storageOK = false;
+      allTools = SEED.map(t => ({ id: 'local-' + t.name.toLowerCase().replace(/[^a-z0-9]+/g,'-'), ...t }));
+    }
+    renderGrid();
+  }
+
+  async function addTool(record){
+    const key = 'tool:' + record.id;
+    if(!storageOK){
+      allTools.unshift(record);
+      renderGrid();
+      return true;
+    }
+    try{
+      const result = await window.storage.set(key, JSON.stringify(record), true);
+      if(!result) return false;
+      allTools.unshift(record);
+      renderGrid();
+      return true;
+    }catch(e){
+      console.error('Failed to save tool', e);
+      return false;
+    }
+  }
+
+  // ---- events ----
+  searchInput.addEventListener('input', (e)=>{
+    searchTerm = e.target.value;
+    renderGrid();
+  });
+
+  document.getElementById('openAdd').addEventListener('click', ()=>{
+    overlay.classList.add('open');
+    formMsg.className = 'form-msg';
+    formMsg.textContent = '';
+    document.getElementById('f-name').focus();
+  });
+  function closeModal(){
+    overlay.classList.remove('open');
+    form.reset();
+    formMsg.className = 'form-msg';
+    formMsg.textContent = '';
+  }
+  document.getElementById('closeModal').addEventListener('click', closeModal);
+  document.getElementById('cancelAdd').addEventListener('click', closeModal);
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeModal(); });
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && overlay.classList.contains('open')) closeModal(); });
+
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const name = document.getElementById('f-name').value.trim();
+    const url = document.getElementById('f-url').value.trim();
+    const desc = document.getElementById('f-desc').value.trim();
+    const cat = document.getElementById('f-cat').value;
+
+    if(!name || !url || !desc){
+      formMsg.className = 'form-msg error';
+      formMsg.textContent = 'Fill in every field before hanging it up.';
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Hanging…';
+
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+    const record = { id, name, url: normalizeUrl(url), desc, cat, createdAt: Date.now() };
+
+    const ok = await addTool(record);
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Hang it up';
+
+    if(ok){
+      formMsg.className = 'form-msg success';
+      formMsg.textContent = 'Added to the board for everyone.';
+      setTimeout(closeModal, 900);
+    } else {
+      formMsg.className = 'form-msg error';
+      formMsg.textContent = 'Could not save — try again in a moment.';
+    }
+  });
+
+  // ---- import bookmarks ----
+  function resetImport(){
+    parsedBookmarks = [];
+    fileInput.value = '';
+    fdLabel.innerHTML = 'Drop the exported <b>bookmarks.html</b> file here, or click to choose it';
+    importList.className = 'import-list';
+    importList.innerHTML = '';
+    importControls.style.display = 'none';
+    importBtn.disabled = true;
+    importMsg.className = 'form-msg';
+    importMsg.textContent = '';
+  }
+
+  function openImportModal(){
+    resetImport();
+    importOverlay.classList.add('open');
+  }
+  function closeImportModal(){
+    importOverlay.classList.remove('open');
+  }
+
+  document.getElementById('openImport').addEventListener('click', openImportModal);
+  document.getElementById('closeImport').addEventListener('click', closeImportModal);
+  document.getElementById('cancelImport').addEventListener('click', closeImportModal);
+  importOverlay.addEventListener('click', (e)=>{ if(e.target === importOverlay) closeImportModal(); });
+
+  function parseBookmarksHtml(htmlText){
+    const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+    const anchors = Array.from(doc.querySelectorAll('a[href]'));
+    const seen = new Set();
+    const out = [];
+    for(const a of anchors){
+      const href = (a.getAttribute('href') || '').trim();
+      const title = (a.textContent || '').trim();
+      if(!href || !/^https?:\/\//i.test(href)) continue;
+      if(seen.has(href)) continue;
+      seen.add(href);
+      out.push({ name: title || href.replace(/^https?:\/\//,'').split('/')[0], url: href });
+      if(out.length >= 500) break;
+    }
+    return out;
+  }
+
+  function renderImportList(){
+    if(parsedBookmarks.length === 0){
+      importList.className = 'import-list';
+      importControls.style.display = 'none';
+      importBtn.disabled = true;
+      return;
+    }
+    importList.className = 'import-list open';
+    importControls.style.display = 'flex';
+    importList.innerHTML = parsedBookmarks.map((b,i)=>`
+      <label class="import-row">
+        <input type="checkbox" class="imp-check" data-i="${i}" checked>
+        <div class="import-row-text">
+          <div class="import-row-name">${escapeHtml(b.name)}</div>
+          <div class="import-row-url">${escapeHtml(b.url)}</div>
+        </div>
+      </label>
+    `).join('');
+    updateImportBtnState();
+    importList.querySelectorAll('.imp-check').forEach(cb=>{
+      cb.addEventListener('change', updateImportBtnState);
+    });
+  }
+
+  function updateImportBtnState(){
+    const checked = importList.querySelectorAll('.imp-check:checked').length;
+    importBtn.disabled = checked === 0;
+    importBtn.textContent = checked > 0 ? `Import ${checked} tool${checked===1?'':'s'}` : 'Import selected';
+  }
+
+  document.getElementById('selectAll').addEventListener('click', ()=>{
+    importList.querySelectorAll('.imp-check').forEach(cb=> cb.checked = true);
+    updateImportBtnState();
+  });
+  document.getElementById('selectNone').addEventListener('click', ()=>{
+    importList.querySelectorAll('.imp-check').forEach(cb=> cb.checked = false);
+    updateImportBtnState();
+  });
+
+  fileInput.addEventListener('change', async ()=>{
+    const file = fileInput.files && fileInput.files[0];
+    if(!file) return;
+    fdLabel.innerHTML = `Reading <b>${escapeHtml(file.name)}</b>…`;
+    try{
+      const text = await file.text();
+      parsedBookmarks = parseBookmarksHtml(text);
+      if(parsedBookmarks.length === 0){
+        fdLabel.innerHTML = 'No links found in that file — export bookmarks as HTML and try again';
+        importMsg.className = 'form-msg error';
+        importMsg.textContent = 'Nothing to import.';
+        return;
+      }
+      fdLabel.innerHTML = `Found <b>${parsedBookmarks.length}</b> bookmark${parsedBookmarks.length===1?'':'s'} — review below`;
+      importMsg.className = 'form-msg';
+      importMsg.textContent = '';
+      renderImportList();
+    }catch(e){
+      console.error('Failed to read bookmarks file', e);
+      fdLabel.innerHTML = 'Could not read that file — make sure it\'s the exported bookmarks HTML';
+    }
+  });
+
+  importBtn.addEventListener('click', async ()=>{
+    const checks = Array.from(importList.querySelectorAll('.imp-check:checked'));
+    if(checks.length === 0) return;
+    const cat = importCat.value;
+    const existingUrls = new Set(allTools.map(t => t.url));
+
+    importBtn.disabled = true;
+    let done = 0, skipped = 0;
+    const total = checks.length;
+
+    for(const cb of checks){
+      const b = parsedBookmarks[parseInt(cb.dataset.i, 10)];
+      const url = normalizeUrl(b.url);
+      if(existingUrls.has(url)){ skipped++; continue; }
+      existingUrls.add(url);
+      const id = Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+      const record = {
+        id, name: b.name.slice(0,60) || url, url,
+        desc: 'Imported from browser bookmarks.',
+        cat, createdAt: Date.now()
+      };
+      await addTool(record);
+      done++;
+      importBtn.textContent = `Importing ${done + skipped}/${total}…`;
+    }
+
+    importMsg.className = 'form-msg success';
+    importMsg.textContent = `Added ${done} tool${done===1?'':'s'} to the board${skipped ? `, skipped ${skipped} already there` : ''}.`;
+    importBtn.textContent = 'Import selected';
+    setTimeout(closeImportModal, 1400);
+  });
+
+  // ---- init ----
+  renderChips();
+  loadFavorites().then(loadTools);
+})();
+</script>
+
+</body>
+</html>

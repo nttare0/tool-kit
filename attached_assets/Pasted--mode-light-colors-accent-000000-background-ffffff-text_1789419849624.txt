@@ -1,0 +1,426 @@
+{
+  "mode": "light",
+  "colors": {
+    "accent": "#000000",
+    "background": "#ffffff",
+    "text": "#000000"
+  },
+  "typography": {
+    "headings": {
+      "h1": {
+        "fontFamily": "Poppins",
+        "fontSize": "54px",
+        "fontWeight": 600,
+        "lineHeight": "54px",
+        "letterSpacing": "-2.7px",
+        "fontFallbacks": [
+          "Poppins",
+          "Poppins Fallback"
+        ]
+      },
+      "h2": {
+        "fontFamily": "Poppins",
+        "fontSize": "43.2px",
+        "fontWeight": 500,
+        "lineHeight": "43.2px",
+        "letterSpacing": "0px",
+        "fontFallbacks": [
+          "Poppins",
+          "Poppins Fallback"
+        ]
+      },
+      "h3": {
+        "fontFamily": "Poppins",
+        "fontSize": "27px",
+        "fontWeight": 500,
+        "lineHeight": "37.8px",
+        "letterSpacing": "0px",
+        "fontFallbacks": [
+          "Poppins",
+          "Poppins Fallback"
+        ]
+      },
+      "h4": {
+        "fontFamily": "Poppins",
+        "fontSize": "18px",
+        "fontWeight": 500,
+        "lineHeight": "22px",
+        "letterSpacing": "0px",
+        "fontFallbacks": [
+          "Poppins",
+          "Poppins Fallback"
+        ]
+      }
+    },
+    "p": {
+      "fontFamily": "Poppins",
+      "fontSize": "14.4px",
+      "fontWeight": 400,
+      "lineHeight": "21.6px",
+      "letterSpacing": "0px",
+      "fontFallbacks": [
+        "Poppins",
+        "Poppins Fallback"
+      ]
+    }
+  },
+  "elementSpacing": {
+    "xs": "2px",
+    "sm": "14px",
+    "md": "22px",
+    "lg": "36px",
+    "xl": "172px"
+  },
+  "shadows": {
+    "sm": "rgba(9, 9, 11, 0.07) 0px 0px 0px 1px, rgba(9, 9, 11, 0.05) 0px 2px 2px 0px",
+    "md": "none",
+    "lg": "none",
+    "xl": "none",
+    "inner": "rgba(183, 183, 183, 0.5) 3px 4px 5px 0px inset, rgba(255, 255, 255, 0.5) -2px -2px 5px 0px inset"
+  },
+  "components": {
+    "button": {
+      "primary": {
+        "backgroundColor": "transparent",
+        "color": "#000000",
+        "borderColor": "transparent",
+        "borderRadius": "7.2px",
+        "borderWidth": "1px",
+        "borderStyle": "solid",
+        "padding": "7.2px",
+        "fontSize": "12.6px",
+        "fontWeight": 400,
+        "minWidth": "59px",
+        "minHeight": "36px",
+        "textDecoration": "none",
+        "boxShadow": "none",
+        "fontFallbacks": [
+          "Poppins",
+          "Poppins Fallback"
+        ],
+        "fontFamily": "Poppins",
+        "css": "box-sizing: border-box; display: inline-block; min-width: 59px; min-height: 36px; background-color: transparent; color: #000000; border: 1px solid transparent; border-radius: 7.2px; padding: 7.2px; font-size: 12.6px; font-weight: 400; font-family: Poppins, \"Poppins Fallback\"; text-decoration: none;"
+      },
+      "secondary": {
+        "backgroundColor": "transparent",
+        "color": "#000000",
+        "borderColor": "transparent",
+        "borderRadius": "7.2px",
+        "borderWidth": "1px",
+        "borderStyle": "solid",
+        "padding": "7.2px",
+        "fontSize": "12.6px",
+        "fontWeight": 400,
+        "minWidth": "59px",
+        "minHeight": "36px",
+        "textDecoration": "none",
+        "boxShadow": "none",
+        "fontFallbacks": [
+          "Poppins",
+          "Poppins Fallback"
+        ],
+        "fontFamily": "Poppins",
+        "css": "box-sizing: border-box; display: inline-block; min-width: 59px; min-height: 36px; background-color: transparent; color: #000000; border: 1px solid transparent; border-radius: 7.2px; padding: 7.2px; font-size: 12.6px; font-weight: 400; font-family: Poppins, \"Poppins Fallback\"; text-decoration: none;"
+      },
+      "link": {
+        "borderRadius": "0px",
+        "borderWidth": "0px",
+        "borderStyle": "none",
+        "padding": "0px",
+        "fontSize": "12.6px",
+        "fontWeight": 400,
+        "minWidth": "0px",
+        "minHeight": "0px",
+        "textDecoration": "underline",
+        "boxShadow": "none",
+        "backgroundColor": "transparent",
+        "color": "#000000",
+        "borderColor": "transparent",
+        "fontFallbacks": [
+          "Poppins",
+          "Poppins Fallback"
+        ],
+        "fontFamily": "Poppins",
+        "css": "color: #000000; font-size: 12.6px; font-weight: 400; font-family: Poppins, \"Poppins Fallback\"; text-decoration: underline;"
+      }
+    },
+    "card": {
+      "backgroundColor": "#ffffff",
+      "borderColor": "#e5e7eb",
+      "borderRadius": "8px",
+      "borderWidth": "1px",
+      "borderStyle": "solid",
+      "padding": "16px",
+      "boxShadow": "none",
+      "textColor": "#000000",
+      "css": "background-color: #ffffff; color: #000000; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px;"
+    }
+  },
+  "fontLinks": {
+    "Poppins": {
+      "type": "google",
+      "files": {
+        "100": "https://fonts.gstatic.com/s/poppins/v24/pxiGyp8kv8JHgFVrLPTed3FBGPaTSQ.ttf",
+        "200": "https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLFj_V1tvFP-KUEg.ttf",
+        "300": "https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLDz8V1tvFP-KUEg.ttf",
+        "400": "https://fonts.gstatic.com/s/poppins/v24/pxiEyp8kv8JHgFVrFJDUc1NECPY.ttf",
+        "500": "https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLGT9V1tvFP-KUEg.ttf",
+        "600": "https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLEj6V1tvFP-KUEg.ttf",
+        "700": "https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLCz7V1tvFP-KUEg.ttf",
+        "800": "https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLDD4V1tvFP-KUEg.ttf",
+        "900": "https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLBT5V1tvFP-KUEg.ttf"
+      },
+      "category": "sans-serif"
+    }
+  }
+}
+
+
+
+
+
+
+
+{
+  "status": "ok",
+  "domain": "ui-layouts.com",
+  "fonts": [
+    {
+      "font": "Poppins",
+      "uses": [
+        "body",
+        "div",
+        "script",
+        "a",
+        "style",
+        "p",
+        "picture",
+        "source",
+        "img",
+        "span",
+        "svg",
+        "path",
+        "section",
+        "header",
+        "button",
+        "rect",
+        "circle",
+        "defs",
+        "radialgradient",
+        "stop",
+        "article",
+        "h1",
+        "br",
+        "filter",
+        "feturbulence",
+        "g",
+        "clippath",
+        "h2",
+        "h3",
+        "fedisplacementmap",
+        "nav",
+        "figure",
+        "form",
+        "label",
+        "input",
+        "footer",
+        "next-route-announcer"
+      ],
+      "fallbacks": [
+        "Poppins Fallback"
+      ],
+      "num_elements": 522,
+      "num_words": 3088,
+      "percent_elements": 100,
+      "percent_words": 100
+    }
+  ],
+  "fontLinks": {
+    "Poppins": {
+      "type": "google",
+      "files": {
+        "100": "https://fonts.gstatic.com/s/poppins/v24/pxiGyp8kv8JHgFVrLPTed3FBGPaTSQ.ttf",
+        "200": "https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLFj_V1tvFP-KUEg.ttf",
+        "300": "https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLDz8V1tvFP-KUEg.ttf",
+        "400": "https://fonts.gstatic.com/s/poppins/v24/pxiEyp8kv8JHgFVrFJDUc1NECPY.ttf",
+        "500": "https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLGT9V1tvFP-KUEg.ttf",
+        "600": "https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLEj6V1tvFP-KUEg.ttf",
+        "700": "https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLCz7V1tvFP-KUEg.ttf",
+        "800": "https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLDD4V1tvFP-KUEg.ttf",
+        "900": "https://fonts.gstatic.com/s/poppins/v24/pxiByp8kv8JHgFVrLBT5V1tvFP-KUEg.ttf"
+      },
+      "category": "sans-serif"
+    }
+  },
+  "code": 200,
+  "cache_metadata": {
+    "status": "miss",
+    "age_ms": 0
+  },
+  "key_metadata": {
+    "credits_consumed": 5,
+    "credits_remaining": 245
+  },
+  "request_id": "f74e723c-3067-4a71-bd73-e250d06191fb"
+}
+
+
+
+
+
+and based on these code add preview that was missing and log as the code are 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tool Manager with SVGL Logos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f8;
+      padding: 30px;
+    }
+    .form-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 500px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .card-grid {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      width: 300px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    .preview-img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      background: #eee;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .brand-logo {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+    }
+    .card-content {
+      padding: 15px;
+    }
+    .card-content h3 {
+      margin: 0;
+    }
+    .card-content p {
+      color: #666;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Add New Tool</h2>
+  <div class="form-container">
+    <input type="text" id="toolName" placeholder="Tool Name (e.g. Discord, Vercel, OpenAI)">
+    <input type="url" id="toolUrl" placeholder="Tool URL (e.g. https://discord.com)">
+    <input type="text" id="toolDesc" placeholder="Description">
+    <button onclick="addTool()">Add Tool Card</button>
+  </div>
+
+  <h2>My Tools</h2>
+  <div class="card-grid" id="toolGrid"></div>
+
+  <script>
+    async function fetchSvglLogo(name) {
+      try {
+        const response = await fetch(`https://api.svgl.app?search=${encodeURIComponent(name)}`);
+        const data = await response.json();
+
+        if (data && data.length > 0) {
+          const match = data[0];
+          // Handle 'route' being either a string URL or a ThemeOptions object
+          if (typeof match.route === 'string') {
+            return match.route;
+          } else if (match.route && match.route.light) {
+            return match.route.light;
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching logo from SVGL:", error);
+      }
+      return null;
+    }
+
+    async function addTool() {
+      const name = document.getElementById('toolName').value.trim();
+      const url = document.getElementById('toolUrl').value.trim();
+      const desc = document.getElementById('toolDesc').value.trim();
+
+      if (!name || !url) {
+        alert("Please provide both a name and a valid URL!");
+        return;
+      }
+
+      // 1. Screenshot Preview API
+      const screenshotApiUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=false&embed=screenshot.url`;
+
+      // 2. Fetch Logo from SVGL API with Fallback to Google Favicon API
+      const svglLogoUrl = await fetchSvglLogo(name);
+      const fallbackFavicon = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(url)}&sz=64`;
+      const finalLogoUrl = svglLogoUrl || fallbackFavicon;
+
+      // 3. Render Card
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <img class="preview-img" src="${screenshotApiUrl}" alt="${name} Homepage Preview" loading="lazy">
+        <div class="card-content">
+          <div class="card-header">
+            <img class="brand-logo" src="${finalLogoUrl}" alt="${name} Logo" onerror="this.src='${fallbackFavicon}'">
+            <h3>${name}</h3>
+          </div>
+          <p>${desc}</p>
+          <a href="${url}" target="_blank">Visit Tool</a>
+        </div>
+      `;
+
+      document.getElementById('toolGrid').appendChild(card);
+
+      // Clear Form
+      document.getElementById('toolName').value = '';
+      document.getElementById('toolUrl').value = '';
+      document.getElementById('toolDesc').value = '';
+    }
+  </script>
+</body>
+</html>

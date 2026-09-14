@@ -1,44 +1,54 @@
-# [Project name]
+# Toolstack
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Toolstack is a curated, visual directory of useful software with a protected admin workspace.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — run the API server
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- SQLite data is stored in `artifacts/api-server/data/toolstack.sqlite`
+- `SESSION_SECRET` is used to sign admin session cookies when available
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
 - API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
+- DB: SQLite via Node.js 24 `node:sqlite`
+- Validation: Zod (`zod/v4`)
 - API codegen: Orval (from OpenAPI spec)
 - Build: esbuild (CJS bundle)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/api-server/src/lib/sqlite.ts` — SQLite schema and access wrapper
+- `artifacts/api-server/src/lib/auth.ts` — admin setup, login, logout, and signed sessions
+- `artifacts/api-server/src/routes/` — public directory and protected admin APIs
+- `artifacts/toolstack/src/pages/` — public directory, detail, 404, and admin screens
+- `lib/api-spec/openapi.yaml` — API contract source of truth
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Public browsing stays open; category and tool mutations require an authenticated admin session.
+- Tool poster previews can be stored as image data URLs in SQLite, so the admin workflow does not need a separate upload service.
+- Seeded tools use Microlink screenshot image responses, while newly added tools can use an uploaded image or preview URL.
+- The older `lib/db` package is retained for workspace compatibility but is not used by the Toolstack API server.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Public visual directory with search, category shelves, featured tools, detail pages, pricing, best-for guidance, and external links.
+- First-run admin setup with scrypt password hashing and HTTP-only signed session cookies.
+- Admin CRUD for tools and categories, publishing state, featured state, logos, and preview images.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+No project-specific preferences recorded.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Run API code generation after changing `lib/api-spec/openapi.yaml`.
+- Use the managed workflow for preview/build checks because the Vite artifact expects workflow-provided `PORT` and `BASE_PATH`.
 
 ## Pointers
 
