@@ -7,6 +7,7 @@ import NotFound from '@/pages/not-found';
 import Home from '@/pages/home';
 import ToolDetail from '@/pages/tool-detail';
 import Admin from '@/pages/admin';
+import Legal from '@/pages/legal';
 import {
   Route,
   Switch,
@@ -22,11 +23,14 @@ function Router() {
   useEffect(() => {
     const isAdmin = location === '/admin';
     const isNotFound = location === '/404';
+    const isLegal = location === '/terms' || location === '/privacy';
     const slug = location.startsWith('/tool/') ? decodeURIComponent(location.slice('/tool/'.length)) : '';
     const title = isAdmin
       ? 'Admin workspace — Toolstack'
       : isNotFound
         ? 'Page not found — Toolstack'
+        : isLegal
+          ? `${location === '/terms' ? 'Terms of use' : 'Privacy'} — Toolstack`
         : slug
           ? `${slug.replace(/-/g, ' ')} — Toolstack field note`
           : 'Toolstack — Find the right tool for the work';
@@ -34,6 +38,8 @@ function Router() {
       ? 'Manage Toolstack tools, categories, publishing status, and featured discoveries.'
       : isNotFound
         ? 'That Toolstack page is not in the current field guide.'
+        : isLegal
+          ? 'Read how Toolstack presents curated software listings, external links, and preview images.'
         : 'Toolstack is a carefully edited field guide to useful AI, design, development, productivity, and media tools.';
     document.title = title;
     const setMeta = (selector: string, content: string) => {
@@ -46,8 +52,13 @@ function Router() {
     setMeta('meta[name="twitter:title"]', title);
     setMeta('meta[name="twitter:description"]', description);
     setMeta('meta[property="og:url"]', `${window.location.origin}${location}`);
-    const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    if (canonical) canonical.href = `${window.location.origin}${location}`;
+    let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.rel = 'canonical';
+      document.head.appendChild(canonical);
+    }
+    canonical.href = `${window.location.origin}${location}`;
     const structured = document.querySelector<HTMLScriptElement>('#toolstack-structured-data');
     if (structured) {
       structured.textContent = JSON.stringify({
@@ -73,6 +84,8 @@ function Router() {
         <Route path="/" component={Home} />
          <Route path="/tool/:slug" component={ToolDetail} />
          <Route path="/admin" component={Admin} />
+         <Route path="/terms" component={() => <Legal kind="terms" />} />
+         <Route path="/privacy" component={() => <Legal kind="privacy" />} />
          <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>

@@ -1,0 +1,2041 @@
+# TOOLSTACK — MASTER IMPROVEMENT BLUEPRINT
+
+## Role
+
+Act as a principal software engineer, senior product designer, UX architect, security engineer, SEO engineer, and technical lead with 15+ years of experience shipping production web applications.
+
+You are working on an existing product called **Toolstack**.
+
+Do not treat this as a greenfield application.
+
+Your first responsibility is to understand the existing codebase, architecture, database, routes, components, APIs, authentication, dependencies, and deployment configuration before making structural changes.
+
+Do not blindly rewrite the application.
+
+Preserve working functionality unless there is a clear reason to replace it.
+
+The objective is to transform Toolstack from a basic software/tool directory into a **high-quality software discovery and decision platform**.
+
+---
+
+# 1. PRODUCT THESIS
+
+The current product concept is:
+
+> “A field guide to useful tools.”
+
+The improved product thesis should be:
+
+> **Toolstack helps people discover the software worth using, understand its tradeoffs, compare alternatives, and assemble the right stack for the job.**
+
+Do NOT build another generic directory whose primary experience is:
+
+> search → cards → click external link
+
+The product should instead help users answer:
+
+> “What should I use for this?”
+
+and:
+
+> “Why should I choose this instead of the alternatives?”
+
+Toolstack should compete through:
+
+* curation
+* trust
+* useful editorial information
+* task-oriented discovery
+* comparisons
+* alternatives
+* workflow stacks
+* strong UX
+* high-quality tool detail pages
+* excellent search and SEO
+* reliable metadata
+* security
+* performance
+
+Do not attempt to compete purely on number of listed tools.
+
+---
+
+# 2. FIRST TASK — AUDIT BEFORE MODIFYING
+
+Before writing or changing code, inspect the entire project.
+
+Identify:
+
+* frontend framework
+* backend framework
+* database
+* ORM/query layer
+* authentication
+* authorization
+* API architecture
+* routing
+* server rendering or client rendering
+* state management
+* styling system
+* component architecture
+* environment variables
+* external services
+* analytics
+* image storage
+* file upload handling
+* deployment configuration
+* database migrations
+* test infrastructure
+* linting
+* type checking
+* dependency management
+* CI/CD configuration
+
+Create an internal architecture map.
+
+Find:
+
+* dead code
+* duplicated components
+* duplicated API logic
+* insecure assumptions
+* hard-coded secrets
+* exposed API keys
+* unsafe URL handling
+* weak validation
+* client-only authorization
+* dangerous HTML rendering
+* missing error boundaries
+* missing loading states
+* missing empty states
+* broken routes
+* inconsistent naming
+* unnecessary dependencies
+* outdated packages
+* unnecessary client-side JavaScript
+
+Do not begin a redesign until you understand the existing implementation.
+
+---
+
+# 3. NON-NEGOTIABLE IMPLEMENTATION RULE
+
+For every feature you change:
+
+1. inspect existing behavior
+2. identify dependencies
+3. make the smallest safe architectural change
+4. implement it
+5. run tests
+6. run type checking
+7. run linting
+8. test the affected routes
+9. verify accessibility
+10. verify responsive behavior
+11. verify security implications
+12. verify production build
+13. only then move to the next subsystem
+
+Do not create placeholder functionality and call it complete.
+
+Do not claim something is fixed unless it has been tested.
+
+---
+
+# 4. PRODUCT POSITIONING
+
+Toolstack must visually and functionally communicate:
+
+> **Less noise. Better software decisions.**
+
+The product should feel like a carefully edited software publication/product rather than a giant SaaS directory.
+
+Avoid the generic “AI directory” aesthetic:
+
+* excessive gradients
+* excessive glassmorphism
+* endless rounded cards
+* meaningless badges
+* huge walls of cards
+* decorative UI with no functional purpose
+* arbitrary animations
+* excessive shadows
+* visual noise
+* fake ratings
+* unnecessary dashboard styling
+
+The design should feel:
+
+* modern
+* editorial
+* confident
+* clean
+* fast
+* technical
+* trustworthy
+* useful
+* human-curated
+
+Think:
+
+**editorial publication + excellent SaaS UX + modern developer tool**
+
+rather than:
+
+**generic AI directory**
+
+---
+
+# 5. HOMEPAGE REDESIGN
+
+The homepage should immediately communicate what Toolstack does.
+
+Primary hero:
+
+> **Find the tools worth using.**
+
+Supporting copy:
+
+> Discover, compare, and build software stacks for the work you actually want to get done.
+
+Primary interaction:
+
+> **What are you trying to accomplish?**
+
+Provide task-oriented entry points such as:
+
+* Build a website
+* Write code
+* Design a product
+* Create content
+* Run a business
+* Manage a team
+* Study and learn
+* Automate work
+* Launch a startup
+
+Do not make users understand Toolstack's category taxonomy before they can use it.
+
+---
+
+# 6. TASK-FIRST INFORMATION ARCHITECTURE
+
+Categories still exist, but tasks should become a major discovery mechanism.
+
+Example:
+
+## Build a website
+
+Recommended stack:
+
+* design
+* hosting
+* analytics
+* forms
+* CMS
+* database
+* authentication
+
+## Launch a startup
+
+Recommended stack:
+
+* domain
+* branding
+* website
+* analytics
+* email
+* CRM
+* payments
+* customer support
+
+## Build an application
+
+Recommended stack:
+
+* IDE
+* database
+* auth
+* API
+* hosting
+* monitoring
+* analytics
+
+## Create YouTube videos
+
+Recommended stack:
+
+* research
+* scripting
+* voice
+* video
+* thumbnails
+* captions
+* distribution
+
+The system should make it easy to create more “stacks” later.
+
+---
+
+# 7. STACKS — MAKE THE BRAND NAME MEAN SOMETHING
+
+The concept of “Toolstack” should become a core product feature.
+
+Create curated workflow collections.
+
+Examples:
+
+* Developer Stack
+* Startup Stack
+* Student Stack
+* Designer Stack
+* Content Creator Stack
+* Solo Founder Stack
+* Agency Stack
+
+Each stack should explain:
+
+* goal
+* target user
+* recommended tools
+* what each tool does
+* how the tools work together
+* alternatives
+* estimated cost
+* setup complexity
+* optional components
+
+Avoid implying there is one universally “best” stack.
+
+Instead show:
+
+> recommended combination + reasoning + alternatives
+
+---
+
+# 8. TOOL DETAIL PAGE
+
+The tool page is the most important content page.
+
+Do NOT make it a glorified outbound link.
+
+Every meaningful tool page should have:
+
+## Header
+
+* logo
+* tool name
+* category
+* one-line explanation
+* official website
+* pricing indicator
+* platform availability
+* last verified date
+
+## Quick facts
+
+* pricing
+* free tier
+* open source
+* API availability
+* platform support
+* team support
+* integrations
+* setup difficulty
+
+## Editorial summary
+
+Explain:
+
+* what the tool actually does
+* who should use it
+* who should not
+* major strengths
+* important weaknesses
+* notable limitations
+
+## Why Toolstack included it
+
+Every curated listing should have an explicit reason for inclusion.
+
+Example:
+
+> Strong API support and excellent workflow automation for small engineering teams.
+
+## Alternatives
+
+Show meaningful alternatives and explain differences.
+
+## Related tools
+
+Connect users to adjacent tools.
+
+## Integrations
+
+Show what it works with.
+
+## Use cases
+
+Provide real-world use cases.
+
+## Verification
+
+Display:
+
+> Last verified: [date]
+
+If information is stale, flag it.
+
+---
+
+# 9. CURATION SYSTEM
+
+“Carefully edited” must become a real product principle.
+
+Do not simply collect tools.
+
+Create structured editorial metadata:
+
+* reviewed
+* tested
+* verified
+* newly added
+* recently updated
+* discontinued
+* needs verification
+* editor note
+* pricing verified
+* website verified
+
+Maintain timestamps.
+
+Avoid fake “quality scores” that have no methodology.
+
+If the application eventually uses ratings, document exactly how they are calculated.
+
+---
+
+# 10. SEARCH UX
+
+Search should understand intent.
+
+Support queries such as:
+
+> “best tool for React documentation”
+
+> “free video editor”
+
+> “Notion alternatives”
+
+> “database for a startup”
+
+> “AI coding tools”
+
+> “email marketing for small businesses”
+
+Search results should support:
+
+* relevance
+* category
+* task
+* price
+* platform
+* features
+* open source
+* integrations
+
+Provide useful empty states.
+
+Example:
+
+> No exact matches.
+
+Then:
+
+> Here are related tools in development, documentation, and knowledge management.
+
+---
+
+# 11. FILTER DESIGN
+
+Do not create 25 filters.
+
+Start with filters that meaningfully change a decision:
+
+* use case
+* price
+* platform
+* team size
+* key capability
+
+Allow advanced filters later.
+
+Remember the principle:
+
+> Filters should reduce uncertainty, not create complexity.
+
+---
+
+# 12. COMPARISON EXPERIENCE
+
+Create a comparison feature.
+
+Users should be able to select multiple tools and compare:
+
+* pricing
+* free tier
+* ease of use
+* target audience
+* platform
+* API
+* integrations
+* open-source status
+* major capabilities
+* limitations
+* setup complexity
+
+Example:
+
+| Dimension   | Tool A   | Tool B     | Tool C     |
+| ----------- | -------- | ---------- | ---------- |
+| Free tier   | Yes      | Limited    | No         |
+| API         | Yes      | Yes        | No         |
+| Teams       | Yes      | Yes        | Yes        |
+| Open source | No       | Yes        | No         |
+| Best for    | Startups | Developers | Enterprise |
+
+Do not secretly declare a universal winner.
+
+Present facts and editorial reasoning.
+
+---
+
+# 13. CARD DESIGN
+
+Tool cards should provide actual decision information.
+
+Do not make every card:
+
+> Logo
+> Name
+> Short sentence
+> Rating
+> Visit
+
+Instead use something like:
+
+### Tool name
+
+Category
+
+**Best for:** Developers
+**Price:** Free / Paid
+**Strength:** API + automation
+**Setup:** Easy
+
+Short editorial explanation.
+
+Actions:
+
+* View details
+* Compare
+* Visit website
+
+Keep cards compact enough to scan.
+
+---
+
+# 14. VISUAL DESIGN SYSTEM
+
+Create a coherent design system.
+
+Define:
+
+* typography scale
+* spacing scale
+* container widths
+* button hierarchy
+* card hierarchy
+* border radius
+* shadows
+* icon sizing
+* form styles
+* focus states
+* hover states
+* empty states
+* loading states
+* error states
+
+Use one visual language.
+
+Do not randomly combine different styles.
+
+Prioritize hierarchy over decoration.
+
+The user's eye should immediately understand:
+
+1. page purpose
+2. primary action
+3. main content
+4. secondary actions
+5. supporting information
+
+---
+
+# 15. RESPONSIVE DESIGN
+
+Design for:
+
+* small phones
+* large phones
+* tablets
+* laptops
+* desktop monitors
+* very wide screens
+
+Do not simply shrink the desktop layout.
+
+Reconsider:
+
+* navigation
+* search
+* filters
+* comparison tables
+* cards
+* tool details
+* sidebars
+* modals
+
+on smaller screens.
+
+Test touch targets.
+
+Avoid tiny text and tiny controls.
+
+---
+
+# 16. ACCESSIBILITY
+
+Implement WCAG-conscious accessibility.
+
+Requirements:
+
+* semantic HTML
+* correct heading hierarchy
+* keyboard navigation
+* visible focus indicators
+* accessible forms
+* labels for inputs
+* descriptive buttons
+* appropriate ARIA only when necessary
+* alt text
+* sufficient contrast
+* reduced-motion support
+* accessible dialogs
+* accessible dropdowns
+* accessible pagination
+* no keyboard traps
+
+Every major interaction must work without a mouse.
+
+---
+
+# 17. SEO ARCHITECTURE
+
+This is a major priority.
+
+Do not rely exclusively on client-side rendering for important content.
+
+Important public pages should be server-rendered, pre-rendered, or otherwise produce meaningful HTML containing their primary content.
+
+Google can process JavaScript, but server-side/pre-rendering can improve speed and crawler accessibility.
+
+Implement:
+
+* unique `<title>`
+* unique meta description
+* canonical URL
+* Open Graph metadata
+* social preview metadata
+* semantic headings
+* crawlable `<a href>` links
+* XML sitemap
+* robots.txt
+* clean URLs
+* proper 404 responses
+* proper redirects
+* pagination/indexation strategy
+* internal linking
+* breadcrumb navigation
+* structured data where appropriate
+
+Useful structured-data candidates may include:
+
+* WebSite
+* Organization
+* BreadcrumbList
+* ItemList
+* SoftwareApplication where applicable
+
+Do not fabricate structured data.
+
+Only publish facts that exist in the underlying database.
+
+---
+
+# 18. SEO PAGE MODEL
+
+Create indexable pages around real user intent.
+
+Potential routes:
+
+`/`
+
+`/tools`
+
+`/tools/[slug]`
+
+`/categories/[slug]`
+
+`/use-cases/[slug]`
+
+`/stacks/[slug]`
+
+`/compare/[tool-a]-vs-[tool-b]`
+
+`/alternatives/[tool-slug]`
+
+Do not generate thousands of thin pages.
+
+Every indexable page needs useful unique content.
+
+Avoid creating pages solely to manipulate SEO.
+
+---
+
+# 19. PERFORMANCE
+
+Optimize for real users.
+
+Measure:
+
+* LCP
+* CLS
+* INP
+* TTFB
+* JavaScript bundle size
+* image sizes
+* cache hit rate
+* server response time
+
+Implement where appropriate:
+
+* code splitting
+* lazy loading
+* image optimization
+* responsive images
+* caching
+* CDN delivery
+* pagination
+* virtualized long lists
+* server-side filtering
+* database indexing
+* request deduplication
+
+Do not ship a huge JavaScript bundle just to make a directory page interactive.
+
+---
+
+# 20. DATABASE DESIGN
+
+Review the data model.
+
+Tool records should support structured fields such as:
+
+* id
+* slug
+* name
+* description
+* logo
+* website_url
+* category
+* subcategories
+* tags
+* pricing
+* free_tier
+* platforms
+* team_size
+* integrations
+* api_available
+* open_source
+* use_cases
+* editorial_summary
+* strengths
+* limitations
+* alternatives
+* verification_status
+* last_verified_at
+* created_at
+* updated_at
+
+Normalize where appropriate.
+
+Avoid storing everything as uncontrolled JSON if it should be queryable.
+
+Add database indexes for:
+
+* slug
+* name
+* category
+* status
+* verification date
+* search fields
+* foreign keys
+
+---
+
+# 21. URL SECURITY
+
+Tool URLs are untrusted data.
+
+Never blindly trust submitted URLs.
+
+Validate:
+
+* protocol
+* hostname
+* syntax
+* allowed schemes
+
+Reject:
+
+* `javascript:`
+* `data:`
+* malformed schemes
+* dangerous protocol handlers
+
+Use HTTPS wherever possible.
+
+Outbound links must not accidentally create unsafe open redirects.
+
+If redirect tracking is implemented, use an allowlist or validated destination mapping.
+
+---
+
+# 22. STORED XSS PROTECTION
+
+Tool descriptions, categories, notes, reviews, editor content, imported metadata, and user-submitted content must all be treated as untrusted.
+
+Never inject raw HTML into the page unless it has been safely sanitized.
+
+Use:
+
+* output encoding
+* safe templating
+* trusted sanitization libraries
+* strict content policies
+
+Pay special attention to:
+
+* descriptions
+* markdown
+* HTML
+* tool logos
+* external metadata
+* user reviews
+* admin editor fields
+
+Do not assume admin-entered content is automatically safe.
+
+---
+
+# 23. API SECURITY
+
+Every API endpoint must have explicit authorization rules.
+
+Do not rely on frontend checks.
+
+Backend must independently verify:
+
+* identity
+* role
+* permissions
+* ownership
+* resource access
+
+Follow the OWASP API Security Top 10 principles, particularly around broken object-level authorization, broken function-level authorization, unrestricted resource consumption, SSRF, security misconfiguration, and inventory management.
+
+Every endpoint should have:
+
+* schema validation
+* authentication where required
+* authorization
+* sensible rate limiting
+* bounded request size
+* bounded response size
+* error handling
+* logging where appropriate
+
+---
+
+# 24. AUTHENTICATION
+
+If authentication exists or will be added:
+
+Use established secure authentication patterns.
+
+Requirements:
+
+* secure password hashing such as Argon2id where applicable
+* email verification
+* secure password reset flows
+* short-lived reset tokens
+* single-use reset tokens
+* session rotation after authentication
+* secure session expiration
+* logout invalidation
+* brute-force protection
+* rate limiting
+* MFA support where appropriate
+* generic login failure messages
+* no credential leakage
+
+Never store raw passwords.
+
+Never put secrets in URLs.
+
+Never log passwords, tokens, session IDs, or API keys.
+
+Follow OWASP authentication guidance.
+
+---
+
+# 25. SESSION SECURITY
+
+If cookie-based sessions are used:
+
+Cookies should use appropriate:
+
+* Secure
+* HttpOnly
+* SameSite
+
+settings.
+
+Sessions must be invalidated server-side when appropriate.
+
+Do not place long-lived sensitive authentication tokens in localStorage unless there is a documented security reason and compensating controls.
+
+---
+
+# 26. AUTHORIZATION / RBAC
+
+Define roles explicitly.
+
+Example:
+
+### Public
+
+Can browse public tools.
+
+### User
+
+Can use favorites, comparisons, personalized features, etc.
+
+### Editor
+
+Can create/edit tool content.
+
+### Admin
+
+Can manage users, permissions, system configuration, and security-sensitive settings.
+
+Never make:
+
+> “user has an admin boolean”
+
+the only authorization mechanism.
+
+Build explicit server-side permission checks.
+
+Follow the separation of authentication and authorization described by OWASP.
+
+---
+
+# 27. ADMIN PANEL SECURITY
+
+The admin interface is high risk.
+
+Implement:
+
+* server-side authorization
+* role checks
+* audit logging
+* confirmation for destructive operations
+* safe bulk actions
+* CSRF protection where applicable
+* strong session requirements
+* rate limiting
+* input validation
+* change history
+* soft delete where appropriate
+
+Every meaningful admin change should be attributable.
+
+Record:
+
+* actor
+* action
+* target
+* timestamp
+* relevant metadata
+
+Do not log secrets or sensitive credentials.
+
+---
+
+# 28. CSRF
+
+If authentication uses cookies:
+
+Protect state-changing operations from CSRF.
+
+Use appropriate:
+
+* SameSite cookies
+* CSRF tokens where needed
+* origin checks
+* secure request validation
+
+Do not rely on obscure frontend behavior as CSRF protection.
+
+---
+
+# 29. CORS
+
+Do not use:
+
+`Access-Control-Allow-Origin: *`
+
+for authenticated/private APIs.
+
+Create an explicit origin allowlist.
+
+Do not allow arbitrary origins dynamically based on request input.
+
+---
+
+# 30. SECURITY HEADERS
+
+Implement a deliberate security-header policy.
+
+Evaluate:
+
+* Content-Security-Policy
+* Strict-Transport-Security
+* X-Content-Type-Options
+* Referrer-Policy
+* Permissions-Policy
+* frame-ancestors through CSP
+* appropriate cache controls
+
+Do not copy a random header configuration from the internet.
+
+Ensure the CSP actually matches the application's scripts, images, fonts, APIs, analytics, and third-party services.
+
+Use CSP as defense in depth, not as a replacement for fixing XSS. OWASP specifically recommends security response headers and CSP for mitigating classes of browser-side attacks.
+
+---
+
+# 31. INPUT VALIDATION
+
+Validate every external input.
+
+Sources include:
+
+* URL params
+* query params
+* request bodies
+* headers
+* cookies
+* uploaded files
+* external API responses
+* webhook payloads
+
+Use typed schemas.
+
+Reject invalid input.
+
+Prefer allowlists over blocklists.
+
+Validate both:
+
+* frontend for UX
+* backend for security
+
+Backend validation is mandatory.
+
+---
+
+# 32. DATABASE SECURITY
+
+Use parameterized queries or a safe ORM.
+
+Never build SQL strings from user input.
+
+Protect against:
+
+* SQL injection
+* mass assignment
+* unauthorized record modification
+* unsafe sorting parameters
+* unsafe filter expressions
+
+Do not expose internal IDs or sensitive fields unless necessary.
+
+Consider UUIDs/random public identifiers where enumeration would be a problem.
+
+---
+
+# 33. SSRF PROTECTION
+
+This is especially important if Toolstack fetches:
+
+* website metadata
+* logos
+* screenshots
+* OG images
+* external APIs
+* URLs entered by administrators/users
+
+Never allow arbitrary server-side URL fetching without controls.
+
+Prevent access to:
+
+* localhost
+* loopback
+* private network ranges
+* cloud metadata endpoints
+* internal hostnames
+* unexpected protocols
+
+Validate and restrict outbound requests.
+
+Use network-level protections as an additional layer.
+
+---
+
+# 34. IMAGE / FILE SECURITY
+
+If the application supports uploads:
+
+Validate:
+
+* MIME type
+* extension
+* file size
+* actual file content
+* image dimensions
+
+Rename stored files.
+
+Never use user-provided filenames directly as filesystem paths.
+
+Store uploads outside executable paths.
+
+Consider malware scanning for relevant file types.
+
+Never trust client-provided MIME types.
+
+---
+
+# 35. OPEN REDIRECT PROTECTION
+
+Do not implement:
+
+`/redirect?url=<anything>`
+
+without validating destinations.
+
+If outbound tracking exists, map internal tool IDs to known URLs.
+
+Prefer:
+
+`/go/tool-slug`
+
+where the server looks up the approved destination.
+
+---
+
+# 36. RATE LIMITING
+
+Implement rate limits for:
+
+* login
+* signup
+* password reset
+* search APIs
+* tool submission
+* reviews
+* voting
+* admin operations
+* expensive endpoints
+* outbound metadata fetching
+* comparison generation
+* AI features if added
+
+Use different limits for different endpoint sensitivity.
+
+Return appropriate HTTP status codes.
+
+Do not rely only on frontend throttling.
+
+---
+
+# 37. ABUSE PREVENTION
+
+Plan for abuse before adding public submissions.
+
+Prevent:
+
+* spam
+* fake tools
+* malicious links
+* fake reviews
+* duplicate submissions
+* scraping abuse
+* automated account creation
+* resource exhaustion
+
+Use:
+
+* validation
+* rate limits
+* moderation
+* duplicate detection
+* suspicious activity logging
+* email verification
+* moderation queues when appropriate
+
+---
+
+# 38. DEPENDENCY / SUPPLY CHAIN SECURITY
+
+Review every dependency.
+
+Remove unnecessary packages.
+
+Keep the lockfile committed.
+
+Regularly scan dependencies for vulnerabilities.
+
+Use automated dependency updates where appropriate.
+
+Pin production dependencies sensibly.
+
+Audit:
+
+* npm/pnpm/yarn dependencies
+* Python packages if present
+* Docker images if present
+* third-party scripts
+* analytics
+* external SDKs
+
+This matters because software supply-chain failures are explicitly included in OWASP Top 10:2025.
+
+---
+
+# 39. SECRET MANAGEMENT
+
+Search the repository for:
+
+* API keys
+* JWT secrets
+* database passwords
+* private tokens
+* webhook secrets
+* service credentials
+
+No secrets in:
+
+* source code
+* Git history
+* frontend bundles
+* public environment variables
+* logs
+* error pages
+
+Use server-side environment variables or the appropriate secret manager.
+
+Only expose variables explicitly intended for the browser.
+
+If a secret has already been committed, assume it is compromised and rotate it.
+
+---
+
+# 40. ERROR HANDLING
+
+Never expose stack traces or internal implementation details to production users.
+
+Create:
+
+* friendly client errors
+* structured server logs
+* correlation/request IDs
+* appropriate status codes
+
+Production errors should not reveal:
+
+* SQL statements
+* file paths
+* environment variables
+* credentials
+* internal network details
+* stack traces
+
+---
+
+# 41. LOGGING AND MONITORING
+
+Implement structured logging.
+
+Track:
+
+* application errors
+* authentication events
+* authorization failures
+* suspicious requests
+* admin changes
+* rate-limit events
+* dependency failures
+* external API failures
+
+Create audit trails for security-sensitive operations.
+
+OWASP Top 10:2025 explicitly includes security logging and alerting failures as a major application-security category.
+
+---
+
+# 42. BACKUPS AND RECOVERY
+
+Verify:
+
+* database backups
+* backup retention
+* restore procedure
+* migration safety
+* recovery process
+
+A backup that has never been restored is not considered verified.
+
+Document recovery steps.
+
+---
+
+# 43. PRIVACY
+
+Only collect information that is necessary.
+
+Clearly separate:
+
+* public tool data
+* user account data
+* admin data
+* analytics data
+
+Do not expose user emails, internal IDs, admin metadata, or private fields through public APIs.
+
+---
+
+# 44. CONTENT QUALITY
+
+Tool records should be structured.
+
+Avoid vague descriptions such as:
+
+> “Powerful AI tool that helps businesses work smarter.”
+
+Prefer:
+
+> “Browser-based analytics platform for product teams that need event tracking and user behavior analysis.”
+
+Descriptions should answer:
+
+* What is it?
+* Who is it for?
+* What does it replace?
+* Why would someone use it?
+* What are its limitations?
+
+---
+
+# 45. TRUST MODEL
+
+Introduce explicit trust signals.
+
+Examples:
+
+* Verified
+* Editorially reviewed
+* Recently checked
+* Pricing verified
+* Website verified
+* Community submitted
+* Needs review
+
+Never fabricate verification.
+
+Every verification state must correspond to actual database state.
+
+---
+
+# 46. DATA FRESHNESS
+
+Tool data will become stale.
+
+Create a content freshness system.
+
+Track:
+
+* created date
+* last modified date
+* last verified date
+* verification source
+* verification status
+
+Flag records that have not been checked recently.
+
+Create an admin queue:
+
+> Tools needing verification
+
+---
+
+# 47. BROKEN LINK MONITORING
+
+Tool websites disappear.
+
+Build or plan a scheduled checker.
+
+Check:
+
+* HTTP status
+* redirect behavior
+* TLS problems
+* obvious dead domains
+
+Do not blindly treat every non-200 as permanently dead because some sites use temporary responses, bot protection, redirects, or rate limiting.
+
+Use a state such as:
+
+* healthy
+* redirected
+* temporarily unavailable
+* needs review
+* dead
+
+---
+
+# 48. ANALYTICS
+
+Track product behavior without violating privacy.
+
+Useful product events:
+
+* search
+* tool viewed
+* comparison started
+* comparison completed
+* category viewed
+* stack viewed
+* outbound click
+* favorite
+* tool submission
+* filter used
+
+Do not collect unnecessary personal information.
+
+---
+
+# 49. EMPTY STATES
+
+Every data-driven UI must have intentional states.
+
+Implement:
+
+* loading
+* empty
+* error
+* no search results
+* unavailable data
+* stale content
+* permission denied
+* offline where appropriate
+
+Do not leave blank screens.
+
+---
+
+# 50. ERROR PAGES
+
+Create polished:
+
+* 404
+* 403
+* 500
+* maintenance state
+* network failure state
+
+These should preserve the Toolstack visual identity.
+
+The 404 page should help users continue discovering content.
+
+---
+
+# 51. MOBILE EXPERIENCE
+
+Mobile is not simply a smaller desktop version.
+
+Prioritize:
+
+* search
+* categories
+* task discovery
+* tool cards
+* comparison
+* outbound actions
+
+Filters should use accessible sheets/drawers.
+
+Comparison tables should have a usable mobile representation.
+
+Avoid horizontal scrolling where it is not genuinely necessary.
+
+---
+
+# 52. MICROINTERACTIONS
+
+Use animation sparingly.
+
+Animations should indicate:
+
+* navigation
+* loading
+* state transition
+* confirmation
+* hierarchy
+
+Avoid decorative animations that slow down the experience.
+
+Respect:
+
+`prefers-reduced-motion`
+
+---
+
+# 53. PRODUCTION DEPLOYMENT
+
+The current URL is a Replit development-style URL:
+
+`*.replit.dev`
+
+Do not treat the development URL as the permanent public production identity.
+
+Publish through a proper production deployment and use either:
+
+* a published Replit domain
+* or a custom production domain
+
+Replit distinguishes workspace development URLs (`*.replit.dev`) from published deployments (`*.replit.app` / custom domains).
+
+Production must have:
+
+* HTTPS
+* production environment variables
+* production database
+* secure cookies
+* error monitoring
+* security headers
+* proper caching
+* backup strategy
+* domain configuration
+* robots configuration
+* sitemap
+* production logging
+
+Do not expose development-only endpoints or tooling publicly.
+
+---
+
+# 54. DEVELOPMENT / PRODUCTION SEPARATION
+
+Ensure:
+
+Development:
+
+* verbose logging
+* debug tools
+* test data
+* development credentials
+
+Production:
+
+* no debug UI
+* no test endpoints
+* no source-map exposure unless intentionally configured
+* secure cookies
+* production secrets
+* monitoring
+* rate limits
+* hardened configuration
+
+Never assume:
+
+`NODE_ENV=production`
+
+alone makes an application secure.
+
+---
+
+# 55. TESTING REQUIREMENTS
+
+Before declaring the project complete, run:
+
+## Functional
+
+* navigation
+* search
+* filters
+* categories
+* tool detail
+* alternatives
+* comparisons
+* stacks
+* outbound links
+* auth
+* admin
+* forms
+
+## Responsive
+
+* 360px
+* 390px
+* 768px
+* 1024px
+* 1280px+
+* very wide display
+
+## Accessibility
+
+* keyboard-only navigation
+* screen-reader sensible semantics
+* focus management
+* contrast
+* form labels
+* modal behavior
+
+## Security
+
+Test for:
+
+* XSS
+* SQL injection
+* CSRF
+* broken authorization
+* IDOR/BOLA
+* open redirects
+* SSRF
+* unsafe file upload
+* rate-limit bypass
+* brute-force attempts
+* insecure CORS
+* missing security headers
+* sensitive-data leakage
+* dependency vulnerabilities
+* secret exposure
+
+Use the OWASP Top 10:2025 as the baseline and OWASP ASVS 5.0 as the verification framework.
+
+---
+
+# 56. SECURITY TEST CASES
+
+Create automated tests for cases such as:
+
+### Authorization
+
+Attempt to access another user's resource by changing an ID.
+
+Expected:
+
+`403` or `404`, depending on the API's information-disclosure design.
+
+### Admin
+
+Attempt admin actions as a normal user.
+
+Expected:
+
+Access denied server-side.
+
+### XSS
+
+Submit malicious HTML/script through any user-editable field.
+
+Expected:
+
+The payload is safely rendered as text or sanitized content.
+
+### Open redirect
+
+Attempt:
+
+`/go?url=https://evil.example`
+
+Expected:
+
+Rejected.
+
+### SSRF
+
+Attempt to make server-side metadata fetching access:
+
+* localhost
+* loopback
+* private IPs
+* internal service names
+
+Expected:
+
+Rejected.
+
+### Rate limiting
+
+Send repeated authentication or expensive API requests.
+
+Expected:
+
+Rate limit enforced.
+
+### Secret exposure
+
+Search client bundle and responses for server-side secrets.
+
+Expected:
+
+No secrets.
+
+---
+
+# 57. SECURITY ACCEPTANCE CRITERIA
+
+Do not consider the security work finished unless:
+
+* no known critical vulnerabilities remain
+* no production secrets are exposed
+* privileged endpoints enforce server-side authorization
+* input validation exists on every public mutation endpoint
+* unsafe HTML rendering has been reviewed
+* outbound URLs are validated
+* SSRF protections exist where server-side fetching exists
+* authenticated APIs have abuse controls
+* security headers are configured
+* authentication/session handling is secure
+* dependency vulnerabilities are reviewed
+* logs do not contain credentials
+* production errors do not expose internals
+* security tests pass
+
+---
+
+# 58. SEO ACCEPTANCE CRITERIA
+
+For important public pages:
+
+* HTTP response contains meaningful content
+* title exists
+* description exists
+* canonical exists
+* page has one meaningful H1
+* internal links are crawlable
+* content is indexable
+* 404s return correct status codes
+* sitemap exists
+* robots.txt exists
+* no accidental `noindex`
+* duplicate URLs have canonical strategy
+* pagination is handled correctly
+* tool pages have useful unique content
+
+---
+
+# 59. PERFORMANCE ACCEPTANCE CRITERIA
+
+Do not optimize for arbitrary Lighthouse scores alone.
+
+Measure real performance.
+
+Priorities:
+
+1. fast initial response
+2. fast meaningful content
+3. minimal JavaScript required for first interaction
+4. optimized images
+5. efficient database queries
+6. caching where beneficial
+7. lazy loading for noncritical content
+
+Avoid “optimization” that makes the application harder to maintain for negligible gains.
+
+---
+
+# 60. CODE QUALITY
+
+Follow:
+
+* strong typing
+* clear naming
+* small reusable components
+* server/client boundaries
+* separation of concerns
+* centralized validation
+* centralized authorization
+* structured errors
+* reusable UI primitives
+* documented architectural decisions
+
+Avoid:
+
+* giant components
+* duplicated validation
+* duplicated permission logic
+* magic constants
+* hidden global state
+* unnecessary abstractions
+* excessive abstraction
+* dead code
+
+---
+
+# 61. DO NOT BREAK THESE THINGS
+
+During the redesign:
+
+Do not accidentally remove:
+
+* existing tools
+* tool links
+* existing categories
+* useful search behavior
+* existing database records
+* working authentication
+* working admin capabilities
+* analytics that are genuinely needed
+* routing
+* deployment configuration
+
+Before destructive migrations:
+
+* back up data
+* write migration
+* test migration
+* verify rollback/recovery path
+
+---
+
+# 62. IMPLEMENTATION ORDER
+
+Work in this exact priority order unless the repository reveals a blocking dependency.
+
+## Phase 0 — Audit
+
+Inspect architecture and create a technical risk report.
+
+## Phase 1 — Security baseline
+
+Fix:
+
+* secrets
+* authorization
+* validation
+* XSS
+* CSRF
+* SSRF
+* headers
+* rate limiting
+* secure sessions
+* dependency issues
+
+## Phase 2 — Architecture cleanup
+
+Fix:
+
+* duplicated logic
+* poor data structures
+* inconsistent APIs
+* database indexing
+* error handling
+
+## Phase 3 — Product foundation
+
+Implement:
+
+* better homepage
+* task discovery
+* improved search
+* structured categories
+* strong tool model
+
+## Phase 4 — Tool experience
+
+Implement:
+
+* rich tool pages
+* alternatives
+* integrations
+* editorial notes
+* verification states
+
+## Phase 5 — Decision features
+
+Implement:
+
+* comparison
+* stacks
+* favorites/personalization where appropriate
+
+## Phase 6 — SEO
+
+Implement:
+
+* SSR/pre-rendering
+* metadata
+* structured data
+* sitemap
+* canonical URLs
+* indexable routes
+
+## Phase 7 — Visual polish
+
+Improve:
+
+* typography
+* spacing
+* hierarchy
+* cards
+* navigation
+* motion
+* responsive behavior
+
+## Phase 8 — Testing
+
+Run the complete:
+
+* functional
+* security
+* performance
+* accessibility
+* responsive
+* SEO
+
+test matrix.
+
+---
+
+# 63. IMPORTANT: DO NOT OVERENGINEER
+
+Do not build:
+
+* AI recommendations
+* social networks
+* complex personalization
+* complicated ranking algorithms
+* unnecessary microservices
+* elaborate recommendation engines
+
+until the basic product is excellent.
+
+A fast, trustworthy, well-curated directory with great search and comparison is more valuable than a technically impressive but confusing platform.
+
+---
+
+# 64. SUCCESS CRITERIA
+
+After the redesign, a first-time visitor should be able to answer these questions within seconds:
+
+### What is Toolstack?
+
+A curated software discovery and decision platform.
+
+### What can I do here?
+
+Find, compare, understand, and assemble software for a specific job.
+
+### Why trust it?
+
+Tools have editorial context, verification status, useful metadata, and transparent reasoning.
+
+### Why use it instead of a generic directory?
+
+Because Toolstack helps me make a decision rather than simply showing me a list.
+
+---
+
+# 65. FINAL DELIVERABLE
+
+When implementation is complete, produce a concise engineering report containing:
+
+## Architecture changes
+
+What changed and why.
+
+## Product changes
+
+What changed and why.
+
+## Security changes
+
+What vulnerabilities/risk areas were addressed.
+
+## SEO changes
+
+What was changed to improve crawlability and indexability.
+
+## Performance changes
+
+What improved and how it was measured.
+
+## Tests
+
+Show exactly which tests were executed and their results.
+
+## Remaining risks
+
+Be explicit about anything that could not be verified.
+
+Do not claim “production-ready” unless the evidence supports that claim.
+
+---
+
+# FINAL PRODUCT PRINCIPLE
+
+Build Toolstack around this idea:
+
+> **The internet already has too many tools.**
+>
+> **The hard part isn't finding another tool.**
+>
+> **The hard part is knowing which tools are actually worth your time.**
+
+Everything in the product should reinforce that idea.
+
+The homepage, search, categories, tool pages, comparisons, stacks, editorial content, SEO, database architecture, and security model should all work toward making Toolstack:
+
+> **a trusted filter between people and the overwhelming software ecosystem.**
+
+Do not optimize for “more.”
+
+Optimize for:
+
+**clarity + trust + usefulness + speed + security + decision quality.**

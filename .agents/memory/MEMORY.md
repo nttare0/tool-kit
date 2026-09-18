@@ -1,0 +1,1 @@
+- [Vite HTML metadata](vite-html-metadata.md) — root-relative canonical links can break this Vite build; create canonical metadata at runtime unless a production origin is known.

@@ -1,13 +1,30 @@
-import { ArrowUpRight, ExternalLink, ImageOff, Search, Sparkles } from 'lucide-react';
+import { ArrowUpRight, Check, ExternalLink, Moon, Search, Sparkles, Sun } from 'lucide-react';
 import { Link } from 'wouter';
-import type { CSSProperties, ReactNode } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import type { Category, Tool } from '@workspace/api-client-react';
 
 export function BrandMark() {
   return <Link href="/" data-testid="link-brand" className="group inline-flex items-center gap-2.5">
-    <span className="grid h-7 w-7 place-items-center rounded-sm bg-primary font-mono text-xs font-bold text-primary-foreground transition-transform group-hover:-rotate-6">T</span>
+    <span className="grid h-8 w-8 place-items-center overflow-hidden rounded-md border border-border bg-white transition-transform group-hover:-rotate-6"><img src="/toolstack-mark.png" alt="" className="h-full w-full object-cover dark:invert dark:mix-blend-screen" /></span>
     <span className="text-base font-semibold tracking-[-0.05em]">tool<span className="text-primary">stack</span></span>
   </Link>;
+}
+
+export function ThemeToggle() {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    const stored = localStorage.getItem('toolstack-theme');
+    const next = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.classList.toggle('dark', next);
+    setDark(next);
+  }, []);
+  const toggle = () => {
+    const next = !dark;
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem('toolstack-theme', next ? 'dark' : 'light');
+    setDark(next);
+  };
+  return <button type="button" onClick={toggle} aria-label={`Switch to ${dark ? 'light' : 'dark'} mode`} className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">{dark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}</button>;
 }
 
 export function Shell({ children }: { children: ReactNode }) {
@@ -15,10 +32,11 @@ export function Shell({ children }: { children: ReactNode }) {
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/95 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 md:px-8">
         <BrandMark />
-        <nav className="flex items-center gap-1 text-xs text-muted-foreground">
+        <nav className="flex items-center gap-2 text-xs text-muted-foreground">
           <Link href="/" data-testid="link-discover" className="rounded px-2.5 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">Discover</Link>
           <span className="hidden font-mono text-[10px] text-border sm:block">/</span>
           <span className="hidden px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[.12em] text-muted-foreground sm:block">Field guide for useful software</span>
+          <ThemeToggle />
         </nav>
       </div>
     </header>
@@ -26,7 +44,7 @@ export function Shell({ children }: { children: ReactNode }) {
     <footer className="mx-auto mt-16 max-w-7xl border-t border-border px-4 py-8 text-xs text-muted-foreground md:px-8">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div><span className="font-mono text-[10px] uppercase tracking-[.16em]">Toolstack / a calm place to choose</span><p className="mt-2 text-muted-foreground/70">Useful things, carefully kept.</p></div>
-        <Link href="/admin" data-testid="link-admin-footer" className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground transition-colors hover:text-primary">Admin access <ArrowUpRight className="h-3 w-3" /></Link>
+        <div className="flex flex-wrap items-center gap-4"><Link href="/terms" className="hover:text-foreground">Terms</Link><Link href="/privacy" className="hover:text-foreground">Privacy</Link><Link href="/admin" data-testid="link-admin-footer" className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground transition-colors hover:text-primary">Admin access <ArrowUpRight className="h-3 w-3" /></Link></div>
       </div>
     </footer>
   </div>;
@@ -50,14 +68,17 @@ export function CategoryPill({ category, active, onClick }: { category: Category
   return <button type="button" onClick={onClick} data-testid={`button-category-${category.name.toLowerCase().replace(/\s+/g, '-')}`} className={`whitespace-nowrap border-b-2 px-1 pb-2 text-xs transition-all ${active ? 'border-[var(--pill-accent)] text-foreground' : 'border-transparent text-muted-foreground hover:border-[var(--pill-accent)]/50 hover:text-foreground'}`} style={style}>{category.name}</button>;
 }
 
-export function ToolCard({ tool, featured = false }: { tool: Tool; featured?: boolean }) {
-  return <Link href={`/tool/${tool.slug}`} data-testid={`card-tool-${tool.id}`} className={`group relative block overflow-hidden border border-border bg-card transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-[0_18px_45px_rgba(0,0,0,.22)] ${featured ? 'md:grid md:grid-cols-[1.35fr_1fr]' : ''}`}>
-    <div className={`relative overflow-hidden bg-secondary ${featured ? 'aspect-[16/10] md:aspect-auto md:min-h-[250px]' : 'aspect-[16/10]'}`}><Preview tool={tool} /></div>
-    <div className={`flex flex-col justify-between p-4 ${featured ? 'md:p-6' : ''}`}>
-      <div><div className="flex items-center justify-between gap-3"><span className="font-mono text-[10px] uppercase tracking-[.12em] text-accent">{tool.categoryName}</span><span className="font-mono text-[10px] uppercase tracking-[.1em] text-muted-foreground">{tool.pricing}</span></div><h3 className={`${featured ? 'mt-8 text-2xl' : 'mt-5 text-lg'} font-semibold tracking-[-.05em]`}>{tool.name}</h3><p className="mt-2 max-w-[36ch] text-sm leading-6 text-muted-foreground">{tool.shortDescription}</p></div>
-      <div className="mt-8 flex items-center justify-between border-t border-border pt-3 text-[11px] text-muted-foreground"><span>{tool.featured ? 'Editor’s pick' : 'Open field note'}</span><ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" /></div>
-    </div>
-  </Link>;
+export function ToolCard({ tool, featured = false, compareSelected = false, onCompare }: { tool: Tool; featured?: boolean; compareSelected?: boolean; onCompare?: () => void }) {
+  return <article className={`group relative overflow-hidden border border-border bg-card transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-[0_18px_45px_rgba(0,0,0,.22)] ${featured ? 'md:grid md:grid-cols-[1.35fr_1fr]' : ''} ${compareSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`}>
+    <Link href={`/tool/${tool.slug}`} data-testid={`card-tool-${tool.id}`} className="block">
+      <div className={`relative overflow-hidden bg-secondary ${featured ? 'aspect-[16/10] md:aspect-auto md:min-h-[250px]' : 'aspect-[16/10]'}`}><Preview tool={tool} /></div>
+      <div className={`flex flex-col justify-between p-4 ${featured ? 'md:p-6' : ''}`}>
+        <div><div className="flex items-center justify-between gap-3"><span className="font-mono text-[10px] uppercase tracking-[.12em] text-accent">{tool.categoryName}</span><span className="font-mono text-[10px] uppercase tracking-[.1em] text-muted-foreground">{tool.pricing}</span></div><h3 className={`${featured ? 'mt-8 text-2xl' : 'mt-5 text-lg'} font-semibold tracking-[-.05em]`}>{tool.name}</h3><p className="mt-2 max-w-[36ch] text-sm leading-6 text-muted-foreground">{tool.shortDescription}</p></div>
+        <div className="mt-8 flex items-center justify-between border-t border-border pt-3 text-[11px] text-muted-foreground"><span>{tool.featured ? 'Editor’s pick' : 'Open field note'}</span><ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" /></div>
+      </div>
+    </Link>
+    {onCompare && <button type="button" onClick={onCompare} aria-pressed={compareSelected} className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 border border-border bg-background/95 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[.1em] text-muted-foreground transition-colors hover:border-primary hover:text-foreground">{compareSelected ? <Check className="h-3 w-3 text-primary" /> : null}{compareSelected ? 'Added' : 'Compare'}</button>}
+  </article>;
 }
 
 export function PreviewPanel({ tool }: { tool: Tool }) {

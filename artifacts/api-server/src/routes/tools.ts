@@ -74,6 +74,25 @@ function findTool(id: number) {
   return row ? presentTool(row) : undefined;
 }
 
+function isHttpUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isSafeAssetUrl(value: string) {
+  return isHttpUrl(value) || value.startsWith("data:image/");
+}
+
+function hasSafeUrls(input: { websiteUrl?: string; logoUrl?: string | null; previewUrl?: string | null }) {
+  return (!input.websiteUrl || isHttpUrl(input.websiteUrl))
+    && (!input.logoUrl || isSafeAssetUrl(input.logoUrl))
+    && (!input.previewUrl || isSafeAssetUrl(input.previewUrl));
+}
+
 router.get("/tools", (req, res): void => {
   const parsed = ListToolsQueryParams.safeParse(req.query);
   if (!parsed.success) {
@@ -114,6 +133,10 @@ router.post("/tools", requireAdmin, (req, res): void => {
     return;
   }
   const body = parsed.data;
+  if (!hasSafeUrls(body)) {
+    res.status(400).json({ error: "Website, logo, and preview URLs must use http(s) or an image data URL." });
+    return;
+  }
   if (body.previewUrl && body.previewUrl.length > 4_000_000) {
     res.status(413).json({ error: "Preview image is too large. Keep it under 3 MB." });
     return;
@@ -172,6 +195,10 @@ router.patch("/tools/:id", requireAdmin, (req, res): void => {
     return;
   }
   const data = parsed.data;
+  if (!hasSafeUrls(data)) {
+    res.status(400).json({ error: "Website, logo, and preview URLs must use http(s) or an image data URL." });
+    return;
+  }
   if (data.previewUrl && data.previewUrl.length > 4_000_000) {
     res.status(413).json({ error: "Preview image is too large. Keep it under 3 MB." });
     return;
