@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
 import Home from '@/pages/home';
+import Directory from '@/pages/directory';
 import ToolDetail from '@/pages/tool-detail';
 import Admin from '@/pages/admin';
 import Legal from '@/pages/legal';
@@ -21,12 +22,16 @@ function Router() {
   const [location] = useLocation();
 
   useEffect(() => {
-    const isAdmin = location === '/admin';
-    const isNotFound = location === '/404';
-    const isLegal = location === '/terms' || location === '/privacy';
-    const slug = location.startsWith('/tool/') ? decodeURIComponent(location.slice('/tool/'.length)) : '';
+    const pathname = location.split('?')[0];
+    const isAdmin = pathname === '/admin';
+    const isDirectory = pathname === '/directory';
+    const isNotFound = pathname === '/404';
+    const isLegal = pathname === '/terms' || pathname === '/privacy';
+    const slug = pathname.startsWith('/tool/') ? decodeURIComponent(pathname.slice('/tool/'.length)) : '';
     const title = isAdmin
       ? 'Admin workspace — Toolstack'
+      : isDirectory
+        ? 'Directory — Find useful software | Toolstack'
       : isNotFound
         ? 'Page not found — Toolstack'
         : isLegal
@@ -36,6 +41,8 @@ function Router() {
           : 'Toolstack — Find the right tool for the work';
     const description = isAdmin
       ? 'Manage Toolstack tools, categories, publishing status, and featured discoveries.'
+      : isDirectory
+        ? 'Search and compare carefully edited tools for design, development, AI, productivity, and media.'
       : isNotFound
         ? 'That Toolstack page is not in the current field guide.'
         : isLegal
@@ -69,7 +76,7 @@ function Router() {
         url: `${window.location.origin}${location}`,
         potentialAction: {
           '@type': 'SearchAction',
-          target: `${window.location.origin}/?search={search_term_string}`,
+      target: `${window.location.origin}/directory?search={search_term_string}`,
           'query-input': 'required name=search_term_string',
         },
       });
@@ -82,6 +89,7 @@ function Router() {
     <RoutedErrorBoundary>
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/directory" component={Directory} />
          <Route path="/tool/:slug" component={ToolDetail} />
          <Route path="/admin" component={Admin} />
          <Route path="/terms" component={() => <Legal kind="terms" />} />

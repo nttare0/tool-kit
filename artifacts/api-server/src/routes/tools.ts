@@ -93,6 +93,10 @@ function hasSafeUrls(input: { websiteUrl?: string; logoUrl?: string | null; prev
     && (!input.previewUrl || isSafeAssetUrl(input.previewUrl));
 }
 
+function makePreviewUrl(websiteUrl: string) {
+  return `https://api.microlink.io/?url=${encodeURIComponent(websiteUrl)}&screenshot=true&meta=false&embed=screenshot.url`;
+}
+
 router.get("/tools", (req, res): void => {
   const parsed = ListToolsQueryParams.safeParse(req.query);
   if (!parsed.success) {
@@ -137,7 +141,8 @@ router.post("/tools", requireAdmin, (req, res): void => {
     res.status(400).json({ error: "Website, logo, and preview URLs must use http(s) or an image data URL." });
     return;
   }
-  if (body.previewUrl && body.previewUrl.length > 4_000_000) {
+  const previewUrl = body.previewUrl || makePreviewUrl(body.websiteUrl);
+  if (previewUrl.length > 4_000_000) {
     res.status(413).json({ error: "Preview image is too large. Keep it under 3 MB." });
     return;
   }
@@ -155,7 +160,7 @@ router.post("/tools", requireAdmin, (req, res): void => {
       body.bestFor ?? "",
       body.websiteUrl,
       body.logoUrl ?? null,
-      body.previewUrl ?? null,
+      previewUrl,
       body.categoryId,
       body.pricing,
       body.featured ? 1 : 0,
@@ -195,11 +200,18 @@ router.patch("/tools/:id", requireAdmin, (req, res): void => {
     return;
   }
   const data = parsed.data;
-  if (!hasSafeUrls(data)) {
+  const existing = findTool(params.data.id);
+  if (!existing) {
+    res.status(404).json({ error: "Tool not found" });
+    return;
+  }
+  const websiteUrl = data.websiteUrl ?? existing.websiteUrl;
+  if (!isHttpUrl(websiteUrl) || !hasSafeUrls({ ...data, websiteUrl })) {
     res.status(400).json({ error: "Website, logo, and preview URLs must use http(s) or an image data URL." });
     return;
   }
-  if (data.previewUrl && data.previewUrl.length > 4_000_000) {
+  const previewUrl = data.previewUrl || makePreviewUrl(websiteUrl);
+  if (previewUrl.length > 4_000_000) {
     res.status(413).json({ error: "Preview image is too large. Keep it under 3 MB." });
     return;
   }
@@ -214,7 +226,7 @@ router.patch("/tools/:id", requireAdmin, (req, res): void => {
     best_for: data.bestFor,
     website_url: data.websiteUrl,
     logo_url: data.logoUrl,
-    preview_url: data.previewUrl,
+    preview_url: previewUrl,
     category_id: data.categoryId,
     pricing: data.pricing,
     featured: data.featured === undefined ? undefined : data.featured ? 1 : 0,

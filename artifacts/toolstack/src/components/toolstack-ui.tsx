@@ -33,7 +33,8 @@ export function Shell({ children }: { children: ReactNode }) {
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 md:px-8">
         <BrandMark />
         <nav className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Link href="/" data-testid="link-discover" className="rounded px-2.5 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">Discover</Link>
+          <Link href="/" data-testid="link-discover" className="rounded px-2.5 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">About</Link>
+          <Link href="/directory" data-testid="link-directory" className="rounded px-2.5 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">Directory</Link>
           <span className="hidden font-mono text-[10px] text-border sm:block">/</span>
           <span className="hidden px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[.12em] text-muted-foreground sm:block">Field guide for useful software</span>
           <ThemeToggle />
