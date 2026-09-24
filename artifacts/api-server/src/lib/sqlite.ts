@@ -52,6 +52,63 @@ sqlite.exec(`
     admin_id INTEGER NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
     expires_at TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL UNIQUE,
+    display_name TEXT NOT NULL,
+    profession TEXT NOT NULL DEFAULT '',
+    password_hash TEXT NOT NULL,
+    password_salt TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'active',
+    created_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS user_sessions (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS user_interests (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, category_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS tool_submissions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    short_description TEXT NOT NULL,
+    description TEXT NOT NULL,
+    how_it_works TEXT NOT NULL,
+    best_for TEXT NOT NULL DEFAULT '',
+    website_url TEXT NOT NULL,
+    logo_url TEXT,
+    preview_url TEXT,
+    pricing TEXT NOT NULL,
+    suggested_categories TEXT NOT NULL DEFAULT '[]',
+    status TEXT NOT NULL DEFAULT 'pending',
+    review_note TEXT,
+    published_tool_id INTEGER REFERENCES tools(id) ON DELETE SET NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    reviewed_at TEXT,
+    reviewed_by INTEGER REFERENCES admins(id) ON DELETE SET NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS activity_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    actor_type TEXT NOT NULL,
+    actor_id INTEGER,
+    actor_email TEXT NOT NULL,
+    action TEXT NOT NULL,
+    target_type TEXT NOT NULL,
+    target_id INTEGER,
+    details TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL
+  );
 `);
 
 export type SqliteRow = Record<string, unknown>;

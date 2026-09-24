@@ -119,6 +119,29 @@ export function loginAdmin(email: string, password: string, response: Response) 
   return true;
 }
 
+export function changeAdminPassword(adminId: number, currentPassword: string, newPassword: string) {
+  const admin = get<AdminRow>(
+    "SELECT id, email, password_hash, password_salt FROM admins WHERE id = ?",
+    adminId,
+  );
+  if (!admin) return false;
+  const actual = hashPassword(currentPassword, admin.password_salt);
+  if (
+    actual.length !== admin.password_hash.length ||
+    !crypto.timingSafeEqual(Buffer.from(actual), Buffer.from(admin.password_hash))
+  ) {
+    return false;
+  }
+  const salt = crypto.randomBytes(16).toString("hex");
+  run(
+    "UPDATE admins SET password_hash = ?, password_salt = ? WHERE id = ?",
+    hashPassword(newPassword, salt),
+    salt,
+    adminId,
+  );
+  return true;
+}
+
 export function logoutAdmin(request: Request, response: Response) {
   const admin = currentAdmin(request);
   if (admin) run("DELETE FROM sessions WHERE id = ?", admin.sessionId);

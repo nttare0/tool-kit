@@ -8,6 +8,7 @@ import Home from '@/pages/home';
 import Directory from '@/pages/directory';
 import ToolDetail from '@/pages/tool-detail';
 import Admin from '@/pages/admin';
+import Account from '@/pages/account';
 import Legal from '@/pages/legal';
 import {
   Route,
@@ -25,6 +26,7 @@ function Router() {
     const pathname = location.split('?')[0];
     const isAdmin = pathname === '/admin';
     const isDirectory = pathname === '/directory';
+    const isAccount = pathname === '/account';
     const isNotFound = pathname === '/404';
     const isLegal = pathname === '/terms' || pathname === '/privacy';
     const slug = pathname.startsWith('/tool/') ? decodeURIComponent(pathname.slice('/tool/'.length)) : '';
@@ -32,6 +34,8 @@ function Router() {
       ? 'Admin workspace — Toolstack'
       : isDirectory
         ? 'Directory — Find useful software | Toolstack'
+        : isAccount
+          ? 'Your account — Toolstack'
       : isNotFound
         ? 'Page not found — Toolstack'
         : isLegal
@@ -43,6 +47,8 @@ function Router() {
       ? 'Manage Toolstack tools, categories, publishing status, and featured discoveries.'
       : isDirectory
         ? 'Search and compare carefully edited tools for design, development, AI, productivity, and media.'
+        : isAccount
+          ? 'Manage your Toolstack profile, interests, tool suggestions, and review status.'
       : isNotFound
         ? 'That Toolstack page is not in the current field guide.'
         : isLegal
@@ -90,6 +96,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/directory" component={Directory} />
+        <Route path="/account" component={Account} />
          <Route path="/tool/:slug" component={ToolDetail} />
          <Route path="/admin" component={Admin} />
          <Route path="/terms" component={() => <Legal kind="terms" />} />

@@ -257,3 +257,362 @@ export const DeleteCategoryParams = zod.object({
 export const DeleteCategoryResponse = zod.void()
 
 
+/**
+ * @summary Register a public member account
+ */
+export const registerAccountBodyDisplayNameMin = 2;
+export const registerAccountBodyDisplayNameMax = 100;
+
+export const registerAccountBodyPasswordMin = 8;
+
+export const registerAccountBodyProfessionMax = 100;
+
+
+
+export const RegisterAccountBody = zod.object({
+  "displayName": zod.string().min(registerAccountBodyDisplayNameMin).max(registerAccountBodyDisplayNameMax),
+  "email": zod.string().email(),
+  "password": zod.string().min(registerAccountBodyPasswordMin),
+  "profession": zod.string().max(registerAccountBodyProfessionMax).optional()
+})
+
+export const RegisterAccountResponse = zod.object({
+  "user": zod.object({
+  "id": zod.number().int(),
+  "email": zod.string().email(),
+  "displayName": zod.string(),
+  "profession": zod.string()
+})
+})
+
+
+/**
+ * @summary Sign in a public member
+ */
+export const LoginUserBody = zod.object({
+  "email": zod.string().email(),
+  "password": zod.string()
+})
+
+export const LoginUserResponse = zod.object({
+  "user": zod.object({
+  "id": zod.number().int(),
+  "email": zod.string().email(),
+  "displayName": zod.string(),
+  "profession": zod.string()
+})
+})
+
+
+/**
+ * @summary Get the current member session
+ */
+export const GetUserSessionResponse = zod.object({
+  "user": zod.union([zod.object({
+  "id": zod.number().int(),
+  "email": zod.string().email(),
+  "displayName": zod.string(),
+  "profession": zod.string()
+}),zod.null()])
+})
+
+
+/**
+ * @summary Sign out a public member
+ */
+export const LogoutUserResponse = zod.void()
+
+
+/**
+ * @summary Get the signed-in member profile and interests
+ */
+export const GetAccountProfileResponse = zod.object({
+  "user": zod.object({
+  "id": zod.number().int(),
+  "email": zod.string().email(),
+  "displayName": zod.string(),
+  "profession": zod.string()
+}),
+  "categoryIds": zod.array(zod.number().int())
+})
+
+
+/**
+ * @summary Update member profile and category interests
+ */
+export const updateAccountProfileBodyDisplayNameMin = 2;
+export const updateAccountProfileBodyDisplayNameMax = 100;
+
+export const updateAccountProfileBodyProfessionMax = 100;
+
+export const updateAccountProfileBodyCategoryIdsMax = 12;
+
+
+
+export const UpdateAccountProfileBody = zod.object({
+  "displayName": zod.string().min(updateAccountProfileBodyDisplayNameMin).max(updateAccountProfileBodyDisplayNameMax),
+  "profession": zod.string().max(updateAccountProfileBodyProfessionMax),
+  "categoryIds": zod.array(zod.number().int()).max(updateAccountProfileBodyCategoryIdsMax)
+})
+
+export const UpdateAccountProfileResponse = zod.object({
+  "user": zod.object({
+  "id": zod.number().int(),
+  "email": zod.string().email(),
+  "displayName": zod.string(),
+  "profession": zod.string()
+}),
+  "categoryIds": zod.array(zod.number().int())
+})
+
+
+/**
+ * @summary Change the signed-in member password
+ */
+export const changeAccountPasswordBodyNewPasswordMin = 8;
+
+
+
+export const ChangeAccountPasswordBody = zod.object({
+  "currentPassword": zod.string(),
+  "newPassword": zod.string().min(changeAccountPasswordBodyNewPasswordMin)
+})
+
+export const ChangeAccountPasswordResponse = zod.object({
+  "changed": zod.boolean()
+})
+
+
+/**
+ * @summary List the signed-in member's tool submissions
+ */
+export const ListOwnSubmissionsResponseItem = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "websiteUrl": zod.string().url(),
+  "status": zod.enum(['pending', 'approved', 'rejected']),
+  "reviewNote": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().optional(),
+  "previewUrl": zod.string().nullish()
+})
+export const ListOwnSubmissionsResponse = zod.array(ListOwnSubmissionsResponseItem)
+
+
+/**
+ * @summary Submit a tool for admin review
+ */
+export const createSubmissionBodyNameMax = 120;
+
+export const createSubmissionBodyShortDescriptionMax = 300;
+
+
+
+export const createSubmissionBodyPricingMax = 100;
+
+
+
+export const CreateSubmissionBody = zod.object({
+  "name": zod.string().min(1).max(createSubmissionBodyNameMax),
+  "websiteUrl": zod.string().url(),
+  "shortDescription": zod.string().min(1).max(createSubmissionBodyShortDescriptionMax),
+  "description": zod.string().min(1),
+  "howItWorks": zod.string().min(1),
+  "bestFor": zod.string().optional(),
+  "pricing": zod.string().min(1).max(createSubmissionBodyPricingMax),
+  "logoUrl": zod.string().nullish()
+})
+
+export const CreateSubmissionResponse = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "websiteUrl": zod.string().url(),
+  "status": zod.enum(['pending', 'approved', 'rejected']),
+  "reviewNote": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().optional(),
+  "previewUrl": zod.string().nullish()
+})
+
+
+/**
+ * @summary List all member tool submissions
+ */
+export const listAdminSubmissionsResponseOneNameMax = 120;
+
+export const listAdminSubmissionsResponseOneShortDescriptionMax = 300;
+
+
+
+export const listAdminSubmissionsResponseOnePricingMax = 100;
+
+
+
+export const ListAdminSubmissionsResponseItem = zod.object({
+  "name": zod.string().min(1).max(listAdminSubmissionsResponseOneNameMax),
+  "websiteUrl": zod.string().url(),
+  "shortDescription": zod.string().min(1).max(listAdminSubmissionsResponseOneShortDescriptionMax),
+  "description": zod.string().min(1),
+  "howItWorks": zod.string().min(1),
+  "bestFor": zod.string().optional(),
+  "pricing": zod.string().min(1).max(listAdminSubmissionsResponseOnePricingMax),
+  "logoUrl": zod.string().nullish()
+}).and(zod.object({
+  "id": zod.number().int(),
+  "userId": zod.number().int(),
+  "userEmail": zod.string().email(),
+  "userName": zod.string(),
+  "logoUrl": zod.string().nullish(),
+  "previewUrl": zod.string().nullish(),
+  "status": zod.enum(['pending', 'approved', 'rejected']),
+  "reviewNote": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date().optional(),
+  "suggestedCategories": zod.array(zod.object({
+  "name": zod.string(),
+  "description": zod.string()
+}))
+}))
+export const ListAdminSubmissionsResponse = zod.array(ListAdminSubmissionsResponseItem)
+
+
+/**
+ * @summary Approve and publish, or reject a submission
+ */
+export const ReviewSubmissionParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const reviewSubmissionBodyReviewNoteMax = 1000;
+
+
+
+export const ReviewSubmissionBody = zod.object({
+  "status": zod.enum(['approved', 'rejected']),
+  "categoryId": zod.number().int().optional(),
+  "reviewNote": zod.string().max(reviewSubmissionBodyReviewNoteMax).optional()
+})
+
+export const ReviewSubmissionResponse = zod.object({
+  "id": zod.number().int(),
+  "status": zod.enum(['approved', 'rejected']),
+  "publishedToolId": zod.number().int().optional(),
+  "reviewNote": zod.string().optional()
+})
+
+
+/**
+ * @summary List member accounts and submission counts
+ */
+export const ListAdminUsersResponseItem = zod.object({
+  "id": zod.number().int(),
+  "email": zod.string().email(),
+  "displayName": zod.string(),
+  "profession": zod.string(),
+  "status": zod.enum(['active', 'suspended']),
+  "createdAt": zod.coerce.date(),
+  "submissionCount": zod.number().int(),
+  "pendingCount": zod.number().int()
+})
+export const ListAdminUsersResponse = zod.array(ListAdminUsersResponseItem)
+
+
+/**
+ * @summary Suspend or restore a member account
+ */
+export const UpdateManagedUserParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const UpdateManagedUserBody = zod.object({
+  "status": zod.enum(['active', 'suspended'])
+})
+
+export const UpdateManagedUserResponse = zod.object({
+  "id": zod.number().int(),
+  "status": zod.enum(['active', 'suspended'])
+})
+
+
+/**
+ * @summary List recent user and admin activity
+ */
+export const ListAdminActivityResponseItem = zod.object({
+  "id": zod.number().int(),
+  "actorType": zod.enum(['admin', 'user']),
+  "actorEmail": zod.string().email(),
+  "action": zod.string(),
+  "targetType": zod.string(),
+  "targetId": zod.number().int().nullish(),
+  "details": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const ListAdminActivityResponse = zod.array(ListAdminActivityResponseItem)
+
+
+/**
+ * @summary Change the signed-in admin password
+ */
+export const changeAdminPasswordBodyNewPasswordMin = 8;
+
+
+
+export const ChangeAdminPasswordBody = zod.object({
+  "currentPassword": zod.string(),
+  "newPassword": zod.string().min(changeAdminPasswordBodyNewPasswordMin)
+})
+
+export const ChangeAdminPasswordResponse = zod.object({
+  "changed": zod.boolean()
+})
+
+
+/**
+ * @summary Draft tool listing details and category suggestions
+ */
+export const suggestToolDetailsBodyNameMax = 120;
+
+
+
+export const SuggestToolDetailsBody = zod.object({
+  "name": zod.string().max(suggestToolDetailsBodyNameMax).optional(),
+  "websiteUrl": zod.string().url()
+})
+
+export const SuggestToolDetailsResponse = zod.object({
+  "name": zod.string(),
+  "shortDescription": zod.string(),
+  "description": zod.string(),
+  "howItWorks": zod.string(),
+  "bestFor": zod.string(),
+  "pricing": zod.string(),
+  "categorySuggestions": zod.array(zod.object({
+  "name": zod.string(),
+  "description": zod.string()
+}))
+})
+
+
+/**
+ * @summary Suggest tools with similar use cases and workflows
+ */
+export const ListRelatedToolsParams = zod.object({
+  "slug": zod.coerce.string()
+})
+
+export const ListRelatedToolsResponseItem = zod.object({
+  "id": zod.number().int(),
+  "slug": zod.string(),
+  "name": zod.string(),
+  "shortDescription": zod.string(),
+  "categoryName": zod.string(),
+  "pricing": zod.string(),
+  "previewUrl": zod.string().nullish(),
+  "websiteUrl": zod.string().url(),
+  "featured": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "score": zod.number()
+})
+export const ListRelatedToolsResponse = zod.array(ListRelatedToolsResponseItem)
+
+

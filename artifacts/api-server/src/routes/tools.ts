@@ -12,6 +12,8 @@ import {
   UpdateToolResponse,
 } from "@workspace/api-zod";
 import { requireAdmin } from "../lib/auth";
+import { currentAdmin } from "../lib/auth";
+import { recordActivity } from "../lib/activity";
 import { all, get, run } from "../lib/sqlite";
 import { slugify } from "../lib/slugify";
 
@@ -104,6 +106,10 @@ router.get("/tools", (req, res): void => {
     return;
   }
   const { search, category, featured, status } = parsed.data;
+  if (status && status !== "published" && !currentAdmin(req)) {
+    res.status(401).json({ error: "Admin login required." });
+    return;
+  }
   const clauses: string[] = [];
   const params: unknown[] = [];
   if (status !== "all") {
@@ -168,6 +174,8 @@ router.post("/tools", requireAdmin, (req, res): void => {
       now,
     );
     const tool = findTool(Number(result.lastInsertRowid));
+    const admin = currentAdmin(req);
+    if (admin) recordActivity("admin", admin.id, admin.email, "tool_created", "tool", Number(result.lastInsertRowid), body.name);
     res.status(201).json(CreateToolResponse.parse(tool));
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : "Could not create tool" });
@@ -182,6 +190,10 @@ router.get("/tools/:id", (req, res): void => {
   }
   const tool = findTool(params.data.id);
   if (!tool) {
+    res.status(404).json({ error: "Tool not found" });
+    return;
+  }
+  if (tool.status !== "published" && !currentAdmin(req)) {
     res.status(404).json({ error: "Tool not found" });
     return;
   }
@@ -247,6 +259,8 @@ router.patch("/tools/:id", requireAdmin, (req, res): void => {
     res.status(404).json({ error: "Tool not found" });
     return;
   }
+  const admin = currentAdmin(req);
+  if (admin) recordActivity("admin", admin.id, admin.email, "tool_updated", "tool", tool.id, tool.name);
   res.json(UpdateToolResponse.parse(tool));
 });
 
@@ -261,6 +275,8 @@ router.delete("/tools/:id", requireAdmin, (req, res): void => {
     res.status(404).json({ error: "Tool not found" });
     return;
   }
+  const admin = currentAdmin(req);
+  if (admin) recordActivity("admin", admin.id, admin.email, "tool_deleted", "tool", params.data.id);
   res.sendStatus(204);
 });
 

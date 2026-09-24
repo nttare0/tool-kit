@@ -63,6 +63,7 @@ paths:
       operationId: createTool
       tags: [tools]
       summary: Create a tool
+      security: [{ adminSession: [] }]
       requestBody:
         required: true
         content:
@@ -99,6 +100,7 @@ paths:
       operationId: updateTool
       tags: [tools]
       summary: Update a tool
+      security: [{ adminSession: [] }]
       parameters:
         - name: id
           in: path
@@ -123,6 +125,7 @@ paths:
       operationId: deleteTool
       tags: [tools]
       summary: Delete a tool
+      security: [{ adminSession: [] }]
       parameters:
         - name: id
           in: path
@@ -151,6 +154,7 @@ paths:
       operationId: createCategory
       tags: [categories]
       summary: Create a category
+      security: [{ adminSession: [] }]
       requestBody:
         required: true
         content:
@@ -169,6 +173,7 @@ paths:
       operationId: updateCategory
       tags: [categories]
       summary: Update a category
+      security: [{ adminSession: [] }]
       parameters:
         - name: id
           in: path
@@ -193,6 +198,7 @@ paths:
       operationId: deleteCategory
       tags: [categories]
       summary: Delete a category
+      security: [{ adminSession: [] }]
       parameters:
         - name: id
           in: path
@@ -203,7 +209,306 @@ paths:
           description: Category deleted
         "404":
           description: Category not found
+  /auth/register:
+    post:
+      operationId: registerAccount
+      tags: [auth]
+      summary: Register a public member account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountRegistration"
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserAuthResponse"
+  /auth/user/login:
+    post:
+      operationId: loginUser
+      tags: [auth]
+      summary: Sign in a public member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountLogin"
+      responses:
+        "200":
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserAuthResponse"
+  /auth/user/status:
+    get:
+      operationId: getUserSession
+      tags: [auth]
+      summary: Get the current member session
+      responses:
+        "200":
+          description: Current member, or null when signed out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserStatusResponse"
+  /auth/user/logout:
+    post:
+      operationId: logoutUser
+      tags: [auth]
+      summary: Sign out a public member
+      responses:
+        "204":
+          description: Signed out
+  /account/profile:
+    get:
+      operationId: getAccountProfile
+      tags: [account]
+      summary: Get the signed-in member profile and interests
+      security: [{ userSession: [] }]
+      responses:
+        "200":
+          description: Member profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountProfile"
+    patch:
+      operationId: updateAccountProfile
+      tags: [account]
+      summary: Update member profile and category interests
+      security: [{ userSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountProfile"
+  /account/password:
+    post:
+      operationId: changeAccountPassword
+      tags: [account]
+      summary: Change the signed-in member password
+      security: [{ userSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordChange"
+      responses:
+        "200":
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasswordChangeResponse"
+  /account/submissions:
+    get:
+      operationId: listOwnSubmissions
+      tags: [submissions]
+      summary: List the signed-in member's tool submissions
+      security: [{ userSession: [] }]
+      responses:
+        "200":
+          description: The member's submissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubmissionListItem"
+  /submissions:
+    post:
+      operationId: createSubmission
+      tags: [submissions]
+      summary: Submit a tool for admin review
+      security: [{ userSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionInput"
+      responses:
+        "201":
+          description: Submission received
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionListItem"
+  /admin/submissions:
+    get:
+      operationId: listAdminSubmissions
+      tags: [admin]
+      summary: List all member tool submissions
+      security: [{ adminSession: [] }]
+      responses:
+        "200":
+          description: Submissions for admin review
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminSubmission"
+  /admin/submissions/{id}:
+    patch:
+      operationId: reviewSubmission
+      tags: [admin]
+      summary: Approve and publish, or reject a submission
+      security: [{ adminSession: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionReview"
+      responses:
+        "200":
+          description: Review saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionReviewResponse"
+  /admin/users:
+    get:
+      operationId: listAdminUsers
+      tags: [admin]
+      summary: List member accounts and submission counts
+      security: [{ adminSession: [] }]
+      responses:
+        "200":
+          description: Member accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ManagedUser"
+  /admin/users/{id}:
+    patch:
+      operationId: updateManagedUser
+      tags: [admin]
+      summary: Suspend or restore a member account
+      security: [{ adminSession: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ManagedUserStatus"
+      responses:
+        "200":
+          description: Account status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagedUserStatusResponse"
+  /admin/activity:
+    get:
+      operationId: listAdminActivity
+      tags: [admin]
+      summary: List recent user and admin activity
+      security: [{ adminSession: [] }]
+      responses:
+        "200":
+          description: Recent activity items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+  /admin/password:
+    post:
+      operationId: changeAdminPassword
+      tags: [admin]
+      summary: Change the signed-in admin password
+      security: [{ adminSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordChange"
+      responses:
+        "200":
+          description: Password changed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasswordChangeResponse"
+  /ai/suggest-tool:
+    post:
+      operationId: suggestToolDetails
+      tags: [ai]
+      summary: Draft tool listing details and category suggestions
+      security: [{ adminSession: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AiSuggestionInput"
+      responses:
+        "200":
+          description: Suggested listing fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiSuggestion"
+  /tools/{slug}/related:
+    get:
+      operationId: listRelatedTools
+      tags: [tools]
+      summary: Suggest tools with similar use cases and workflows
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Related tools
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RelatedTool"
 components:
+  securitySchemes:
+    adminSession:
+      type: apiKey
+      in: cookie
+      name: toolstack_session
+    userSession:
+      type: apiKey
+      in: cookie
+      name: toolstack_user_session
   schemas:
     HealthStatus:
       type: object
@@ -287,4 +592,201 @@ components:
         pricing: { type: string, minLength: 1 }
         featured: { type: boolean }
         status: { type: string }
+    AccountRegistration:
+      type: object
+      required: [displayName, email, password]
+      properties:
+        displayName: { type: string, minLength: 2, maxLength: 100 }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+        profession: { type: string, maxLength: 100 }
+    AccountLogin:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+    User:
+      type: object
+      required: [id, email, displayName, profession]
+      properties:
+        id: { type: integer }
+        email: { type: string, format: email }
+        displayName: { type: string }
+        profession: { type: string }
+    UserAuthResponse:
+      type: object
+      required: [user]
+      properties:
+        user: { $ref: "#/components/schemas/User" }
+    UserStatusResponse:
+      type: object
+      required: [user]
+      properties:
+        user:
+          anyOf:
+            - $ref: "#/components/schemas/User"
+            - type: "null"
+    AccountProfile:
+      type: object
+      required: [user, categoryIds]
+      properties:
+        user: { $ref: "#/components/schemas/User" }
+        categoryIds:
+          type: array
+          items: { type: integer }
+    AccountProfileUpdate:
+      type: object
+      required: [displayName, profession, categoryIds]
+      properties:
+        displayName: { type: string, minLength: 2, maxLength: 100 }
+        profession: { type: string, maxLength: 100 }
+        categoryIds:
+          type: array
+          maxItems: 12
+          items: { type: integer }
+    PasswordChange:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword: { type: string }
+        newPassword: { type: string, minLength: 8 }
+    PasswordChangeResponse:
+      type: object
+      required: [changed]
+      properties:
+        changed: { type: boolean }
+    SubmissionInput:
+      type: object
+      required: [name, websiteUrl, shortDescription, description, howItWorks, pricing]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        websiteUrl: { type: string, format: uri }
+        shortDescription: { type: string, minLength: 1, maxLength: 300 }
+        description: { type: string, minLength: 1 }
+        howItWorks: { type: string, minLength: 1 }
+        bestFor: { type: string }
+        pricing: { type: string, minLength: 1, maxLength: 100 }
+        logoUrl: { type: ["string", "null"] }
+    SubmissionListItem:
+      type: object
+      required: [id, name, websiteUrl, status, createdAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        websiteUrl: { type: string, format: uri }
+        status: { type: string, enum: [pending, approved, rejected] }
+        reviewNote: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        previewUrl: { type: ["string", "null"] }
+    AdminSubmission:
+      allOf:
+        - $ref: "#/components/schemas/SubmissionInput"
+        - type: object
+          required: [id, userId, userEmail, userName, status, createdAt, suggestedCategories]
+          properties:
+            id: { type: integer }
+            userId: { type: integer }
+            userEmail: { type: string, format: email }
+            userName: { type: string }
+            logoUrl: { type: ["string", "null"] }
+            previewUrl: { type: ["string", "null"] }
+            status: { type: string, enum: [pending, approved, rejected] }
+            reviewNote: { type: ["string", "null"] }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+            suggestedCategories:
+              type: array
+              items: { $ref: "#/components/schemas/CategorySuggestion" }
+    SubmissionReview:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [approved, rejected] }
+        categoryId: { type: integer }
+        reviewNote: { type: string, maxLength: 1000 }
+    SubmissionReviewResponse:
+      type: object
+      required: [id, status]
+      properties:
+        id: { type: integer }
+        status: { type: string, enum: [approved, rejected] }
+        publishedToolId: { type: integer }
+        reviewNote: { type: string }
+    ManagedUser:
+      type: object
+      required: [id, email, displayName, profession, status, createdAt, submissionCount, pendingCount]
+      properties:
+        id: { type: integer }
+        email: { type: string, format: email }
+        displayName: { type: string }
+        profession: { type: string }
+        status: { type: string, enum: [active, suspended] }
+        createdAt: { type: string, format: date-time }
+        submissionCount: { type: integer }
+        pendingCount: { type: integer }
+    ManagedUserStatus:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [active, suspended] }
+    ManagedUserStatusResponse:
+      type: object
+      required: [id, status]
+      properties:
+        id: { type: integer }
+        status: { type: string, enum: [active, suspended] }
+    ActivityItem:
+      type: object
+      required: [id, actorType, actorEmail, action, targetType, details, createdAt]
+      properties:
+        id: { type: integer }
+        actorType: { type: string, enum: [admin, user] }
+        actorEmail: { type: string, format: email }
+        action: { type: string }
+        targetType: { type: string }
+        targetId: { type: ["integer", "null"] }
+        details: { type: string }
+        createdAt: { type: string, format: date-time }
+    AiSuggestionInput:
+      type: object
+      required: [websiteUrl]
+      properties:
+        name: { type: string, maxLength: 120 }
+        websiteUrl: { type: string, format: uri }
+    CategorySuggestion:
+      type: object
+      required: [name, description]
+      properties:
+        name: { type: string }
+        description: { type: string }
+    AiSuggestion:
+      type: object
+      required: [name, shortDescription, description, howItWorks, bestFor, pricing, categorySuggestions]
+      properties:
+        name: { type: string }
+        shortDescription: { type: string }
+        description: { type: string }
+        howItWorks: { type: string }
+        bestFor: { type: string }
+        pricing: { type: string }
+        categorySuggestions:
+          type: array
+          items: { $ref: "#/components/schemas/CategorySuggestion" }
+    RelatedTool:
+      type: object
+      required: [id, slug, name, shortDescription, categoryName, pricing, websiteUrl, featured, createdAt, score]
+      properties:
+        id: { type: integer }
+        slug: { type: string }
+        name: { type: string }
+        shortDescription: { type: string }
+        categoryName: { type: string }
+        pricing: { type: string }
+        previewUrl: { type: ["string", "null"] }
+        websiteUrl: { type: string, format: uri }
+        featured: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        score: { type: number }
 

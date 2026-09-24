@@ -100,6 +100,270 @@ export interface ToolUpdate {
   status?: string;
 }
 
+export interface AccountRegistration {
+  /**
+     * @minLength 2
+     * @maxLength 100
+     */
+  displayName: string;
+  email: string;
+  /** @minLength 8 */
+  password: string;
+  /** @maxLength 100 */
+  profession?: string;
+}
+
+export interface AccountLogin {
+  email: string;
+  password: string;
+}
+
+export interface User {
+  id: number;
+  email: string;
+  displayName: string;
+  profession: string;
+}
+
+export interface UserAuthResponse {
+  user: User;
+}
+
+export interface UserStatusResponse {
+  user: User | null;
+}
+
+export interface AccountProfile {
+  user: User;
+  categoryIds: number[];
+}
+
+export interface AccountProfileUpdate {
+  /**
+     * @minLength 2
+     * @maxLength 100
+     */
+  displayName: string;
+  /** @maxLength 100 */
+  profession: string;
+  /** @maxItems 12 */
+  categoryIds: number[];
+}
+
+export interface PasswordChange {
+  currentPassword: string;
+  /** @minLength 8 */
+  newPassword: string;
+}
+
+export interface PasswordChangeResponse {
+  changed: boolean;
+}
+
+export interface SubmissionInput {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  websiteUrl: string;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  shortDescription: string;
+  /** @minLength 1 */
+  description: string;
+  /** @minLength 1 */
+  howItWorks: string;
+  bestFor?: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  pricing: string;
+  /** @nullable */
+  logoUrl?: string | null;
+}
+
+export type SubmissionListItemStatus = typeof SubmissionListItemStatus[keyof typeof SubmissionListItemStatus];
+
+
+export const SubmissionListItemStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export interface SubmissionListItem {
+  id: number;
+  name: string;
+  websiteUrl: string;
+  status: SubmissionListItemStatus;
+  /** @nullable */
+  reviewNote?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+  /** @nullable */
+  previewUrl?: string | null;
+}
+
+export type AdminSubmissionStatus = typeof AdminSubmissionStatus[keyof typeof AdminSubmissionStatus];
+
+
+export const AdminSubmissionStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export interface CategorySuggestion {
+  name: string;
+  description: string;
+}
+
+export type AdminSubmission = SubmissionInput & ({
+  id: number;
+  userId: number;
+  userEmail: string;
+  userName: string;
+  /** @nullable */
+  logoUrl?: string | null;
+  /** @nullable */
+  previewUrl?: string | null;
+  status: AdminSubmissionStatus;
+  /** @nullable */
+  reviewNote?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+  suggestedCategories: CategorySuggestion[];
+});
+
+export type SubmissionReviewStatus = typeof SubmissionReviewStatus[keyof typeof SubmissionReviewStatus];
+
+
+export const SubmissionReviewStatus = {
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export interface SubmissionReview {
+  status: SubmissionReviewStatus;
+  categoryId?: number;
+  /** @maxLength 1000 */
+  reviewNote?: string;
+}
+
+export type SubmissionReviewResponseStatus = typeof SubmissionReviewResponseStatus[keyof typeof SubmissionReviewResponseStatus];
+
+
+export const SubmissionReviewResponseStatus = {
+  approved: 'approved',
+  rejected: 'rejected',
+} as const;
+
+export interface SubmissionReviewResponse {
+  id: number;
+  status: SubmissionReviewResponseStatus;
+  publishedToolId?: number;
+  reviewNote?: string;
+}
+
+export type ManagedUserStatusProperty = typeof ManagedUserStatusProperty[keyof typeof ManagedUserStatusProperty];
+
+
+export const ManagedUserStatusProperty = {
+  active: 'active',
+  suspended: 'suspended',
+} as const;
+
+export interface ManagedUser {
+  id: number;
+  email: string;
+  displayName: string;
+  profession: string;
+  status: ManagedUserStatusProperty;
+  createdAt: string;
+  submissionCount: number;
+  pendingCount: number;
+}
+
+export type ManagedUserStatusStatus = typeof ManagedUserStatusStatus[keyof typeof ManagedUserStatusStatus];
+
+
+export const ManagedUserStatusStatus = {
+  active: 'active',
+  suspended: 'suspended',
+} as const;
+
+export interface ManagedUserStatus {
+  status: ManagedUserStatusStatus;
+}
+
+export type ManagedUserStatusResponseStatus = typeof ManagedUserStatusResponseStatus[keyof typeof ManagedUserStatusResponseStatus];
+
+
+export const ManagedUserStatusResponseStatus = {
+  active: 'active',
+  suspended: 'suspended',
+} as const;
+
+export interface ManagedUserStatusResponse {
+  id: number;
+  status: ManagedUserStatusResponseStatus;
+}
+
+export type ActivityItemActorType = typeof ActivityItemActorType[keyof typeof ActivityItemActorType];
+
+
+export const ActivityItemActorType = {
+  admin: 'admin',
+  user: 'user',
+} as const;
+
+export interface ActivityItem {
+  id: number;
+  actorType: ActivityItemActorType;
+  actorEmail: string;
+  action: string;
+  targetType: string;
+  /** @nullable */
+  targetId?: number | null;
+  details: string;
+  createdAt: string;
+}
+
+export interface AiSuggestionInput {
+  /** @maxLength 120 */
+  name?: string;
+  websiteUrl: string;
+}
+
+export interface AiSuggestion {
+  name: string;
+  shortDescription: string;
+  description: string;
+  howItWorks: string;
+  bestFor: string;
+  pricing: string;
+  categorySuggestions: CategorySuggestion[];
+}
+
+export interface RelatedTool {
+  id: number;
+  slug: string;
+  name: string;
+  shortDescription: string;
+  categoryName: string;
+  pricing: string;
+  /** @nullable */
+  previewUrl?: string | null;
+  websiteUrl: string;
+  featured: boolean;
+  createdAt: string;
+  score: number;
+}
+
 export type ListToolsParams = {
 search?: string;
 category?: string;

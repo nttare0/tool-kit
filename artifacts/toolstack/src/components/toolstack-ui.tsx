@@ -32,9 +32,10 @@ export function Shell({ children }: { children: ReactNode }) {
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/95 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 md:px-8">
         <BrandMark />
-        <nav className="flex items-center gap-2 text-xs text-muted-foreground">
+        <nav className="flex items-center gap-1 text-xs text-muted-foreground sm:gap-2">
           <Link href="/" data-testid="link-discover" className="rounded px-2.5 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">About</Link>
           <Link href="/directory" data-testid="link-directory" className="rounded px-2.5 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">Directory</Link>
+          <Link href="/account" data-testid="link-account" className="rounded px-2.5 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">Account</Link>
           <span className="hidden font-mono text-[10px] text-border sm:block">/</span>
           <span className="hidden px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[.12em] text-muted-foreground sm:block">Field guide for useful software</span>
           <ThemeToggle />
@@ -52,9 +53,13 @@ export function Shell({ children }: { children: ReactNode }) {
 }
 
 function Preview({ tool, className = '' }: { tool: Tool; className?: string }) {
-  return <div className={`relative h-full w-full bg-[radial-gradient(circle_at_85%_15%,rgba(216,255,99,.28),transparent_30%),linear-gradient(135deg,#24271d,#11130f_65%)] ${className}`}>
-    <div className="flex h-full w-full items-end justify-between p-5"><span className="font-serif text-6xl leading-none text-primary/80">{tool.name.slice(0, 1)}</span><span className="font-mono text-[9px] uppercase tracking-[.18em] text-foreground/45">preview unavailable</span></div>
-    {tool.previewUrl && <img src={tool.previewUrl} alt={`${tool.name} website preview`} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.025]" onError={(event) => { event.currentTarget.style.display = 'none'; }} />}
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [tool.previewUrl]);
+  return <div className={`relative h-full w-full overflow-hidden bg-[radial-gradient(circle_at_85%_15%,rgba(216,255,99,.28),transparent_30%),linear-gradient(135deg,#24271d,#11130f_65%)] ${className}`}>
+    {tool.previewUrl && !failed
+      ? <img src={tool.previewUrl} alt={`${tool.name} website screenshot`} width={1280} height={800} loading="lazy" className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.025]" onError={() => setFailed(true)} />
+      : <div className="flex h-full min-h-40 items-center justify-center p-6 text-center"><div><span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-white/15 bg-white/5 font-serif text-3xl text-primary">{tool.name.slice(0, 1).toUpperCase()}</span><span className="mt-4 block font-mono text-[10px] uppercase tracking-[.15em] text-white/65">{failed ? 'Screenshot not available' : 'Website preview'}</span></div></div>}
+    {tool.previewUrl && !failed && <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/45 to-transparent" />}
   </div>;
 }
 
@@ -70,9 +75,9 @@ export function CategoryPill({ category, active, onClick }: { category: Category
 }
 
 export function ToolCard({ tool, featured = false, compareSelected = false, onCompare }: { tool: Tool; featured?: boolean; compareSelected?: boolean; onCompare?: () => void }) {
-  return <article className={`group relative overflow-hidden border border-border bg-card transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-[0_18px_45px_rgba(0,0,0,.22)] ${featured ? 'md:grid md:grid-cols-[1.35fr_1fr]' : ''} ${compareSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`}>
-    <Link href={`/tool/${tool.slug}`} data-testid={`card-tool-${tool.id}`} className="block">
-      <div className={`relative overflow-hidden bg-secondary ${featured ? 'aspect-[16/10] md:aspect-auto md:min-h-[250px]' : 'aspect-[16/10]'}`}><Preview tool={tool} /></div>
+  return <article className={`group relative overflow-hidden border border-border bg-card transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/70 hover:shadow-[0_18px_45px_rgba(0,0,0,.22)] ${compareSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}`}>
+    <Link href={`/tool/${tool.slug}`} data-testid={`card-tool-${tool.id}`} className={`block ${featured ? 'md:grid md:grid-cols-[1.25fr_1fr] md:items-stretch' : ''}`}>
+      <div className={`relative overflow-hidden bg-secondary ${featured ? 'aspect-[16/10] md:aspect-auto md:min-h-[360px]' : 'aspect-[16/10]'}`}><Preview tool={tool} /></div>
       <div className={`flex flex-col justify-between p-4 ${featured ? 'md:p-6' : ''}`}>
         <div><div className="flex items-center justify-between gap-3"><span className="font-mono text-[10px] uppercase tracking-[.12em] text-accent">{tool.categoryName}</span><span className="font-mono text-[10px] uppercase tracking-[.1em] text-muted-foreground">{tool.pricing}</span></div><h3 className={`${featured ? 'mt-8 text-2xl' : 'mt-5 text-lg'} font-semibold tracking-[-.05em]`}>{tool.name}</h3><p className="mt-2 max-w-[36ch] text-sm leading-6 text-muted-foreground">{tool.shortDescription}</p></div>
         <div className="mt-8 flex items-center justify-between border-t border-border pt-3 text-[11px] text-muted-foreground"><span>{tool.featured ? 'Editor’s pick' : 'Open field note'}</span><ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" /></div>
