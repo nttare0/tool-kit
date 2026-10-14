@@ -88,20 +88,6 @@ export function requireAdmin(
   next();
 }
 
-export function setupAdmin(email: string, password: string) {
-  const existing = get<{ id: number }>("SELECT id FROM admins LIMIT 1");
-  if (existing) return false;
-  const salt = crypto.randomBytes(16).toString("hex");
-  run(
-    "INSERT INTO admins (email, password_hash, password_salt, created_at) VALUES (?, ?, ?, ?)",
-    email.trim().toLowerCase(),
-    hashPassword(password, salt),
-    salt,
-    new Date().toISOString(),
-  );
-  return true;
-}
-
 export function loginAdmin(email: string, password: string, response: Response) {
   const admin = get<AdminRow>(
     "SELECT id, email, password_hash, password_salt FROM admins WHERE email = ?",

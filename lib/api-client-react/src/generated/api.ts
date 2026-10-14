@@ -26,13 +26,18 @@ import type {
   AccountRegistration,
   ActivityItem,
   AdminSubmission,
+  AiChatInput,
+  AiChatResponse,
   AiSuggestion,
   AiSuggestionInput,
   Category,
   CategoryInput,
   CategoryUpdate,
+  FavoriteStatus,
   HealthStatus,
   ListToolsParams,
+  LlmProvider,
+  LlmProviderInput,
   ManagedUser,
   ManagedUserStatus,
   ManagedUserStatusResponse,
@@ -44,6 +49,9 @@ import type {
   SubmissionReview,
   SubmissionReviewResponse,
   Tool,
+  ToolCollection,
+  ToolCollectionDetail,
+  ToolCollectionInput,
   ToolInput,
   ToolUpdate,
   UserAuthResponse,
@@ -1407,6 +1415,739 @@ export function useListOwnSubmissions<TData = Awaited<ReturnType<typeof listOwnS
 
 
 
+export const getListFavoriteToolsUrl = () => {
+
+
+
+
+  return `/api/account/favorites`
+}
+
+/**
+ * @summary List tools saved by the signed-in member
+ */
+export const listFavoriteTools = async ( options?: Parameters<typeof customFetch>[1]): Promise<Tool[]> => {
+
+  return customFetch<Tool[]>(getListFavoriteToolsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListFavoriteToolsQueryKey = () => {
+    return [
+    `/api/account/favorites`
+    ] as const;
+    }
+
+
+export const getListFavoriteToolsQueryOptions = <TData = Awaited<ReturnType<typeof listFavoriteTools>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listFavoriteTools>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListFavoriteToolsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listFavoriteTools>>> = ({ signal }) => listFavoriteTools({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listFavoriteTools>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListFavoriteToolsQueryResult = NonNullable<Awaited<ReturnType<typeof listFavoriteTools>>>
+export type ListFavoriteToolsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List tools saved by the signed-in member
+ */
+
+export function useListFavoriteTools<TData = Awaited<ReturnType<typeof listFavoriteTools>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listFavoriteTools>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListFavoriteToolsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSaveFavoriteToolUrl = (toolId: number,) => {
+
+
+
+
+  return `/api/account/favorites/${toolId}`
+}
+
+/**
+ * @summary Save a published tool to member favorites
+ */
+export const saveFavoriteTool = async (toolId: number, options?: Parameters<typeof customFetch>[1]): Promise<FavoriteStatus> => {
+
+  return customFetch<FavoriteStatus>(getSaveFavoriteToolUrl(toolId),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getSaveFavoriteToolMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveFavoriteTool>>, TError,{toolId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveFavoriteTool>>, TError,{toolId: number}, TContext> => {
+
+const mutationKey = ['saveFavoriteTool'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveFavoriteTool>>, {toolId: number}> = (props) => {
+          const {toolId} = props ?? {};
+
+          return  saveFavoriteTool(toolId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveFavoriteToolMutationResult = NonNullable<Awaited<ReturnType<typeof saveFavoriteTool>>>
+
+    export type SaveFavoriteToolMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Save a published tool to member favorites
+ */
+export const useSaveFavoriteTool = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveFavoriteTool>>, TError,{toolId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveFavoriteTool>>,
+        TError,
+        {toolId: number},
+        TContext
+      > => {
+      return useMutation(getSaveFavoriteToolMutationOptions(options));
+    }
+
+export const getRemoveFavoriteToolUrl = (toolId: number,) => {
+
+
+
+
+  return `/api/account/favorites/${toolId}`
+}
+
+/**
+ * @summary Remove a tool from member favorites
+ */
+export const removeFavoriteTool = async (toolId: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getRemoveFavoriteToolUrl(toolId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRemoveFavoriteToolMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeFavoriteTool>>, TError,{toolId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeFavoriteTool>>, TError,{toolId: number}, TContext> => {
+
+const mutationKey = ['removeFavoriteTool'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeFavoriteTool>>, {toolId: number}> = (props) => {
+          const {toolId} = props ?? {};
+
+          return  removeFavoriteTool(toolId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveFavoriteToolMutationResult = NonNullable<Awaited<ReturnType<typeof removeFavoriteTool>>>
+
+    export type RemoveFavoriteToolMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove a tool from member favorites
+ */
+export const useRemoveFavoriteTool = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeFavoriteTool>>, TError,{toolId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removeFavoriteTool>>,
+        TError,
+        {toolId: number},
+        TContext
+      > => {
+      return useMutation(getRemoveFavoriteToolMutationOptions(options));
+    }
+
+export const getListCollectionsUrl = () => {
+
+
+
+
+  return `/api/account/collections`
+}
+
+/**
+ * @summary List member tool collections
+ */
+export const listCollections = async ( options?: Parameters<typeof customFetch>[1]): Promise<ToolCollection[]> => {
+
+  return customFetch<ToolCollection[]>(getListCollectionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCollectionsQueryKey = () => {
+    return [
+    `/api/account/collections`
+    ] as const;
+    }
+
+
+export const getListCollectionsQueryOptions = <TData = Awaited<ReturnType<typeof listCollections>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCollections>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCollectionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCollections>>> = ({ signal }) => listCollections({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCollections>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCollectionsQueryResult = NonNullable<Awaited<ReturnType<typeof listCollections>>>
+export type ListCollectionsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List member tool collections
+ */
+
+export function useListCollections<TData = Awaited<ReturnType<typeof listCollections>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCollections>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCollectionsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateCollectionUrl = () => {
+
+
+
+
+  return `/api/account/collections`
+}
+
+/**
+ * @summary Create a personal tool collection
+ */
+export const createCollection = async (toolCollectionInput: ToolCollectionInput, options?: Parameters<typeof customFetch>[1]): Promise<ToolCollection> => {
+
+  return customFetch<ToolCollection>(getCreateCollectionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(toolCollectionInput)
+  }
+);}
+
+
+
+
+
+export const getCreateCollectionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCollection>>, TError,{data: BodyType<ToolCollectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCollection>>, TError,{data: BodyType<ToolCollectionInput>}, TContext> => {
+
+const mutationKey = ['createCollection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCollection>>, {data: BodyType<ToolCollectionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createCollection(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCollectionMutationResult = NonNullable<Awaited<ReturnType<typeof createCollection>>>
+    export type CreateCollectionMutationBody = BodyType<ToolCollectionInput>
+    export type CreateCollectionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a personal tool collection
+ */
+export const useCreateCollection = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCollection>>, TError,{data: BodyType<ToolCollectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createCollection>>,
+        TError,
+        {data: BodyType<ToolCollectionInput>},
+        TContext
+      > => {
+      return useMutation(getCreateCollectionMutationOptions(options));
+    }
+
+export const getGetCollectionUrl = (id: number,) => {
+
+
+
+
+  return `/api/account/collections/${id}`
+}
+
+/**
+ * @summary Get a personal tool collection and its tools
+ */
+export const getCollection = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<ToolCollectionDetail> => {
+
+  return customFetch<ToolCollectionDetail>(getGetCollectionUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCollectionQueryKey = (id: number,) => {
+    return [
+    `/api/account/collections/${id}`
+    ] as const;
+    }
+
+
+export const getGetCollectionQueryOptions = <TData = Awaited<ReturnType<typeof getCollection>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCollection>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCollectionQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCollection>>> = ({ signal }) => getCollection(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCollection>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCollectionQueryResult = NonNullable<Awaited<ReturnType<typeof getCollection>>>
+export type GetCollectionQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get a personal tool collection and its tools
+ */
+
+export function useGetCollection<TData = Awaited<ReturnType<typeof getCollection>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCollection>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCollectionQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateCollectionUrl = (id: number,) => {
+
+
+
+
+  return `/api/account/collections/${id}`
+}
+
+/**
+ * @summary Update a personal tool collection
+ */
+export const updateCollection = async (id: number,
+    toolCollectionInput: ToolCollectionInput, options?: Parameters<typeof customFetch>[1]): Promise<ToolCollection> => {
+
+  return customFetch<ToolCollection>(getUpdateCollectionUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(toolCollectionInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateCollectionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCollection>>, TError,{id: number;data: BodyType<ToolCollectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateCollection>>, TError,{id: number;data: BodyType<ToolCollectionInput>}, TContext> => {
+
+const mutationKey = ['updateCollection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCollection>>, {id: number;data: BodyType<ToolCollectionInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateCollection(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateCollectionMutationResult = NonNullable<Awaited<ReturnType<typeof updateCollection>>>
+    export type UpdateCollectionMutationBody = BodyType<ToolCollectionInput>
+    export type UpdateCollectionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a personal tool collection
+ */
+export const useUpdateCollection = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCollection>>, TError,{id: number;data: BodyType<ToolCollectionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateCollection>>,
+        TError,
+        {id: number;data: BodyType<ToolCollectionInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateCollectionMutationOptions(options));
+    }
+
+export const getDeleteCollectionUrl = (id: number,) => {
+
+
+
+
+  return `/api/account/collections/${id}`
+}
+
+/**
+ * @summary Delete a personal tool collection
+ */
+export const deleteCollection = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteCollectionUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteCollectionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCollection>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCollection>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteCollection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCollection>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteCollection(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCollectionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCollection>>>
+
+    export type DeleteCollectionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a personal tool collection
+ */
+export const useDeleteCollection = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCollection>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCollection>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteCollectionMutationOptions(options));
+    }
+
+export const getAddToolToCollectionUrl = (id: number,
+    toolId: number,) => {
+
+
+
+
+  return `/api/account/collections/${id}/tools/${toolId}`
+}
+
+/**
+ * @summary Add a published tool to a personal collection
+ */
+export const addToolToCollection = async (id: number,
+    toolId: number, options?: Parameters<typeof customFetch>[1]): Promise<FavoriteStatus> => {
+
+  return customFetch<FavoriteStatus>(getAddToolToCollectionUrl(id,toolId),
+  {
+    ...options,
+    method: 'PUT'
+
+
+  }
+);}
+
+
+
+
+
+export const getAddToolToCollectionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addToolToCollection>>, TError,{id: number;toolId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addToolToCollection>>, TError,{id: number;toolId: number}, TContext> => {
+
+const mutationKey = ['addToolToCollection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addToolToCollection>>, {id: number;toolId: number}> = (props) => {
+          const {id,toolId} = props ?? {};
+
+          return  addToolToCollection(id,toolId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddToolToCollectionMutationResult = NonNullable<Awaited<ReturnType<typeof addToolToCollection>>>
+
+    export type AddToolToCollectionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Add a published tool to a personal collection
+ */
+export const useAddToolToCollection = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addToolToCollection>>, TError,{id: number;toolId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addToolToCollection>>,
+        TError,
+        {id: number;toolId: number},
+        TContext
+      > => {
+      return useMutation(getAddToolToCollectionMutationOptions(options));
+    }
+
+export const getRemoveToolFromCollectionUrl = (id: number,
+    toolId: number,) => {
+
+
+
+
+  return `/api/account/collections/${id}/tools/${toolId}`
+}
+
+/**
+ * @summary Remove a tool from a personal collection
+ */
+export const removeToolFromCollection = async (id: number,
+    toolId: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getRemoveToolFromCollectionUrl(id,toolId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRemoveToolFromCollectionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeToolFromCollection>>, TError,{id: number;toolId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeToolFromCollection>>, TError,{id: number;toolId: number}, TContext> => {
+
+const mutationKey = ['removeToolFromCollection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeToolFromCollection>>, {id: number;toolId: number}> = (props) => {
+          const {id,toolId} = props ?? {};
+
+          return  removeToolFromCollection(id,toolId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveToolFromCollectionMutationResult = NonNullable<Awaited<ReturnType<typeof removeToolFromCollection>>>
+
+    export type RemoveToolFromCollectionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove a tool from a personal collection
+ */
+export const useRemoveToolFromCollection = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeToolFromCollection>>, TError,{id: number;toolId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removeToolFromCollection>>,
+        TError,
+        {id: number;toolId: number},
+        TContext
+      > => {
+      return useMutation(getRemoveToolFromCollectionMutationOptions(options));
+    }
+
 export const getCreateSubmissionUrl = () => {
 
 
@@ -1922,6 +2663,296 @@ export const useChangeAdminPassword = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getChangeAdminPasswordMutationOptions(options));
+    }
+
+export const getListLlmProvidersUrl = () => {
+
+
+
+
+  return `/api/admin/llm-providers`
+}
+
+/**
+ * @summary List configured LLM provider metadata and key status
+ */
+export const listLlmProviders = async ( options?: Parameters<typeof customFetch>[1]): Promise<LlmProvider[]> => {
+
+  return customFetch<LlmProvider[]>(getListLlmProvidersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListLlmProvidersQueryKey = () => {
+    return [
+    `/api/admin/llm-providers`
+    ] as const;
+    }
+
+
+export const getListLlmProvidersQueryOptions = <TData = Awaited<ReturnType<typeof listLlmProviders>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listLlmProviders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListLlmProvidersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listLlmProviders>>> = ({ signal }) => listLlmProviders({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listLlmProviders>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListLlmProvidersQueryResult = NonNullable<Awaited<ReturnType<typeof listLlmProviders>>>
+export type ListLlmProvidersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List configured LLM provider metadata and key status
+ */
+
+export function useListLlmProviders<TData = Awaited<ReturnType<typeof listLlmProviders>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listLlmProviders>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListLlmProvidersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateLlmProviderUrl = () => {
+
+
+
+
+  return `/api/admin/llm-providers`
+}
+
+/**
+ * @summary Configure an LLM provider using a Replit Secrets variable name
+ */
+export const createLlmProvider = async (llmProviderInput: LlmProviderInput, options?: Parameters<typeof customFetch>[1]): Promise<LlmProvider> => {
+
+  return customFetch<LlmProvider>(getCreateLlmProviderUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(llmProviderInput)
+  }
+);}
+
+
+
+
+
+export const getCreateLlmProviderMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createLlmProvider>>, TError,{data: BodyType<LlmProviderInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createLlmProvider>>, TError,{data: BodyType<LlmProviderInput>}, TContext> => {
+
+const mutationKey = ['createLlmProvider'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createLlmProvider>>, {data: BodyType<LlmProviderInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createLlmProvider(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateLlmProviderMutationResult = NonNullable<Awaited<ReturnType<typeof createLlmProvider>>>
+    export type CreateLlmProviderMutationBody = BodyType<LlmProviderInput>
+    export type CreateLlmProviderMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Configure an LLM provider using a Replit Secrets variable name
+ */
+export const useCreateLlmProvider = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createLlmProvider>>, TError,{data: BodyType<LlmProviderInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createLlmProvider>>,
+        TError,
+        {data: BodyType<LlmProviderInput>},
+        TContext
+      > => {
+      return useMutation(getCreateLlmProviderMutationOptions(options));
+    }
+
+export const getDeleteLlmProviderUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/llm-providers/${id}`
+}
+
+/**
+ * @summary Remove an LLM provider configuration
+ */
+export const deleteLlmProvider = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteLlmProviderUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteLlmProviderMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLlmProvider>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteLlmProvider>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteLlmProvider'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteLlmProvider>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteLlmProvider(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteLlmProviderMutationResult = NonNullable<Awaited<ReturnType<typeof deleteLlmProvider>>>
+
+    export type DeleteLlmProviderMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove an LLM provider configuration
+ */
+export const useDeleteLlmProvider = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLlmProvider>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteLlmProvider>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteLlmProviderMutationOptions(options));
+    }
+
+export const getChatWithToolstackAssistantUrl = () => {
+
+
+
+
+  return `/api/ai/chat`
+}
+
+/**
+ * @summary Chat with an admin assistant that can draft tool listings
+ */
+export const chatWithToolstackAssistant = async (aiChatInput: AiChatInput, options?: Parameters<typeof customFetch>[1]): Promise<AiChatResponse> => {
+
+  return customFetch<AiChatResponse>(getChatWithToolstackAssistantUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(aiChatInput)
+  }
+);}
+
+
+
+
+
+export const getChatWithToolstackAssistantMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof chatWithToolstackAssistant>>, TError,{data: BodyType<AiChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof chatWithToolstackAssistant>>, TError,{data: BodyType<AiChatInput>}, TContext> => {
+
+const mutationKey = ['chatWithToolstackAssistant'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof chatWithToolstackAssistant>>, {data: BodyType<AiChatInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  chatWithToolstackAssistant(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChatWithToolstackAssistantMutationResult = NonNullable<Awaited<ReturnType<typeof chatWithToolstackAssistant>>>
+    export type ChatWithToolstackAssistantMutationBody = BodyType<AiChatInput>
+    export type ChatWithToolstackAssistantMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Chat with an admin assistant that can draft tool listings
+ */
+export const useChatWithToolstackAssistant = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof chatWithToolstackAssistant>>, TError,{data: BodyType<AiChatInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof chatWithToolstackAssistant>>,
+        TError,
+        {data: BodyType<AiChatInput>},
+        TContext
+      > => {
+      return useMutation(getChatWithToolstackAssistantMutationOptions(options));
     }
 
 export const getSuggestToolDetailsUrl = () => {

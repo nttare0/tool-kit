@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
-import { Activity, Check, Edit3, FolderPlus, LogOut, Plus, Save, Sparkles, Star, Trash2, Users, X } from 'lucide-react';
+import { Activity, Bot, Check, Edit3, FolderPlus, LogOut, Plus, Save, Send, Sparkles, Star, Trash2, Users, X } from 'lucide-react';
 import type { Category, Tool } from '@workspace/api-client-react';
 import { BrandMark, LoadingGrid, Logo, QueryError, Shell } from '@/components/toolstack-ui';
 
@@ -10,8 +10,10 @@ type CategoryForm = { name: string; description: string; accent: string };
 type Submission = { id: number; userEmail: string; userName: string; name: string; shortDescription: string; description: string; howItWorks: string; bestFor: string; websiteUrl: string; logoUrl: string | null; previewUrl: string | null; pricing: string; suggestedCategories: Array<{ name: string; description: string }>; status: string; reviewNote: string | null; createdAt: string };
 type ManagedUser = { id: number; email: string; displayName: string; profession: string; status: string; createdAt: string; submissionCount: number; pendingCount: number };
 type ActivityItem = { id: number; actorType: string; actorEmail: string; action: string; targetType: string; targetId: number | null; details: string; createdAt: string };
-type Suggestion = { name: string; shortDescription: string; description: string; howItWorks: string; bestFor: string; pricing: string; categorySuggestions: Array<{ name: string; description: string }> };
-type Tab = 'tools' | 'categories' | 'submissions' | 'users' | 'activity' | 'settings';
+type Suggestion = { name: string; websiteUrl?: string; shortDescription: string; description: string; howItWorks: string; bestFor: string; pricing: string; categorySuggestions: Array<{ name: string; description: string }> };
+type Provider = { id: string; name: string; adapter: 'openai-compatible' | 'openai' | 'anthropic' | 'gemini'; baseUrl: string; model: string; apiKeySecretName: string; configured: boolean; createdAt: string };
+type ChatMessage = { role: 'user' | 'assistant'; content: string };
+type Tab = 'tools' | 'categories' | 'submissions' | 'users' | 'activity' | 'assistant' | 'settings';
 
 const blankTool: ToolForm = { name: '', shortDescription: '', description: '', howItWorks: '', bestFor: '', websiteUrl: '', logoUrl: '', previewUrl: '', categoryId: 0, pricing: 'Free', featured: false, status: 'published' };
 const blankCategory: CategoryForm = { name: '', description: '', accent: '#D8FF63' };
@@ -50,7 +52,7 @@ function AuthGate({ status, onAuthenticated }: { status: AuthStatus; onAuthentic
     setBusy(true);
     setMessage('');
     try {
-      await adminRequest(status.configured ? 'auth/login' : 'auth/setup', { email, password });
+      await adminRequest('auth/login', { email, password });
       onAuthenticated();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Could not sign in.');
@@ -58,10 +60,11 @@ function AuthGate({ status, onAuthenticated }: { status: AuthStatus; onAuthentic
       setBusy(false);
     }
   };
+  if (!status.configured) return <Shell><main className="mx-auto flex min-h-[70vh] max-w-md items-center px-4 py-12 md:px-8"><section className="w-full border border-border bg-card p-7 md:p-9"><BrandMark /><div className="mt-10 font-mono text-[10px] uppercase tracking-[.16em] text-muted-foreground">Restricted workspace</div><h1 className="mt-3 text-3xl font-semibold tracking-[-.06em]">Admin access unavailable.</h1><p className="mt-3 text-sm leading-6 text-muted-foreground">Admin account creation is disabled on this page. An administrator must provision an account privately before signing in.</p></section></main></Shell>;
   return <Shell><main className="mx-auto flex min-h-[70vh] max-w-md items-center px-4 py-12 md:px-8"><form onSubmit={submit} className="w-full border border-border bg-card p-7 md:p-9">
-    <BrandMark /><div className="mt-10 font-mono text-[10px] uppercase tracking-[.16em] text-muted-foreground">{status.configured ? 'Restricted workspace' : 'One-time first admin setup'}</div><h1 className="mt-3 text-3xl font-semibold tracking-[-.06em]">{status.configured ? 'Admin sign in.' : 'Create the first admin.'}</h1><p className="mt-3 text-sm leading-6 text-muted-foreground">{status.configured ? 'Only an admin account can open this workspace.' : 'This one-time setup is available only before an admin account exists.'}</p>
-    <label className="mt-6 block text-xs text-muted-foreground">Email<input type="email" autoComplete="email" required className={`${inputClass} mt-1.5`} value={email} onChange={(e) => setEmail(e.target.value)} /></label><label className="mt-4 block text-xs text-muted-foreground">Password (8+ characters)<input type="password" minLength={8} autoComplete={status.configured ? 'current-password' : 'new-password'} required className={`${inputClass} mt-1.5`} value={password} onChange={(e) => setPassword(e.target.value)} /></label>
-    {message && <p role="alert" className="mt-4 border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{message}</p>}<button disabled={busy} className="mt-7 h-11 w-full bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50">{busy ? 'Working…' : status.configured ? 'Sign in' : 'Create admin account'}</button>
+    <BrandMark /><div className="mt-10 font-mono text-[10px] uppercase tracking-[.16em] text-muted-foreground">Restricted workspace</div><h1 className="mt-3 text-3xl font-semibold tracking-[-.06em]">Admin sign in.</h1><p className="mt-3 text-sm leading-6 text-muted-foreground">Only the provisioned admin account can open this workspace. Member registration is separate.</p>
+    <label className="mt-6 block text-xs text-muted-foreground">Email<input type="email" autoComplete="email" required className={`${inputClass} mt-1.5`} value={email} onChange={(e) => setEmail(e.target.value)} /></label><label className="mt-4 block text-xs text-muted-foreground">Password<input type="password" autoComplete="current-password" required className={`${inputClass} mt-1.5`} value={password} onChange={(e) => setPassword(e.target.value)} /></label>
+    {message && <p role="alert" className="mt-4 border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{message}</p>}<button disabled={busy} className="mt-7 h-11 w-full bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50">{busy ? 'Working…' : 'Sign in'}</button>
   </form></main></Shell>;
 }
 
@@ -100,6 +103,14 @@ function AdminWorkspace({ adminEmail, onLogout }: { adminEmail: string; onLogout
   const [submissionCategories, setSubmissionCategories] = useState<Record<number, number>>({});
   const [reviewNotes, setReviewNotes] = useState<Record<number, string>>({});
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '' });
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [providerForm, setProviderForm] = useState({ name: '', adapter: 'openai-compatible' as Provider['adapter'], baseUrl: '', model: '', apiKeySecretName: 'TOOLSTACK_LLM_CUSTOM_API_KEY' });
+  const [activeProvider, setActiveProvider] = useState('');
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatBusy, setChatBusy] = useState(false);
+  const [chatError, setChatError] = useState('');
+  const [chatDraft, setChatDraft] = useState<Suggestion | null>(null);
 
   const loadCore = async () => {
     setCoreLoading(true);
@@ -117,6 +128,21 @@ function AdminWorkspace({ adminEmail, onLogout }: { adminEmail: string; onLogout
     }
   };
   const loadSection = async (section: Tab) => {
+    if (section === 'settings' || section === 'assistant') {
+      setSectionLoading(true);
+      try {
+        const nextProviders = await adminRequest<Provider[]>('admin/llm-providers');
+        setProviders(nextProviders);
+        setActiveProvider((current) => current && nextProviders.some((item) => item.id === current)
+          ? current
+          : nextProviders.find((item) => item.configured)?.id || nextProviders[0]?.id || '');
+      } catch (loadError) {
+        setError(loadError instanceof Error ? loadError.message : 'Could not load LLM provider settings.');
+      } finally {
+        setSectionLoading(false);
+      }
+      return;
+    }
     if (!['submissions', 'users', 'activity'].includes(section)) return;
     setSectionLoading(true);
     try {
@@ -170,7 +196,7 @@ function AdminWorkspace({ adminEmail, onLogout }: { adminEmail: string; onLogout
     try {
       const data = { ...toolForm, categoryId: Number(toolForm.categoryId), logoUrl: toolForm.logoUrl || null, previewUrl: toolForm.previewUrl || null };
       await adminRequest(editingTool ? `tools/${editingTool.id}` : 'tools', data, editingTool ? 'PATCH' : 'POST');
-      setNotice(editingTool ? 'Tool updated.' : 'Tool added to the public directory.');
+      setNotice(editingTool ? 'Tool updated.' : data.status === 'draft' ? 'Draft saved privately. Publish it from the tools list when it is ready.' : 'Tool added to the public directory.');
       setToolOpen(false);
       await loadCore();
       void loadSection('activity');
@@ -185,7 +211,7 @@ function AdminWorkspace({ adminEmail, onLogout }: { adminEmail: string; onLogout
     setAiBusy(true);
     setAiError('');
     try {
-      const result = await adminRequest<Suggestion>('ai/suggest-tool', { name: toolForm.name, websiteUrl: toolForm.websiteUrl });
+      const result = await adminRequest<Suggestion>('ai/suggest-tool', { name: toolForm.name, websiteUrl: toolForm.websiteUrl, providerId: activeProvider || undefined });
       setToolForm((old) => ({ ...old, ...result, websiteUrl: old.websiteUrl }));
       setSuggestedCategories(result.categorySuggestions || []);
       setNotice('AI draft added to the form. Verify every claim and pricing detail before publishing.');
@@ -272,12 +298,88 @@ function AdminWorkspace({ adminEmail, onLogout }: { adminEmail: string; onLogout
     }
   };
 
+  const saveProvider = async (event: FormEvent) => {
+    event.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      const created = await adminRequest<Provider>('admin/llm-providers', providerForm, 'POST');
+      setProviders((current) => [...current, created]);
+      setActiveProvider(created.id);
+      setProviderForm({ name: '', adapter: 'openai-compatible', baseUrl: '', model: '', apiKeySecretName: 'TOOLSTACK_LLM_CUSTOM_API_KEY' });
+      setNotice(`${created.name} provider saved. Add its key in Replit Secrets to enable it.`);
+    } catch (providerError) {
+      setError(providerError instanceof Error ? providerError.message : 'Could not save this provider.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const deleteProvider = async (provider: Provider) => {
+    if (!window.confirm(`Remove the ${provider.name} provider configuration? The Replit Secret will remain and must be removed separately.`)) return;
+    try {
+      await adminRequest(`admin/llm-providers/${provider.id}`, undefined, 'DELETE');
+      const next = providers.filter((item) => item.id !== provider.id);
+      setProviders(next);
+      if (activeProvider === provider.id) setActiveProvider(next.find((item) => item.configured)?.id || next[0]?.id || '');
+      setNotice(`${provider.name} configuration removed. Remove ${provider.apiKeySecretName} separately in Replit Secrets if it is no longer needed.`);
+    } catch (providerError) {
+      setError(providerError instanceof Error ? providerError.message : 'Could not remove this provider.');
+    }
+  };
+
+  const sendChat = async (event: FormEvent) => {
+    event.preventDefault();
+    const content = chatInput.trim();
+    if (!content || chatBusy || !activeProvider) return;
+    const nextMessages: ChatMessage[] = [...chatMessages, { role: 'user', content }];
+    const history = nextMessages.slice(-12);
+    setChatMessages(nextMessages);
+    setChatInput('');
+    setChatBusy(true);
+    setChatError('');
+    try {
+      const response = await adminRequest<{ reply: string; draft: Suggestion | null }>('ai/chat', { providerId: activeProvider, messages: history });
+      setChatMessages((current) => [...current, { role: 'assistant', content: response.reply }]);
+      if (response.draft) {
+        setChatDraft(response.draft);
+      }
+    } catch (chatRequestError) {
+      setChatError(chatRequestError instanceof Error ? chatRequestError.message : 'Could not reach the assistant.');
+    } finally {
+      setChatBusy(false);
+    }
+  };
+
+  const applyChatDraft = () => {
+    if (!chatDraft) return;
+    const { categorySuggestions, ...fields } = chatDraft;
+    setTab('tools');
+    openTool();
+    setToolForm({
+      ...blankTool,
+      name: fields.name,
+      websiteUrl: fields.websiteUrl || '',
+      shortDescription: fields.shortDescription,
+      description: fields.description,
+      howItWorks: fields.howItWorks,
+      bestFor: fields.bestFor,
+      pricing: fields.pricing || 'Check pricing',
+      categoryId: categories[0]?.id || 0,
+      status: 'draft',
+    });
+    setSuggestedCategories(categorySuggestions || []);
+    setChatDraft(null);
+    setNotice('AI draft loaded into the tool editor. Review each field before saving; it will remain unpublished.');
+  };
+
   const tabs: Array<[Tab, string, typeof Users]> = [
     ['tools', `Tools (${tools.length})`, Plus],
     ['categories', `Categories (${categories.length})`, FolderPlus],
     ['submissions', `Submissions (${submissions.filter((item) => item.status === 'pending').length || '…'})`, Check],
     ['users', 'Users', Users],
     ['activity', 'Activity', Activity],
+    ['assistant', 'AI assistant', Sparkles],
     ['settings', 'Settings', Sparkles],
   ];
   const field = (label: string, value: string | number, onChange: (value: string) => void, options: { area?: boolean; required?: boolean; type?: string } = {}) => <label className="block text-xs text-muted-foreground"><span className="mb-1.5 block text-[11px] font-medium text-foreground">{label}</span>{options.area ? <textarea value={value} required={options.required} onChange={(e) => onChange(e.target.value)} className={areaClass} /> : <input type={options.type || 'text'} value={value} required={options.required} onChange={(e) => onChange(e.target.value)} className={inputClass} />}</label>;
@@ -298,7 +400,40 @@ function AdminWorkspace({ adminEmail, onLogout }: { adminEmail: string; onLogout
 
       {tab === 'activity' && <section className="mt-7"><div className="flex items-center gap-3"><Activity className="h-5 w-5 text-primary" /><div><div className="font-mono text-[10px] uppercase tracking-[.16em] text-muted-foreground">Audit trail</div><h2 className="mt-1 text-2xl font-semibold">Recent activity</h2></div></div>{sectionLoading ? <div className="py-8"><LoadingGrid /></div> : <div className="mt-5 divide-y divide-border border border-border">{activities.map((item) => <article key={item.id} className="grid gap-2 p-4 sm:grid-cols-[1fr_auto] sm:items-center"><div><div className="text-sm"><span className="font-medium">{item.actorEmail}</span><span className="text-muted-foreground"> · {item.action.replaceAll('_', ' ')}{item.details ? ` · ${item.details}` : ''}</span></div><div className="mt-1 text-[10px] font-mono uppercase text-muted-foreground">{item.actorType} / {item.targetType}{item.targetId ? ` #${item.targetId}` : ''}</div></div><time className="text-xs text-muted-foreground">{new Date(item.createdAt).toLocaleString()}</time></article>)}{!activities.length && <p className="p-8 text-center text-sm text-muted-foreground">Activity will appear here as people use Toolstack.</p>}</div>}</section>}
 
-      {tab === 'settings' && <section className="mt-7 grid gap-6 lg:grid-cols-2"><div className="border border-border bg-card p-6"><div className="font-mono text-[10px] uppercase tracking-[.16em] text-muted-foreground">Admin security</div><h2 className="mt-2 text-2xl font-semibold">Change password</h2><form onSubmit={changePassword} className="mt-5 space-y-4"><label className="block text-xs text-muted-foreground">Current password<input required type="password" autoComplete="current-password" value={passwordForm.currentPassword} onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} className={`${inputClass} mt-1.5`} /></label><label className="block text-xs text-muted-foreground">New password (8+ characters)<input required minLength={8} type="password" autoComplete="new-password" value={passwordForm.newPassword} onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} className={`${inputClass} mt-1.5`} /></label><button disabled={busy} className="bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">{busy ? 'Saving…' : 'Update password'}</button></form></div><div className="border border-border bg-primary/5 p-6"><Users className="h-5 w-5 text-primary" /><h2 className="mt-4 text-xl font-semibold">Admin controls stay private</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Only authenticated admins can view submissions, member details, activity history, and draft tools. New member-submitted listings remain hidden until approval.</p></div></section>}
+      {tab === 'assistant' && <section className="mt-7 grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="overflow-hidden rounded-lg border border-border bg-card">
+          <header className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-md bg-primary/10 text-primary"><Bot className="h-4 w-4" /></span><div><h2 className="font-semibold">Toolstack assistant</h2><p className="mt-0.5 text-xs text-muted-foreground">Ask for a listing draft; review it before it is saved or published.</p></div></div>
+            <label className="text-xs text-muted-foreground">LLM provider<select value={activeProvider} onChange={(e) => setActiveProvider(e.target.value)} className={`${inputClass} mt-1 min-w-44`}><option value="">Choose provider</option>{providers.map((provider) => <option key={provider.id} value={provider.id} disabled={!provider.configured}>{provider.name}{provider.configured ? '' : ' · key missing'}</option>)}</select></label>
+          </header>
+          <div aria-live="polite" className="flex min-h-[340px] max-h-[55vh] flex-col gap-3 overflow-y-auto bg-background/70 p-4">
+            {!chatMessages.length && <div className="m-auto max-w-sm text-center"><Sparkles className="mx-auto h-6 w-6 text-primary" /><p className="mt-3 text-sm font-medium">What should we work on?</p><p className="mt-2 text-xs leading-5 text-muted-foreground">For example: “Draft a listing for Figma at https://figma.com.” The assistant will prepare a private draft for your review.</p></div>}
+            {chatMessages.map((message, index) => <div key={`${index}-${message.role}`} className={`max-w-[85%] rounded-lg border px-4 py-3 text-sm leading-6 ${message.role === 'user' ? 'ml-auto border-primary/30 bg-primary/10' : 'mr-auto border-border bg-card'}`}><span className="mb-1 block font-mono text-[9px] uppercase tracking-[.12em] text-muted-foreground">{message.role === 'user' ? 'You' : 'Assistant'}</span>{message.content}</div>)}
+            {chatBusy && <div className="mr-auto rounded-lg border border-border bg-card px-4 py-3 text-xs text-muted-foreground">Preparing a response…</div>}
+          </div>
+          {chatError && <p role="alert" className="mx-4 mt-3 border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">{chatError}</p>}
+          {chatDraft && <div className="mx-4 mt-3 flex flex-col justify-between gap-3 border border-primary/40 bg-primary/5 p-4 sm:flex-row sm:items-center"><div><div className="font-mono text-[9px] uppercase tracking-[.12em] text-primary">Private draft ready</div><p className="mt-1 text-sm font-medium">{chatDraft.name || 'New tool listing'}{chatDraft.websiteUrl && <span className="ml-2 text-xs font-normal text-muted-foreground">{chatDraft.websiteUrl}</span>}</p><p className="mt-1 text-xs text-muted-foreground">Review and edit every field. Saving now keeps it unpublished.</p></div><button type="button" onClick={applyChatDraft} className="shrink-0 bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground">Review draft</button></div>}
+      <form onSubmit={sendChat} className="flex gap-2 border-t border-border p-3 sm:p-4"><label className="sr-only" htmlFor="admin-ai-chat">Message the assistant</label><input id="admin-ai-chat" value={chatInput} onChange={(e) => setChatInput(e.target.value)} maxLength={4000} placeholder="Ask a question or request a tool listing…" className={`${inputClass} min-w-0 flex-1`} disabled={!activeProvider || chatBusy} /><button disabled={!chatInput.trim() || !activeProvider || !providers.find((provider) => provider.id === activeProvider)?.configured || chatBusy} className="inline-flex h-10 items-center gap-2 bg-primary px-4 text-xs font-semibold text-primary-foreground disabled:opacity-40"><Send className="h-3.5 w-3.5" /> Send</button></form>
+        </div>
+        <aside className="border border-border bg-secondary/40 p-5"><div className="font-mono text-[10px] uppercase tracking-[.15em] text-muted-foreground">What it can do</div><ul className="mt-4 space-y-4 text-sm leading-6"><li><strong className="font-medium">Prepare listings.</strong><span className="block text-xs text-muted-foreground">Give a name and website URL; the assistant fills a draft.</span></li><li><strong className="font-medium">Keep publishing manual.</strong><span className="block text-xs text-muted-foreground">Drafts stay hidden until you review and publish them.</span></li><li><strong className="font-medium">Bring your own provider.</strong><span className="block text-xs text-muted-foreground">Configure the endpoint and model in Settings. Keys live in Replit Secrets.</span></li></ul>{!providers.some((provider) => provider.configured) && <button type="button" onClick={() => setTab('settings')} className="mt-5 w-full border border-border bg-background px-3 py-2 text-xs font-medium hover:border-primary">Configure a provider</button>}</aside>
+      </section>}
+
+      {tab === 'settings' && <section className="mt-7 grid gap-6 xl:grid-cols-[1.2fr_.8fr]">
+        <div className="space-y-6">
+          <div className="border border-border bg-card p-6"><div className="font-mono text-[10px] uppercase tracking-[.16em] text-muted-foreground">Language model connections</div><h2 className="mt-2 text-2xl font-semibold">Bring your own API</h2><p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Connect OpenAI-compatible services, including custom endpoints, or use dedicated OpenAI, Anthropic, and Gemini adapters. API keys are never stored in Toolstack’s database or shown here.</p>
+            <form onSubmit={saveProvider} className="mt-6 grid gap-4 md:grid-cols-2">
+              <label className="block text-xs text-muted-foreground">Provider name<input required maxLength={80} value={providerForm.name} onChange={(e) => setProviderForm({ ...providerForm, name: e.target.value })} placeholder="My LLM" className={`${inputClass} mt-1.5`} /></label>
+              <label className="block text-xs text-muted-foreground">Provider type<select value={providerForm.adapter} onChange={(e) => setProviderForm({ ...providerForm, adapter: e.target.value as Provider['adapter'], apiKeySecretName: e.target.value === 'openai' ? 'OPENAI_API_KEY' : e.target.value === 'anthropic' ? 'ANTHROPIC_API_KEY' : e.target.value === 'gemini' ? 'GEMINI_API_KEY' : 'TOOLSTACK_LLM_CUSTOM_API_KEY' })} className={`${inputClass} mt-1.5`}><option value="openai-compatible">OpenAI-compatible endpoint</option><option value="openai">OpenAI</option><option value="anthropic">Anthropic</option><option value="gemini">Google Gemini</option></select></label>
+              <label className="block text-xs text-muted-foreground">API base URL{providerForm.adapter !== 'openai-compatible' && <span className="ml-1 text-muted-foreground/70">(optional default)</span>}<input type="url" value={providerForm.baseUrl} onChange={(e) => setProviderForm({ ...providerForm, baseUrl: e.target.value })} placeholder={providerForm.adapter === 'openai' ? 'https://api.openai.com/v1' : providerForm.adapter === 'anthropic' ? 'https://api.anthropic.com' : providerForm.adapter === 'gemini' ? 'https://generativelanguage.googleapis.com/v1beta' : 'https://your-provider.example/v1'} required={providerForm.adapter === 'openai-compatible'} className={`${inputClass} mt-1.5`} /></label>
+              <label className="block text-xs text-muted-foreground">Model name<input required maxLength={120} value={providerForm.model} onChange={(e) => setProviderForm({ ...providerForm, model: e.target.value })} placeholder="e.g. gpt-4.1-mini" className={`${inputClass} mt-1.5`} /></label>
+              <label className="block text-xs text-muted-foreground md:col-span-2">Replit Secret variable name<input required pattern="(OPENAI_API_KEY|ANTHROPIC_API_KEY|GEMINI_API_KEY|TOOLSTACK_LLM_[A-Z0-9_]+_API_KEY)" value={providerForm.apiKeySecretName} onChange={(e) => setProviderForm({ ...providerForm, apiKeySecretName: e.target.value.toUpperCase() })} className={`${inputClass} mt-1.5 font-mono`} /><span className="mt-1.5 block text-[11px] leading-5 text-muted-foreground">Add the secret value in Replit → Secrets, using this exact name. Do not enter the key on this page.</span></label>
+              <button disabled={busy} className="inline-flex h-10 items-center justify-center gap-2 bg-primary px-4 text-xs font-semibold text-primary-foreground disabled:opacity-50"><Plus className="h-4 w-4" />{busy ? 'Saving…' : 'Add provider'}</button>
+            </form>
+          </div>
+          <div className="border border-border bg-card"><div className="border-b border-border px-5 py-4"><h3 className="font-semibold">Configured providers</h3><p className="mt-1 text-xs text-muted-foreground">Only provider details and whether its secret exists are shown.</p></div><div className="divide-y divide-border">{providers.map((provider) => <article key={provider.id} className="flex flex-col justify-between gap-3 p-5 sm:flex-row sm:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h4 className="font-medium">{provider.name}</h4><span className={`rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase ${provider.configured ? 'border-primary/40 text-primary' : 'border-amber-500/40 text-amber-700 dark:text-amber-300'}`}>{provider.configured ? 'Key configured' : 'Key missing'}</span></div><p className="mt-1 break-all text-xs text-muted-foreground">{provider.adapter} · {provider.model}</p><p className="mt-1 break-all font-mono text-[10px] text-muted-foreground">{provider.baseUrl}</p><p className="mt-1 font-mono text-[10px] text-muted-foreground">Secret: {provider.apiKeySecretName}</p></div><button type="button" onClick={() => void deleteProvider(provider)} aria-label={`Delete ${provider.name} provider`} className="inline-flex h-9 shrink-0 items-center gap-2 border border-border px-3 text-xs text-muted-foreground hover:border-destructive hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /> Remove</button></article>)}{!providers.length && <p className="p-6 text-sm text-muted-foreground">No model connections yet. Add one above.</p>}</div></div>
+        </div>
+        <div className="space-y-6"><div className="border border-border bg-card p-6"><div className="font-mono text-[10px] uppercase tracking-[.16em] text-muted-foreground">Admin security</div><h2 className="mt-2 text-xl font-semibold">Change password</h2><form onSubmit={changePassword} className="mt-5 space-y-4"><label className="block text-xs text-muted-foreground">Current password<input required type="password" autoComplete="current-password" value={passwordForm.currentPassword} onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} className={`${inputClass} mt-1.5`} /></label><label className="block text-xs text-muted-foreground">New password (8+ characters)<input required minLength={8} type="password" autoComplete="new-password" value={passwordForm.newPassword} onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} className={`${inputClass} mt-1.5`} /></label><button disabled={busy} className="bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">{busy ? 'Saving…' : 'Update password'}</button></form></div><div className="border border-border bg-primary/5 p-6"><Users className="h-5 w-5 text-primary" /><h2 className="mt-4 text-xl font-semibold">Restricted admin workspace</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Member accounts remain separate from admin access. Only authenticated admins can review account details and publishing drafts.</p></div></div>
+      </section>}
     </>}
 
     {toolOpen && <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-3 sm:p-6"><form onSubmit={saveTool} className="mx-auto my-5 max-w-5xl border border-border bg-card p-5 shadow-2xl md:p-8"><div className="flex items-start justify-between gap-4"><div><span className="font-mono text-[10px] uppercase tracking-[.16em] text-muted-foreground">{editingTool ? 'Edit public listing' : 'New public listing'}</span><h2 className="mt-2 text-2xl font-semibold">{editingTool ? editingTool.name : 'Add a tool'}</h2><p className="mt-2 text-sm text-muted-foreground">Use AI to draft the fields, then verify details before saving.</p></div><button type="button" aria-label="Close tool form" onClick={() => setToolOpen(false)} className="border border-border p-2"><X className="h-4 w-4" /></button></div><div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -312,13 +447,14 @@ function AdminWorkspace({ adminEmail, onLogout }: { adminEmail: string; onLogout
       {field('Pricing', toolForm.pricing, (v) => setToolForm({ ...toolForm, pricing: v }), { required: true })}
       {field('Logo URL (optional)', toolForm.logoUrl, (v) => setToolForm({ ...toolForm, logoUrl: v }))}
       <label className="block text-xs text-muted-foreground"><span className="mb-1.5 block text-[11px] font-medium text-foreground">Category</span><select required value={toolForm.categoryId} onChange={(e) => setToolForm({ ...toolForm, categoryId: e.target.value })} className={inputClass}>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
+      <label className="block text-xs text-muted-foreground"><span className="mb-1.5 block text-[11px] font-medium text-foreground">Visibility</span><select value={toolForm.status} onChange={(e) => setToolForm({ ...toolForm, status: e.target.value })} className={inputClass}><option value="draft">Private draft</option><option value="published">Published</option></select></label>
       <label className="block text-xs text-muted-foreground"><span className="mb-1.5 block text-[11px] font-medium text-foreground">Website screenshot</span><input type="file" accept="image/*" onChange={readPreview} className="block w-full border border-dashed border-border bg-background p-2 text-xs" /><span className="mt-2 block">A screenshot link is created automatically from the website unless you upload one.</span></label>
       <label className="flex items-center gap-3 self-end text-sm"><input type="checkbox" checked={toolForm.featured} onChange={(e) => setToolForm({ ...toolForm, featured: e.target.checked })} className="h-4 w-4 accent-primary" /> Feature as an editor’s pick</label>
     </div>
     {suggestedCategories.length > 0 && <div className="mt-5 border border-border bg-background p-4"><div className="font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground">AI category ideas · review before adding</div><div className="mt-3 flex flex-wrap gap-2">{suggestedCategories.map((item) => <button key={item.name} type="button" onClick={() => void addSuggestedCategory(item)} className="border border-border px-3 py-2 text-left text-xs hover:border-primary"><span className="font-medium">{item.name}</span><span className="ml-2 text-muted-foreground">Add</span></button>)}</div></div>}
     {toolForm.previewUrl && <div className="relative mt-5 overflow-hidden border border-border bg-secondary"><div className="grid min-h-32 place-items-center font-mono text-[10px] uppercase tracking-[.12em] text-muted-foreground">Website screenshot preview</div><img src={toolForm.previewUrl} alt="Website screenshot preview" width={1280} height={800} className="absolute inset-0 max-h-72 min-h-32 w-full bg-secondary object-cover object-top" onError={(e) => { e.currentTarget.style.display = 'none'; }} /></div>}
     {error && <p role="alert" className="mt-4 border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</p>}
-    <button disabled={busy} type="submit" className="mt-6 inline-flex items-center gap-2 bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"><Save className="h-4 w-4" />{busy ? 'Saving…' : editingTool ? 'Save changes' : 'Publish tool'}</button>
+    <button disabled={busy} type="submit" className="mt-6 inline-flex items-center gap-2 bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"><Save className="h-4 w-4" />{busy ? 'Saving…' : editingTool ? 'Save changes' : toolForm.status === 'draft' ? 'Save private draft' : 'Publish tool'}</button>
     </form></div>}
 
     {categoryOpen && <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4"><form onSubmit={saveCategory} className="w-full max-w-lg border border-border bg-card p-6 shadow-2xl"><div className="flex items-start justify-between"><div><div className="font-mono text-[10px] uppercase tracking-[.16em] text-muted-foreground">{editingCategory ? 'Edit category' : 'New category'}</div><h2 className="mt-2 text-2xl font-semibold">Shape a shelf</h2></div><button type="button" aria-label="Close category form" onClick={() => setCategoryOpen(false)}><X className="h-4 w-4" /></button></div><div className="mt-6 space-y-4">{field('Name', categoryForm.name, (v) => setCategoryForm({ ...categoryForm, name: v }), { required: true })}{field('Description', categoryForm.description, (v) => setCategoryForm({ ...categoryForm, description: v }), { area: true, required: true })}<label className="block text-xs text-muted-foreground">Accent color<input type="color" value={categoryForm.accent} onChange={(e) => setCategoryForm({ ...categoryForm, accent: e.target.value })} className="mt-1.5 h-10 w-full border border-border bg-background p-1" /></label></div>{error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}<button disabled={busy} className="mt-6 inline-flex items-center gap-2 bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground"><FolderPlus className="h-4 w-4" />{busy ? 'Saving…' : 'Save category'}</button></form></div>}

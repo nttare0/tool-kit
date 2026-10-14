@@ -47,6 +47,34 @@ function safeUser(req: Request) {
   return currentUser(req);
 }
 
+type MemberToolRow = {
+  id: number; name: string; slug: string; short_description: string; description: string;
+  how_it_works: string; best_for: string; website_url: string; logo_url: string | null;
+  preview_url: string | null; category_id: number; category_name: string; category_slug: string;
+  pricing: string; featured: number; status: string; created_at: string;
+};
+
+const memberToolQuery = `
+  SELECT t.id, t.name, t.slug, t.short_description, t.description, t.how_it_works, t.best_for,
+         t.website_url, t.logo_url, t.preview_url, t.category_id, c.name AS category_name,
+         c.slug AS category_slug, t.pricing, t.featured, t.status, t.created_at
+  FROM tools t JOIN categories c ON c.id = t.category_id
+`;
+
+function presentMemberTool(row: MemberToolRow) {
+  return {
+    id: row.id, name: row.name, slug: row.slug, shortDescription: row.short_description,
+    description: row.description, howItWorks: row.how_it_works, bestFor: row.best_for,
+    websiteUrl: row.website_url, logoUrl: row.logo_url, previewUrl: row.preview_url,
+    categoryId: row.category_id, categoryName: row.category_name, categorySlug: row.category_slug,
+    pricing: row.pricing, featured: Boolean(row.featured), status: row.status, createdAt: row.created_at,
+  };
+}
+
+function collectionForUser(collectionId: number, userId: number) {
+  return get<{ id: number }>("SELECT id FROM user_collections WHERE id = ? AND user_id = ?", collectionId, userId);
+}
+
 router.post("/auth/register", (req, res) => {
   const displayName = cleanText(req.body?.displayName, 100);
   const email = cleanText(req.body?.email, 254).toLowerCase();
@@ -148,6 +176,151 @@ router.post("/account/password", requireUser, (req, res) => {
   }
   recordActivity("user", user.id, user.email, "password_changed", "user", user.id);
   res.json({ changed: true });
+});
+
+router.get("/account/favorites", requireUser, (req, res) => {
+  const user = currentUser(req)!;
+  const rows = all<MemberToolRow>(
+    `${memberToolQuery} JOIN user_favorites f ON f.tool_id = t.id
+     WHERE f.user_id = ? AND t.status = 'published' ORDER BY f.created_at DESC`,
+    user.id,
+  );
+  res.json(rows.map(presentMemberTool));
+});
+
+router.put("/account/favorites/:toolId", requireUser, (req, res) => {
+  const user = currentUser(req)!;
+  const toolId = Number(req.params.toolId);
+  const tool = Number.isInteger(toolId) && toolId > 0
+    ? get<{ id: number; name: string }>("SELECT id, name FROM tools WHERE id = ? AND status = 'published'", toolId)
+    : undefined;
+  if (!tool) {
+    res.status(404).json({ error: "Published tool not found." });
+    return;
+  }
+  run("INSERT OR IGNORE INTO user_favorites (user_id, tool_id, created_at) VALUES (?, ?, ?)", user.id, toolId, new Date().toISOString());
+  res.json({ saved: true });
+});
+
+router.delete("/account/favorites/:toolId", requireUser, (req, res) => {
+  const user = currentUser(req)!;
+  const toolId = Number(req.params.toolId);
+  if (Number.isInteger(toolId) && toolId > 0) run("DELETE FROM user_favorites WHERE user_id = ? AND tool_id = ?", user.id, toolId);
+  res.sendStatus(204);
+});
+
+router.get("/account/collections", requireUser, (req, res) => {
+  const user = currentUser(req)!;
+  res.json(all(
+    `SELECT c.id, c.name, c.description, c.created_at AS createdAt, c.updated_at AS updatedAt,
+            (SELECT COUNT(*) FROM collection_tools ct JOIN tools t ON t.id = ct.tool_id
+             WHERE ct.collection_id = c.id AND t.status = 'published') AS toolCount
+     FROM user_collections c WHERE c.user_id = ? ORDER BY c.updated_at DESC, c.id DESC`,
+    user.id,
+  ));
+});
+
+router.post("/account/collections", requireUser, (req, res) => {
+  const user = currentUser(req)!;
+  const name = cleanText(req.body?.name, 100);
+  const description = cleanText(req.body?.description, 500);
+  if (!name) {
+    res.status(400).json({ error: "Give your collection a name." });
+    return;
+  }
+  const now = new Date().toISOString();
+  const result = run(
+    "INSERT INTO user_collections (user_id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+    user.id, name, description, now, now,
+  );
+  res.status(201).json({ id: Number(result.lastInsertRowid), name, description, createdAt: now, updatedAt: now, toolCount: 0 });
+});
+
+router.get("/account/collections/:id", requireUser, (req, res) => {
+  const user = currentUser(req)!;
+  const id = Number(req.params.id);
+  const collection = Number.isInteger(id) && id > 0
+    ? get<{ id: number; name: string; description: string; createdAt: string; updatedAt: string; toolCount: number }>(
+      `SELECT c.id, c.name, c.description, c.created_at AS createdAt, c.updated_at AS updatedAt,
+              (SELECT COUNT(*) FROM collection_tools ct JOIN tools t ON t.id = ct.tool_id
+               WHERE ct.collection_id = c.id AND t.status = 'published') AS toolCount
+       FROM user_collections c WHERE c.id = ? AND c.user_id = ?`,
+      id, user.id,
+    )
+    : undefined;
+  if (!collection) {
+    res.status(404).json({ error: "Collection not found." });
+    return;
+  }
+  const tools = all<MemberToolRow>(
+    `${memberToolQuery} JOIN collection_tools ct ON ct.tool_id = t.id
+     WHERE ct.collection_id = ? AND t.status = 'published' ORDER BY ct.added_at DESC`,
+    id,
+  ).map(presentMemberTool);
+  res.json({ ...collection, tools });
+});
+
+router.patch("/account/collections/:id", requireUser, (req, res) => {
+  const user = currentUser(req)!;
+  const id = Number(req.params.id);
+  const name = cleanText(req.body?.name, 100);
+  const description = cleanText(req.body?.description, 500);
+  if (!Number.isInteger(id) || id < 1 || !collectionForUser(id, user.id)) {
+    res.status(404).json({ error: "Collection not found." });
+    return;
+  }
+  if (!name) {
+    res.status(400).json({ error: "Give your collection a name." });
+    return;
+  }
+  const updatedAt = new Date().toISOString();
+  run("UPDATE user_collections SET name = ?, description = ?, updated_at = ? WHERE id = ? AND user_id = ?", name, description, updatedAt, id, user.id);
+  const collection = get(
+    `SELECT c.id, c.name, c.description, c.created_at AS createdAt, c.updated_at AS updatedAt,
+            (SELECT COUNT(*) FROM collection_tools ct JOIN tools t ON t.id = ct.tool_id
+             WHERE ct.collection_id = c.id AND t.status = 'published') AS toolCount
+     FROM user_collections c WHERE c.id = ? AND c.user_id = ?`,
+    id, user.id,
+  );
+  res.json(collection);
+});
+
+router.delete("/account/collections/:id", requireUser, (req, res) => {
+  const user = currentUser(req)!;
+  const id = Number(req.params.id);
+  if (Number.isInteger(id) && id > 0) run("DELETE FROM user_collections WHERE id = ? AND user_id = ?", id, user.id);
+  res.sendStatus(204);
+});
+
+router.put("/account/collections/:id/tools/:toolId", requireUser, (req, res) => {
+  const user = currentUser(req)!;
+  const id = Number(req.params.id);
+  const toolId = Number(req.params.toolId);
+  if (!Number.isInteger(id) || id < 1 || !collectionForUser(id, user.id)) {
+    res.status(404).json({ error: "Collection not found." });
+    return;
+  }
+  const tool = Number.isInteger(toolId) && toolId > 0
+    ? get<{ id: number }>("SELECT id FROM tools WHERE id = ? AND status = 'published'", toolId)
+    : undefined;
+  if (!tool) {
+    res.status(404).json({ error: "Published tool not found." });
+    return;
+  }
+  run("INSERT OR IGNORE INTO collection_tools (collection_id, tool_id, added_at) VALUES (?, ?, ?)", id, toolId, new Date().toISOString());
+  run("UPDATE user_collections SET updated_at = ? WHERE id = ?", new Date().toISOString(), id);
+  res.json({ saved: true });
+});
+
+router.delete("/account/collections/:id/tools/:toolId", requireUser, (req, res) => {
+  const user = currentUser(req)!;
+  const id = Number(req.params.id);
+  const toolId = Number(req.params.toolId);
+  if (Number.isInteger(id) && id > 0 && collectionForUser(id, user.id)) {
+    run("DELETE FROM collection_tools WHERE collection_id = ? AND tool_id = ?", id, toolId);
+    run("UPDATE user_collections SET updated_at = ? WHERE id = ?", new Date().toISOString(), id);
+  }
+  res.sendStatus(204);
 });
 
 router.get("/account/submissions", requireUser, (req, res) => {

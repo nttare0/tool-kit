@@ -9,6 +9,7 @@ import type { CategorySuggestion } from './categorySuggestion';
 
 export interface AiSuggestion {
   name: string;
+  websiteUrl?: string;
   shortDescription: string;
   description: string;
   howItWorks: string;

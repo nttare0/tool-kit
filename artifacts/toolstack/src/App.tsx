@@ -23,6 +23,7 @@ function Router() {
   const [location] = useLocation();
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     const pathname = location.split('?')[0];
     const isAdmin = pathname === '/admin';
     const isDirectory = pathname === '/directory';

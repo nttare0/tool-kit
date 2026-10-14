@@ -400,6 +400,190 @@ export const ListOwnSubmissionsResponse = zod.array(ListOwnSubmissionsResponseIt
 
 
 /**
+ * @summary List tools saved by the signed-in member
+ */
+export const ListFavoriteToolsResponseItem = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "slug": zod.string(),
+  "shortDescription": zod.string(),
+  "description": zod.string(),
+  "howItWorks": zod.string(),
+  "bestFor": zod.string().optional(),
+  "websiteUrl": zod.string().url(),
+  "logoUrl": zod.string().url().nullish(),
+  "previewUrl": zod.string().nullish(),
+  "categoryId": zod.number().int(),
+  "categoryName": zod.string(),
+  "categorySlug": zod.string().optional(),
+  "pricing": zod.string(),
+  "featured": zod.boolean(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const ListFavoriteToolsResponse = zod.array(ListFavoriteToolsResponseItem)
+
+
+/**
+ * @summary Save a published tool to member favorites
+ */
+export const SaveFavoriteToolParams = zod.object({
+  "toolId": zod.coerce.number().int()
+})
+
+export const SaveFavoriteToolResponse = zod.object({
+  "saved": zod.boolean()
+})
+
+
+/**
+ * @summary Remove a tool from member favorites
+ */
+export const RemoveFavoriteToolParams = zod.object({
+  "toolId": zod.coerce.number().int()
+})
+
+export const RemoveFavoriteToolResponse = zod.void()
+
+
+/**
+ * @summary List member tool collections
+ */
+export const ListCollectionsResponseItem = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "toolCount": zod.number().int()
+})
+export const ListCollectionsResponse = zod.array(ListCollectionsResponseItem)
+
+
+/**
+ * @summary Create a personal tool collection
+ */
+export const createCollectionBodyNameMax = 100;
+
+export const createCollectionBodyDescriptionMax = 500;
+
+
+
+export const CreateCollectionBody = zod.object({
+  "name": zod.string().min(1).max(createCollectionBodyNameMax),
+  "description": zod.string().max(createCollectionBodyDescriptionMax).optional()
+})
+
+export const CreateCollectionResponse = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "toolCount": zod.number().int()
+})
+
+
+/**
+ * @summary Get a personal tool collection and its tools
+ */
+export const GetCollectionParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const GetCollectionResponse = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "toolCount": zod.number().int()
+}).and(zod.object({
+  "tools": zod.array(zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "slug": zod.string(),
+  "shortDescription": zod.string(),
+  "description": zod.string(),
+  "howItWorks": zod.string(),
+  "bestFor": zod.string().optional(),
+  "websiteUrl": zod.string().url(),
+  "logoUrl": zod.string().url().nullish(),
+  "previewUrl": zod.string().nullish(),
+  "categoryId": zod.number().int(),
+  "categoryName": zod.string(),
+  "categorySlug": zod.string().optional(),
+  "pricing": zod.string(),
+  "featured": zod.boolean(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date()
+}))
+}))
+
+
+/**
+ * @summary Update a personal tool collection
+ */
+export const UpdateCollectionParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const updateCollectionBodyNameMax = 100;
+
+export const updateCollectionBodyDescriptionMax = 500;
+
+
+
+export const UpdateCollectionBody = zod.object({
+  "name": zod.string().min(1).max(updateCollectionBodyNameMax),
+  "description": zod.string().max(updateCollectionBodyDescriptionMax).optional()
+})
+
+export const UpdateCollectionResponse = zod.object({
+  "id": zod.number().int(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date(),
+  "toolCount": zod.number().int()
+})
+
+
+/**
+ * @summary Delete a personal tool collection
+ */
+export const DeleteCollectionParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteCollectionResponse = zod.void()
+
+
+/**
+ * @summary Add a published tool to a personal collection
+ */
+export const AddToolToCollectionParams = zod.object({
+  "id": zod.coerce.number().int(),
+  "toolId": zod.coerce.number().int()
+})
+
+export const AddToolToCollectionResponse = zod.object({
+  "saved": zod.boolean()
+})
+
+
+/**
+ * @summary Remove a tool from a personal collection
+ */
+export const RemoveToolFromCollectionParams = zod.object({
+  "id": zod.coerce.number().int(),
+  "toolId": zod.coerce.number().int()
+})
+
+export const RemoveToolFromCollectionResponse = zod.void()
+
+
+/**
  * @summary Submit a tool for admin review
  */
 export const createSubmissionBodyNameMax = 120;
@@ -568,6 +752,97 @@ export const ChangeAdminPasswordResponse = zod.object({
 
 
 /**
+ * @summary List configured LLM provider metadata and key status
+ */
+export const ListLlmProvidersResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "adapter": zod.enum(['openai-compatible', 'openai', 'anthropic', 'gemini']),
+  "baseUrl": zod.string().url(),
+  "model": zod.string(),
+  "apiKeySecretName": zod.string(),
+  "configured": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+export const ListLlmProvidersResponse = zod.array(ListLlmProvidersResponseItem)
+
+
+/**
+ * @summary Configure an LLM provider using a Replit Secrets variable name
+ */
+export const createLlmProviderBodyNameMax = 80;
+
+export const createLlmProviderBodyModelMax = 120;
+
+export const createLlmProviderBodyApiKeySecretNameRegExp = new RegExp('^[A-Z][A-Z0-9_]{2,80}$');
+
+
+export const CreateLlmProviderBody = zod.object({
+  "name": zod.string().min(1).max(createLlmProviderBodyNameMax),
+  "adapter": zod.enum(['openai-compatible', 'openai', 'anthropic', 'gemini']),
+  "baseUrl": zod.string().url().optional(),
+  "model": zod.string().min(1).max(createLlmProviderBodyModelMax),
+  "apiKeySecretName": zod.string().regex(createLlmProviderBodyApiKeySecretNameRegExp)
+})
+
+export const CreateLlmProviderResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "adapter": zod.enum(['openai-compatible', 'openai', 'anthropic', 'gemini']),
+  "baseUrl": zod.string().url(),
+  "model": zod.string(),
+  "apiKeySecretName": zod.string(),
+  "configured": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Remove an LLM provider configuration
+ */
+export const DeleteLlmProviderParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteLlmProviderResponse = zod.void()
+
+
+/**
+ * @summary Chat with an admin assistant that can draft tool listings
+ */
+export const chatWithToolstackAssistantBodyMessagesItemContentMax = 4000;
+
+export const chatWithToolstackAssistantBodyMessagesMax = 20;
+
+
+
+export const ChatWithToolstackAssistantBody = zod.object({
+  "providerId": zod.string(),
+  "messages": zod.array(zod.object({
+  "role": zod.enum(['user', 'assistant']),
+  "content": zod.string().max(chatWithToolstackAssistantBodyMessagesItemContentMax)
+})).min(1).max(chatWithToolstackAssistantBodyMessagesMax)
+})
+
+export const ChatWithToolstackAssistantResponse = zod.object({
+  "reply": zod.string(),
+  "draft": zod.union([zod.object({
+  "name": zod.string(),
+  "websiteUrl": zod.string().url().optional(),
+  "shortDescription": zod.string(),
+  "description": zod.string(),
+  "howItWorks": zod.string(),
+  "bestFor": zod.string(),
+  "pricing": zod.string(),
+  "categorySuggestions": zod.array(zod.object({
+  "name": zod.string(),
+  "description": zod.string()
+}))
+}),zod.null()])
+})
+
+
+/**
  * @summary Draft tool listing details and category suggestions
  */
 export const suggestToolDetailsBodyNameMax = 120;
@@ -576,11 +851,13 @@ export const suggestToolDetailsBodyNameMax = 120;
 
 export const SuggestToolDetailsBody = zod.object({
   "name": zod.string().max(suggestToolDetailsBodyNameMax).optional(),
-  "websiteUrl": zod.string().url()
+  "websiteUrl": zod.string().url(),
+  "providerId": zod.string().optional()
 })
 
 export const SuggestToolDetailsResponse = zod.object({
   "name": zod.string(),
+  "websiteUrl": zod.string().url().optional(),
   "shortDescription": zod.string(),
   "description": zod.string(),
   "howItWorks": zod.string(),

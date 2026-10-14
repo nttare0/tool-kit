@@ -109,6 +109,39 @@ sqlite.exec(`
     details TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS llm_providers (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    adapter TEXT NOT NULL,
+    base_url TEXT NOT NULL,
+    model TEXT NOT NULL,
+    api_key_secret_name TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS user_favorites (
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    tool_id INTEGER NOT NULL REFERENCES tools(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (user_id, tool_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS user_collections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS collection_tools (
+    collection_id INTEGER NOT NULL REFERENCES user_collections(id) ON DELETE CASCADE,
+    tool_id INTEGER NOT NULL REFERENCES tools(id) ON DELETE CASCADE,
+    added_at TEXT NOT NULL,
+    PRIMARY KEY (collection_id, tool_id)
+  );
 `);
 
 export type SqliteRow = Record<string, unknown>;

@@ -7,6 +7,7 @@ import seoRouter from "./seo";
 import accountRouter from "./account";
 import adminManagementRouter from "./admin-management";
 import aiSuggestionsRouter from "./ai-suggestions";
+import llmProvidersRouter from "./llm-providers";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(seoRouter);
 router.use(accountRouter);
 router.use(adminManagementRouter);
 router.use(aiSuggestionsRouter);
+router.use(llmProvidersRouter);
 
 export default router;

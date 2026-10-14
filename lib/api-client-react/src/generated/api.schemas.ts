@@ -337,10 +337,83 @@ export interface AiSuggestionInput {
   /** @maxLength 120 */
   name?: string;
   websiteUrl: string;
+  providerId?: string;
+}
+
+export type LlmProviderInputAdapter = typeof LlmProviderInputAdapter[keyof typeof LlmProviderInputAdapter];
+
+
+export const LlmProviderInputAdapter = {
+  'openai-compatible': 'openai-compatible',
+  openai: 'openai',
+  anthropic: 'anthropic',
+  gemini: 'gemini',
+} as const;
+
+export interface LlmProviderInput {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  name: string;
+  adapter: LlmProviderInputAdapter;
+  baseUrl?: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  model: string;
+  /** @pattern ^[A-Z][A-Z0-9_]{2,80}$ */
+  apiKeySecretName: string;
+}
+
+export type LlmProviderAdapter = typeof LlmProviderAdapter[keyof typeof LlmProviderAdapter];
+
+
+export const LlmProviderAdapter = {
+  'openai-compatible': 'openai-compatible',
+  openai: 'openai',
+  anthropic: 'anthropic',
+  gemini: 'gemini',
+} as const;
+
+export interface LlmProvider {
+  id: string;
+  name: string;
+  adapter: LlmProviderAdapter;
+  baseUrl: string;
+  model: string;
+  apiKeySecretName: string;
+  configured: boolean;
+  createdAt: string;
+}
+
+export type AiChatMessageRole = typeof AiChatMessageRole[keyof typeof AiChatMessageRole];
+
+
+export const AiChatMessageRole = {
+  user: 'user',
+  assistant: 'assistant',
+} as const;
+
+export interface AiChatMessage {
+  role: AiChatMessageRole;
+  /** @maxLength 4000 */
+  content: string;
+}
+
+export interface AiChatInput {
+  providerId: string;
+  /**
+     * @minItems 1
+     * @maxItems 20
+     */
+  messages: AiChatMessage[];
 }
 
 export interface AiSuggestion {
   name: string;
+  websiteUrl?: string;
   shortDescription: string;
   description: string;
   howItWorks: string;
@@ -348,6 +421,38 @@ export interface AiSuggestion {
   pricing: string;
   categorySuggestions: CategorySuggestion[];
 }
+
+export interface AiChatResponse {
+  reply: string;
+  draft: AiSuggestion | null;
+}
+
+export interface FavoriteStatus {
+  saved: boolean;
+}
+
+export interface ToolCollectionInput {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  name: string;
+  /** @maxLength 500 */
+  description?: string;
+}
+
+export interface ToolCollection {
+  id: number;
+  name: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+  toolCount: number;
+}
+
+export type ToolCollectionDetail = ToolCollection & {
+  tools: Tool[];
+};
 
 export interface RelatedTool {
   id: number;

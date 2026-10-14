@@ -10,4 +10,5 @@ export interface AiSuggestionInput {
   /** @maxLength 120 */
   name?: string;
   websiteUrl: string;
+  providerId?: string;
 }
