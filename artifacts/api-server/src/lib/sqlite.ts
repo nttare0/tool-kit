@@ -12,6 +12,7 @@ export const sqlite = new DatabaseSync(databasePath);
 sqlite.exec(`
   PRAGMA journal_mode = WAL;
   PRAGMA foreign_keys = ON;
+  PRAGMA secure_delete = ON;
 
   CREATE TABLE IF NOT EXISTS categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -117,6 +118,7 @@ sqlite.exec(`
     base_url TEXT NOT NULL,
     model TEXT NOT NULL,
     api_key_secret_name TEXT NOT NULL,
+    api_key_encrypted TEXT,
     created_at TEXT NOT NULL
   );
 
@@ -143,6 +145,13 @@ sqlite.exec(`
     PRIMARY KEY (collection_id, tool_id)
   );
 `);
+
+const llmProviderColumns = sqlite
+  .prepare("PRAGMA table_info(llm_providers)")
+  .all() as Array<{ name: string }>;
+if (!llmProviderColumns.some((column) => column.name === "api_key_encrypted")) {
+  sqlite.exec("ALTER TABLE llm_providers ADD COLUMN api_key_encrypted TEXT");
+}
 
 export type SqliteRow = Record<string, unknown>;
 

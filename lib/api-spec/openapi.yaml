@@ -651,7 +651,7 @@ paths:
     post:
       operationId: createLlmProvider
       tags: [admin]
-      summary: Configure an LLM provider using a Replit Secrets variable name
+      summary: Add an LLM provider with an encrypted API key
       security: [{ adminSession: [] }]
       requestBody:
         required: true
@@ -667,6 +667,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/LlmProvider"
   /admin/llm-providers/{id}:
+    patch:
+      operationId: updateLlmProviderKey
+      tags: [admin]
+      summary: Replace an LLM provider API key
+      security: [{ adminSession: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LlmProviderKeyInput"
+      responses:
+        "200":
+          description: Provider key replaced
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LlmProvider"
+        "404":
+          description: Provider not found
     delete:
       operationId: deleteLlmProvider
       tags: [admin]
@@ -996,23 +1021,27 @@ components:
         providerId: { type: string }
     LlmProviderInput:
       type: object
-      required: [name, adapter, model, apiKeySecretName]
+      required: [name, adapter, model, apiKey]
       properties:
         name: { type: string, minLength: 1, maxLength: 80 }
         adapter: { type: string, enum: [openai-compatible, openai, anthropic, gemini] }
         baseUrl: { type: string, format: uri }
         model: { type: string, minLength: 1, maxLength: 120 }
-        apiKeySecretName: { type: string, pattern: "^[A-Z][A-Z0-9_]{2,80}$" }
+        apiKey: { type: string, minLength: 1, maxLength: 4096, writeOnly: true }
+    LlmProviderKeyInput:
+      type: object
+      required: [apiKey]
+      properties:
+        apiKey: { type: string, minLength: 1, maxLength: 4096, writeOnly: true }
     LlmProvider:
       type: object
-      required: [id, name, adapter, baseUrl, model, apiKeySecretName, configured, createdAt]
+      required: [id, name, adapter, baseUrl, model, configured, createdAt]
       properties:
         id: { type: string }
         name: { type: string }
         adapter: { type: string, enum: [openai-compatible, openai, anthropic, gemini] }
         baseUrl: { type: string, format: uri }
         model: { type: string }
-        apiKeySecretName: { type: string }
         configured: { type: boolean }
         createdAt: { type: string, format: date-time }
     AiChatMessage:

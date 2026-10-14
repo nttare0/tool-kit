@@ -1,4 +1,5 @@
 import { all, get } from "./sqlite";
+import { decryptLlmApiKey } from "./llm-secret";
 
 export type LlmAdapter = "openai-compatible" | "openai" | "anthropic" | "gemini";
 export type LlmMessage = { role: "system" | "user" | "assistant"; content: string };
@@ -10,6 +11,7 @@ type ProviderRow = {
   base_url: string;
   model: string;
   api_key_secret_name: string;
+  api_key_encrypted: string | null;
   created_at: string;
 };
 
@@ -19,7 +21,6 @@ export type PublicProvider = {
   adapter: LlmAdapter;
   baseUrl: string;
   model: string;
-  apiKeySecretName: string;
   configured: boolean;
   createdAt: string;
 };
@@ -31,8 +32,7 @@ function publicProvider(row: ProviderRow): PublicProvider {
     adapter: row.adapter,
     baseUrl: row.base_url,
     model: row.model,
-    apiKeySecretName: row.api_key_secret_name,
-    configured: Boolean(process.env[row.api_key_secret_name]),
+    configured: Boolean(row.api_key_encrypted || (row.api_key_secret_name && process.env[row.api_key_secret_name])),
     createdAt: row.created_at,
   };
 }
@@ -46,8 +46,12 @@ function getProvider(id?: string) {
     ? get<ProviderRow>("SELECT * FROM llm_providers WHERE id = ?", id)
     : all<ProviderRow>("SELECT * FROM llm_providers ORDER BY created_at, name")[0];
   if (!row) throw new Error("Configure an LLM provider in Admin → Settings first.");
-  const key = process.env[row.api_key_secret_name];
-  if (!key) throw new Error(`Add ${row.api_key_secret_name} in Replit Secrets, then restart the API server.`);
+  const key = row.api_key_encrypted
+    ? decryptLlmApiKey(row.api_key_encrypted)
+    : row.api_key_secret_name
+      ? process.env[row.api_key_secret_name]
+      : undefined;
+  if (!key) throw new Error("Add an API key in Admin → Settings before using this provider.");
   return { row, key };
 }
 

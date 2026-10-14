@@ -38,6 +38,7 @@ import type {
   ListToolsParams,
   LlmProvider,
   LlmProviderInput,
+  LlmProviderKeyInput,
   ManagedUser,
   ManagedUserStatus,
   ManagedUserStatusResponse,
@@ -2751,7 +2752,7 @@ export const getCreateLlmProviderUrl = () => {
 }
 
 /**
- * @summary Configure an LLM provider using a Replit Secrets variable name
+ * @summary Add an LLM provider with an encrypted API key
  */
 export const createLlmProvider = async (llmProviderInput: LlmProviderInput, options?: Parameters<typeof customFetch>[1]): Promise<LlmProvider> => {
 
@@ -2800,7 +2801,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreateLlmProviderMutationError = ErrorType<unknown>
 
     /**
- * @summary Configure an LLM provider using a Replit Secrets variable name
+ * @summary Add an LLM provider with an encrypted API key
  */
 export const useCreateLlmProvider = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createLlmProvider>>, TError,{data: BodyType<LlmProviderInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -2811,6 +2812,78 @@ export const useCreateLlmProvider = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreateLlmProviderMutationOptions(options));
+    }
+
+export const getUpdateLlmProviderKeyUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/llm-providers/${id}`
+}
+
+/**
+ * @summary Replace an LLM provider API key
+ */
+export const updateLlmProviderKey = async (id: string,
+    llmProviderKeyInput: LlmProviderKeyInput, options?: Parameters<typeof customFetch>[1]): Promise<LlmProvider> => {
+
+  return customFetch<LlmProvider>(getUpdateLlmProviderKeyUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(llmProviderKeyInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateLlmProviderKeyMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateLlmProviderKey>>, TError,{id: string;data: BodyType<LlmProviderKeyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateLlmProviderKey>>, TError,{id: string;data: BodyType<LlmProviderKeyInput>}, TContext> => {
+
+const mutationKey = ['updateLlmProviderKey'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateLlmProviderKey>>, {id: string;data: BodyType<LlmProviderKeyInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateLlmProviderKey(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateLlmProviderKeyMutationResult = NonNullable<Awaited<ReturnType<typeof updateLlmProviderKey>>>
+    export type UpdateLlmProviderKeyMutationBody = BodyType<LlmProviderKeyInput>
+    export type UpdateLlmProviderKeyMutationError = ErrorType<void>
+
+    /**
+ * @summary Replace an LLM provider API key
+ */
+export const useUpdateLlmProviderKey = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateLlmProviderKey>>, TError,{id: string;data: BodyType<LlmProviderKeyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateLlmProviderKey>>,
+        TError,
+        {id: string;data: BodyType<LlmProviderKeyInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateLlmProviderKeyMutationOptions(options));
     }
 
 export const getDeleteLlmProviderUrl = (id: string,) => {

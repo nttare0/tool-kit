@@ -13,7 +13,6 @@ export interface LlmProvider {
   adapter: LlmProviderAdapter;
   baseUrl: string;
   model: string;
-  apiKeySecretName: string;
   configured: boolean;
   createdAt: Date;
 }

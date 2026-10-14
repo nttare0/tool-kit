@@ -31,6 +31,7 @@ export * from './llmProvider';
 export * from './llmProviderAdapter';
 export * from './llmProviderInput';
 export * from './llmProviderInputAdapter';
+export * from './llmProviderKeyInput';
 export * from './managedUser';
 export * from './managedUserStatus';
 export * from './managedUserStatusProperty';

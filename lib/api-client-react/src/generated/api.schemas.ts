@@ -363,8 +363,19 @@ export interface LlmProviderInput {
      * @maxLength 120
      */
   model: string;
-  /** @pattern ^[A-Z][A-Z0-9_]{2,80}$ */
-  apiKeySecretName: string;
+  /**
+     * @minLength 1
+     * @maxLength 4096
+     */
+  apiKey: string;
+}
+
+export interface LlmProviderKeyInput {
+  /**
+     * @minLength 1
+     * @maxLength 4096
+     */
+  apiKey: string;
 }
 
 export type LlmProviderAdapter = typeof LlmProviderAdapter[keyof typeof LlmProviderAdapter];
@@ -383,7 +394,6 @@ export interface LlmProvider {
   adapter: LlmProviderAdapter;
   baseUrl: string;
   model: string;
-  apiKeySecretName: string;
   configured: boolean;
   createdAt: string;
 }

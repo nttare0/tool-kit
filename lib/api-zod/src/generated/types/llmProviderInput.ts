@@ -20,6 +20,9 @@ export interface LlmProviderInput {
      * @maxLength 120
      */
   model: string;
-  /** @pattern ^[A-Z][A-Z0-9_]{2,80}$ */
-  apiKeySecretName: string;
+  /**
+     * @minLength 1
+     * @maxLength 4096
+     */
+  apiKey: string;
 }

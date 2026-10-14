@@ -1,8 +1,16 @@
 import { Router, type IRouter } from "express";
+import {
+  CreateLlmProviderBody,
+  CreateLlmProviderResponse,
+  UpdateLlmProviderKeyBody,
+  UpdateLlmProviderKeyParams,
+  UpdateLlmProviderKeyResponse,
+} from "@workspace/api-zod";
 import { requireAdmin, currentAdmin } from "../lib/auth";
 import { recordActivity } from "../lib/activity";
 import { get, run } from "../lib/sqlite";
 import { listLlmProviders, type LlmAdapter } from "../lib/llm-provider";
+import { encryptLlmApiKey } from "../lib/llm-secret";
 import { slugify } from "../lib/slugify";
 
 const router: IRouter = Router();
@@ -27,33 +35,90 @@ function validBaseUrl(value: string, adapter: LlmAdapter) {
 }
 
 router.get("/admin/llm-providers", requireAdmin, (_req, res) => {
+  res.setHeader("Cache-Control", "no-store");
   res.json(listLlmProviders());
 });
 
 router.post("/admin/llm-providers", requireAdmin, (req, res) => {
-  const name = typeof req.body?.name === "string" ? req.body.name.trim().slice(0, 80) : "";
-  const adapter = req.body?.adapter as LlmAdapter;
-  const model = typeof req.body?.model === "string" ? req.body.model.trim().slice(0, 120) : "";
-  const secretName = typeof req.body?.apiKeySecretName === "string" ? req.body.apiKeySecretName.trim().toUpperCase() : "";
-  const rawBaseUrl = typeof req.body?.baseUrl === "string" ? req.body.baseUrl.trim() : "";
-  const baseUrl = adapters.has(adapter) ? validBaseUrl(rawBaseUrl, adapter) : "";
-  if (name.length < 1 || !adapters.has(adapter) || model.length < 1 || !baseUrl ||
-    !/^(OPENAI_API_KEY|ANTHROPIC_API_KEY|GEMINI_API_KEY|TOOLSTACK_LLM_[A-Z0-9_]+_API_KEY)$/.test(secretName)) {
-    res.status(400).json({ error: "Enter a valid provider name, supported adapter, model, HTTPS endpoint, and approved secret variable name." });
+  const parsed = CreateLlmProviderBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Enter a provider name, model, and API key." });
     return;
   }
+
+  const name = parsed.data.name.trim();
+  const adapter = parsed.data.adapter as LlmAdapter;
+  const model = parsed.data.model.trim();
+  const apiKey = parsed.data.apiKey.trim();
+  const rawBaseUrl = parsed.data.baseUrl?.trim() || "";
+  const baseUrl = adapters.has(adapter) ? validBaseUrl(rawBaseUrl, adapter) : "";
+  if (!apiKey || name.length < 1 || !adapters.has(adapter) || model.length < 1 || !baseUrl) {
+    res.status(400).json({ error: "Enter a valid provider name, supported adapter, model, HTTPS endpoint, and API key." });
+    return;
+  }
+
+  let encryptedApiKey: string;
+  try {
+    encryptedApiKey = encryptLlmApiKey(apiKey);
+  } catch {
+    res.status(503).json({ error: "Provider key encryption is unavailable. Check the server secret configuration." });
+    return;
+  }
+
   const baseId = slugify(name) || adapter;
   let id = baseId;
   let suffix = 2;
   while (get<{ id: string }>("SELECT id FROM llm_providers WHERE id = ?", id)) id = `${baseId}-${suffix++}`;
   const createdAt = new Date().toISOString();
   run(
-    "INSERT INTO llm_providers (id, name, adapter, base_url, model, api_key_secret_name, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    id, name, adapter, baseUrl, model, secretName, createdAt,
+    "INSERT INTO llm_providers (id, name, adapter, base_url, model, api_key_secret_name, api_key_encrypted, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    id, name, adapter, baseUrl, model, "", encryptedApiKey, createdAt,
   );
   const admin = currentAdmin(req)!;
   recordActivity("admin", admin.id, admin.email, "llm_provider_created", "llm_provider", null, name);
-  res.status(201).json(listLlmProviders().find((item) => item.id === id));
+  res.setHeader("Cache-Control", "no-store");
+  res.status(201).json(CreateLlmProviderResponse.parse(listLlmProviders().find((item) => item.id === id)));
+});
+
+router.patch("/admin/llm-providers/:id", requireAdmin, (req, res) => {
+  const params = UpdateLlmProviderKeyParams.safeParse(req.params);
+  const parsed = UpdateLlmProviderKeyBody.safeParse(req.body);
+  if (!params.success || !parsed.success || !parsed.data.apiKey.trim()) {
+    res.status(400).json({ error: "Enter a valid API key." });
+    return;
+  }
+
+  const provider = get<{ id: string; name: string }>(
+    "SELECT id, name FROM llm_providers WHERE id = ?",
+    params.data.id,
+  );
+  if (!provider) {
+    res.status(404).json({ error: "LLM provider configuration not found." });
+    return;
+  }
+
+  let encryptedApiKey: string;
+  try {
+    encryptedApiKey = encryptLlmApiKey(parsed.data.apiKey.trim());
+  } catch {
+    res.status(503).json({ error: "Provider key encryption is unavailable. Check the server secret configuration." });
+    return;
+  }
+
+  run(
+    "UPDATE llm_providers SET api_key_secret_name = '', api_key_encrypted = ? WHERE id = ?",
+    encryptedApiKey,
+    provider.id,
+  );
+  const admin = currentAdmin(req)!;
+  recordActivity("admin", admin.id, admin.email, "llm_provider_key_updated", "llm_provider", null, provider.name);
+  const updated = listLlmProviders().find((item) => item.id === provider.id);
+  if (!updated) {
+    res.status(500).json({ error: "The provider was updated, but its status could not be loaded." });
+    return;
+  }
+  res.setHeader("Cache-Control", "no-store");
+  res.json(UpdateLlmProviderKeyResponse.parse(updated));
 });
 
 router.delete("/admin/llm-providers/:id", requireAdmin, (req, res) => {
@@ -65,6 +130,7 @@ router.delete("/admin/llm-providers/:id", requireAdmin, (req, res) => {
   run("DELETE FROM llm_providers WHERE id = ?", provider.id);
   const admin = currentAdmin(req)!;
   recordActivity("admin", admin.id, admin.email, "llm_provider_deleted", "llm_provider", null, provider.name);
+  res.setHeader("Cache-Control", "no-store");
   res.sendStatus(204);
 });
 

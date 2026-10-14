@@ -760,7 +760,6 @@ export const ListLlmProvidersResponseItem = zod.object({
   "adapter": zod.enum(['openai-compatible', 'openai', 'anthropic', 'gemini']),
   "baseUrl": zod.string().url(),
   "model": zod.string(),
-  "apiKeySecretName": zod.string(),
   "configured": zod.boolean(),
   "createdAt": zod.coerce.date()
 })
@@ -768,13 +767,14 @@ export const ListLlmProvidersResponse = zod.array(ListLlmProvidersResponseItem)
 
 
 /**
- * @summary Configure an LLM provider using a Replit Secrets variable name
+ * @summary Add an LLM provider with an encrypted API key
  */
 export const createLlmProviderBodyNameMax = 80;
 
 export const createLlmProviderBodyModelMax = 120;
 
-export const createLlmProviderBodyApiKeySecretNameRegExp = new RegExp('^[A-Z][A-Z0-9_]{2,80}$');
+export const createLlmProviderBodyApiKeyMax = 4096;
+
 
 
 export const CreateLlmProviderBody = zod.object({
@@ -782,7 +782,7 @@ export const CreateLlmProviderBody = zod.object({
   "adapter": zod.enum(['openai-compatible', 'openai', 'anthropic', 'gemini']),
   "baseUrl": zod.string().url().optional(),
   "model": zod.string().min(1).max(createLlmProviderBodyModelMax),
-  "apiKeySecretName": zod.string().regex(createLlmProviderBodyApiKeySecretNameRegExp)
+  "apiKey": zod.string().min(1).max(createLlmProviderBodyApiKeyMax)
 })
 
 export const CreateLlmProviderResponse = zod.object({
@@ -791,7 +791,32 @@ export const CreateLlmProviderResponse = zod.object({
   "adapter": zod.enum(['openai-compatible', 'openai', 'anthropic', 'gemini']),
   "baseUrl": zod.string().url(),
   "model": zod.string(),
-  "apiKeySecretName": zod.string(),
+  "configured": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Replace an LLM provider API key
+ */
+export const UpdateLlmProviderKeyParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const updateLlmProviderKeyBodyApiKeyMax = 4096;
+
+
+
+export const UpdateLlmProviderKeyBody = zod.object({
+  "apiKey": zod.string().min(1).max(updateLlmProviderKeyBodyApiKeyMax)
+})
+
+export const UpdateLlmProviderKeyResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "adapter": zod.enum(['openai-compatible', 'openai', 'anthropic', 'gemini']),
+  "baseUrl": zod.string().url(),
+  "model": zod.string(),
   "configured": zod.boolean(),
   "createdAt": zod.coerce.date()
 })
