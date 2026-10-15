@@ -47,7 +47,7 @@ function getProvider(id?: string) {
     : all<ProviderRow>("SELECT * FROM llm_providers ORDER BY created_at, name")[0];
   if (!row) throw new Error("Configure an LLM provider in Admin → Settings first.");
   const key = row.api_key_encrypted
-    ? decryptLlmApiKey(row.api_key_encrypted)
+    ? decryptLlmApiKey(row.api_key_encrypted, row.id)
     : row.api_key_secret_name
       ? process.env[row.api_key_secret_name]
       : undefined;

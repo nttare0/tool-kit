@@ -25,6 +25,7 @@ async function adminRequest<T>(path: string, body?: object, method?: string): Pr
     method: method || (body ? 'POST' : 'GET'),
     headers: body ? { 'Content-Type': 'application/json' } : undefined,
     credentials: 'include',
+    cache: 'no-store',
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await response.json().catch(() => null);

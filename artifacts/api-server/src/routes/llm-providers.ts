@@ -57,18 +57,18 @@ router.post("/admin/llm-providers", requireAdmin, (req, res) => {
     return;
   }
 
+  const baseId = slugify(name) || adapter;
+  let id = baseId;
+  let suffix = 2;
+  while (get<{ id: string }>("SELECT id FROM llm_providers WHERE id = ?", id)) id = `${baseId}-${suffix++}`;
   let encryptedApiKey: string;
   try {
-    encryptedApiKey = encryptLlmApiKey(apiKey);
+    encryptedApiKey = encryptLlmApiKey(apiKey, id);
   } catch {
     res.status(503).json({ error: "Provider key encryption is unavailable. Check the server secret configuration." });
     return;
   }
 
-  const baseId = slugify(name) || adapter;
-  let id = baseId;
-  let suffix = 2;
-  while (get<{ id: string }>("SELECT id FROM llm_providers WHERE id = ?", id)) id = `${baseId}-${suffix++}`;
   const createdAt = new Date().toISOString();
   run(
     "INSERT INTO llm_providers (id, name, adapter, base_url, model, api_key_secret_name, api_key_encrypted, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -99,7 +99,7 @@ router.patch("/admin/llm-providers/:id", requireAdmin, (req, res) => {
 
   let encryptedApiKey: string;
   try {
-    encryptedApiKey = encryptLlmApiKey(parsed.data.apiKey.trim());
+    encryptedApiKey = encryptLlmApiKey(parsed.data.apiKey.trim(), params.data.id);
   } catch {
     res.status(503).json({ error: "Provider key encryption is unavailable. Check the server secret configuration." });
     return;

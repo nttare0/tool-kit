@@ -19,9 +19,10 @@ function encryptionKey() {
   ));
 }
 
-export function encryptLlmApiKey(apiKey: string) {
+export function encryptLlmApiKey(apiKey: string, providerId: string) {
   const iv = randomBytes(IV_LENGTH);
   const cipher = createCipheriv("aes-256-gcm", encryptionKey(), iv);
+  cipher.setAAD(Buffer.from(`toolstack-provider:${providerId}`, "utf8"));
   const ciphertext = Buffer.concat([
     cipher.update(apiKey, "utf8"),
     cipher.final(),
@@ -36,7 +37,7 @@ export function encryptLlmApiKey(apiKey: string) {
   ].join(".");
 }
 
-export function decryptLlmApiKey(encryptedValue: string) {
+export function decryptLlmApiKey(encryptedValue: string, providerId: string) {
   try {
     const [version, encodedIv, encodedAuthTag, encodedCiphertext, extra] = encryptedValue.split(".");
     if (version !== VERSION || !encodedIv || !encodedAuthTag || !encodedCiphertext || extra) {
@@ -50,6 +51,7 @@ export function decryptLlmApiKey(encryptedValue: string) {
     }
 
     const decipher = createDecipheriv("aes-256-gcm", encryptionKey(), iv);
+    decipher.setAAD(Buffer.from(`toolstack-provider:${providerId}`, "utf8"));
     decipher.setAuthTag(authTag);
     return Buffer.concat([
       decipher.update(Buffer.from(encodedCiphertext, "base64url")),
