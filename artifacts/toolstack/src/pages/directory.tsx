@@ -25,7 +25,7 @@ export default function Directory() {
       const matchesCategory = !category || tool.categorySlug === category;
       return matchesSearch && matchesCategory;
     });
-    return search || category ? filtered : allTools.filter((tool) => !tool.featured);
+    return filtered;
   }, [allTools, category, search]);
   const selectedTools = useMemo(() => compareIds.map((id) => allTools.find((tool) => tool.id === id)).filter(Boolean) as Tool[], [allTools, compareIds]);
 
@@ -36,7 +36,7 @@ export default function Directory() {
     </section>
 
     {tools.isLoading || categories.isLoading ? <section className="py-12"><LoadingGrid /></section> : tools.isError || categories.isError ? <section className="py-12"><QueryError retry={() => { tools.refetch(); categories.refetch(); }} /></section> : <div className="pt-10">
-      {!search && !category && featured.length > 0 && <section><div className="mb-5 flex items-end justify-between"><div><h2 className="mt-2 text-2xl font-semibold tracking-[-.05em]">Editor’s picks</h2></div><span className="font-mono text-[10px] text-muted-foreground">{featured.length} selected</span></div><div className="grid gap-4 md:grid-cols-2">{featured.slice(0, 4).map((tool) => <ToolCard key={tool.id} tool={tool} featured compareSelected={compareIds.includes(tool.id)} onCompare={() => setCompareIds((ids) => toggleSelection(ids, tool.id))} />)}</div></section>}
+      {!search && !category && featured.length > 0 && <section><div className="mb-5 flex items-end justify-between"><div><h2 className="mt-2 text-2xl font-semibold tracking-[-.05em]">Editor’s picks</h2></div><span className="font-mono text-[10px] text-muted-foreground">{Math.min(featured.length, 4)} selected</span></div><div className="grid gap-4 md:grid-cols-2">{featured.slice(0, 4).map((tool) => <ToolCard key={tool.id} tool={tool} featured compareSelected={compareIds.includes(tool.id)} onCompare={() => setCompareIds((ids) => toggleSelection(ids, tool.id))} />)}</div></section>}
       <section className={`${!search && !category && featured.length ? 'mt-14' : ''}`}><div className="mb-5 flex items-end justify-between"><div><h2 className="mt-2 text-2xl font-semibold tracking-[-.05em]">{search || category ? `${shown.length} ${shown.length === 1 ? 'result' : 'results'}` : 'All tools'}</h2></div></div>{shown.length ? <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{shown.map((tool) => <ToolCard key={tool.id} tool={tool} compareSelected={compareIds.includes(tool.id)} onCompare={() => setCompareIds((ids) => toggleSelection(ids, tool.id))} />)}</div> : <EmptyState search={search || category} />}</section>
 
     </div>}
