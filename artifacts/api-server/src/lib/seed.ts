@@ -1,3 +1,4 @@
+import { importToolCatalog } from "./import-tool-catalog";
 import { logger } from "./logger";
 import { all, run, transaction } from "./sqlite";
 import { slugify } from "./slugify";
@@ -110,7 +111,10 @@ export async function seedDatabase() {
       tool.websiteUrl,
     );
   }
-  if ((await all("SELECT id FROM categories LIMIT 1")).length > 0) return;
+  if ((await all("SELECT id FROM categories LIMIT 1")).length > 0) {
+    await importToolCatalog();
+    return;
+  }
   await transaction(async () => {
     const categoryIds = new Map<string, number>();
     for (const category of seedCategories) {
@@ -145,6 +149,7 @@ export async function seedDatabase() {
       );
     }
   });
+  await importToolCatalog();
   logger.info(
     { categoryCount: seedCategories.length, toolCount: seedTools.length },
     "Seeded Toolstack content",
