@@ -1,3 +1,4 @@
+import { provisionAdmin } from "./lib/provision-admin";
 import app from "./app";
 import { logger } from "./lib/logger";
 import { seedDatabase } from "./lib/seed";
@@ -14,6 +15,7 @@ if (!process.env["PORT"]) {
   logger.warn({ port }, "PORT not set — using fallback for local development. Set PORT in production.");
 }
 
+provisionAdmin();
 await seedDatabase();
 
 app.listen(port, (err) => {
