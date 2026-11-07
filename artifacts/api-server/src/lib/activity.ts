@@ -1,6 +1,6 @@
 import { run } from "./sqlite";
 
-export function recordActivity(
+export async function recordActivity(
   actorType: "admin" | "user",
   actorId: number | null,
   actorEmail: string,
@@ -9,7 +9,7 @@ export function recordActivity(
   targetId: number | null,
   details = "",
 ) {
-  run(
+  await run(
     `INSERT INTO activity_log (actor_type, actor_id, actor_email, action, target_type, target_id, details, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     actorType,

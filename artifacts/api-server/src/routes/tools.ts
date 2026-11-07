@@ -71,8 +71,8 @@ const baseQuery = `
   INNER JOIN categories c ON c.id = t.category_id
 `;
 
-function findTool(id: number) {
-  const row = get<ToolRow>(`${baseQuery} WHERE t.id = ?`, id);
+async function findTool(id: number) {
+  const row = await get<ToolRow>(`${baseQuery} WHERE t.id = ?`, id);
   return row ? presentTool(row) : undefined;
 }
 
@@ -89,24 +89,30 @@ function isSafeAssetUrl(value: string) {
   return isHttpUrl(value) || value.startsWith("data:image/");
 }
 
-function hasSafeUrls(input: { websiteUrl?: string; logoUrl?: string | null; previewUrl?: string | null }) {
-  return (!input.websiteUrl || isHttpUrl(input.websiteUrl))
-    && (!input.logoUrl || isSafeAssetUrl(input.logoUrl))
-    && (!input.previewUrl || isSafeAssetUrl(input.previewUrl));
+function hasSafeUrls(input: {
+  websiteUrl?: string;
+  logoUrl?: string | null;
+  previewUrl?: string | null;
+}) {
+  return (
+    (!input.websiteUrl || isHttpUrl(input.websiteUrl)) &&
+    (!input.logoUrl || isSafeAssetUrl(input.logoUrl)) &&
+    (!input.previewUrl || isSafeAssetUrl(input.previewUrl))
+  );
 }
 
 function makePreviewUrl(websiteUrl: string) {
   return `https://api.microlink.io/?url=${encodeURIComponent(websiteUrl)}&screenshot=true&meta=false&embed=screenshot.url`;
 }
 
-router.get("/tools", (req, res): void => {
+router.get("/tools", async (req, res): Promise<void> => {
   const parsed = ListToolsQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
   const { search, category, featured, status } = parsed.data;
-  if (status && status !== "published" && !currentAdmin(req)) {
+  if (status && status !== "published" && !(await currentAdmin(req))) {
     res.status(401).json({ error: "Admin login required." });
     return;
   }
@@ -129,14 +135,14 @@ router.get("/tools", (req, res): void => {
   }
   if (featured === true) clauses.push("t.featured = 1");
   const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
-  const rows = all<ToolRow>(
+  const rows = await all<ToolRow>(
     `${baseQuery} ${where} ORDER BY t.featured DESC, t.created_at DESC`,
     ...params,
   );
   res.json(ListToolsResponse.parse(rows.map(presentTool)));
 });
 
-router.post("/tools", requireAdmin, (req, res): void => {
+router.post("/tools", requireAdmin, async (req, res): Promise<void> => {
   const parsed = CreateToolBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -144,17 +150,24 @@ router.post("/tools", requireAdmin, (req, res): void => {
   }
   const body = parsed.data;
   if (!hasSafeUrls(body)) {
-    res.status(400).json({ error: "Website, logo, and preview URLs must use http(s) or an image data URL." });
+    res
+      .status(400)
+      .json({
+        error:
+          "Website, logo, and preview URLs must use http(s) or an image data URL.",
+      });
     return;
   }
   const previewUrl = body.previewUrl || makePreviewUrl(body.websiteUrl);
   if (previewUrl.length > 4_000_000) {
-    res.status(413).json({ error: "Preview image is too large. Keep it under 3 MB." });
+    res
+      .status(413)
+      .json({ error: "Preview image is too large. Keep it under 3 MB." });
     return;
   }
   const now = new Date().toISOString();
   try {
-    const result = run(
+    const result = await run(
       `INSERT INTO tools
        (name, slug, short_description, description, how_it_works, best_for, website_url, logo_url, preview_url, category_id, pricing, featured, status, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -173,34 +186,47 @@ router.post("/tools", requireAdmin, (req, res): void => {
       body.status ?? "draft",
       now,
     );
-    const tool = findTool(Number(result.lastInsertRowid));
-    const admin = currentAdmin(req);
-    if (admin) recordActivity("admin", admin.id, admin.email, "tool_created", "tool", Number(result.lastInsertRowid), body.name);
+    const tool = await findTool(Number(result.lastInsertRowid));
+    const admin = await currentAdmin(req);
+    if (admin)
+      await recordActivity(
+        "admin",
+        admin.id,
+        admin.email,
+        "tool_created",
+        "tool",
+        Number(result.lastInsertRowid),
+        body.name,
+      );
     res.status(201).json(CreateToolResponse.parse(tool));
   } catch (error) {
-    res.status(400).json({ error: error instanceof Error ? error.message : "Could not create tool" });
+    res
+      .status(400)
+      .json({
+        error: error instanceof Error ? error.message : "Could not create tool",
+      });
   }
 });
 
-router.get("/tools/:id", (req, res): void => {
+router.get("/tools/:id", async (req, res): Promise<void> => {
   const params = GetToolParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
-  const tool = findTool(params.data.id);
+  const tool = await findTool(params.data.id);
   if (!tool) {
     res.status(404).json({ error: "Tool not found" });
     return;
   }
-  if (tool.status !== "published" && !currentAdmin(req)) {
+  if (tool.status !== "published" && !(await currentAdmin(req))) {
     res.status(404).json({ error: "Tool not found" });
     return;
   }
   res.json(GetToolResponse.parse(tool));
 });
 
-router.patch("/tools/:id", requireAdmin, (req, res): void => {
+router.patch("/tools/:id", requireAdmin, async (req, res): Promise<void> => {
   const params = UpdateToolParams.safeParse(req.params);
   const parsed = UpdateToolBody.safeParse(req.body);
   if (!params.success) {
@@ -212,19 +238,26 @@ router.patch("/tools/:id", requireAdmin, (req, res): void => {
     return;
   }
   const data = parsed.data;
-  const existing = findTool(params.data.id);
+  const existing = await findTool(params.data.id);
   if (!existing) {
     res.status(404).json({ error: "Tool not found" });
     return;
   }
   const websiteUrl = data.websiteUrl ?? existing.websiteUrl;
   if (!isHttpUrl(websiteUrl) || !hasSafeUrls({ ...data, websiteUrl })) {
-    res.status(400).json({ error: "Website, logo, and preview URLs must use http(s) or an image data URL." });
+    res
+      .status(400)
+      .json({
+        error:
+          "Website, logo, and preview URLs must use http(s) or an image data URL.",
+      });
     return;
   }
   const previewUrl = data.previewUrl || makePreviewUrl(websiteUrl);
   if (previewUrl.length > 4_000_000) {
-    res.status(413).json({ error: "Preview image is too large. Keep it under 3 MB." });
+    res
+      .status(413)
+      .json({ error: "Preview image is too large. Keep it under 3 MB." });
     return;
   }
   const fields: string[] = [];
@@ -252,31 +285,48 @@ router.patch("/tools/:id", requireAdmin, (req, res): void => {
   }
   if (fields.length) {
     values.push(params.data.id);
-    run(`UPDATE tools SET ${fields.join(", ")} WHERE id = ?`, ...values);
+    await run(`UPDATE tools SET ${fields.join(", ")} WHERE id = ?`, ...values);
   }
-  const tool = findTool(params.data.id);
+  const tool = await findTool(params.data.id);
   if (!tool) {
     res.status(404).json({ error: "Tool not found" });
     return;
   }
-  const admin = currentAdmin(req);
-  if (admin) recordActivity("admin", admin.id, admin.email, "tool_updated", "tool", tool.id, tool.name);
+  const admin = await currentAdmin(req);
+  if (admin)
+    await recordActivity(
+      "admin",
+      admin.id,
+      admin.email,
+      "tool_updated",
+      "tool",
+      tool.id,
+      tool.name,
+    );
   res.json(UpdateToolResponse.parse(tool));
 });
 
-router.delete("/tools/:id", requireAdmin, (req, res): void => {
+router.delete("/tools/:id", requireAdmin, async (req, res): Promise<void> => {
   const params = DeleteToolParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
     return;
   }
-  const result = run("DELETE FROM tools WHERE id = ?", params.data.id);
+  const result = await run("DELETE FROM tools WHERE id = ?", params.data.id);
   if (!result.changes) {
     res.status(404).json({ error: "Tool not found" });
     return;
   }
-  const admin = currentAdmin(req);
-  if (admin) recordActivity("admin", admin.id, admin.email, "tool_deleted", "tool", params.data.id);
+  const admin = await currentAdmin(req);
+  if (admin)
+    await recordActivity(
+      "admin",
+      admin.id,
+      admin.email,
+      "tool_deleted",
+      "tool",
+      params.data.id,
+    );
   res.sendStatus(204);
 });
 

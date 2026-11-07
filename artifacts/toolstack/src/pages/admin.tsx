@@ -130,14 +130,14 @@ function AdminWorkspace({ adminEmail, onLogout }: { adminEmail: string; onLogout
     }
   };
   const loadSection = async (section: Tab) => {
-    if (section === 'settings' || section === 'assistant') {
+    if (section === 'settings' || section === 'assistant' || section === 'tools') {
       setSectionLoading(true);
       try {
         const nextProviders = await adminRequest<Provider[]>('admin/llm-providers');
         setProviders(nextProviders);
         setActiveProvider((current) => current && nextProviders.some((item) => item.id === current)
           ? current
-          : nextProviders.find((item) => item.name === 'Google AI Studio' && item.adapter === 'gemini')?.id
+          : nextProviders.find((item) => item.name === 'Google AI Studio' && item.adapter === 'gemini' && item.configured)?.id
             || nextProviders.find((item) => item.configured)?.id
             || nextProviders[0]?.id
             || '');
@@ -312,7 +312,7 @@ function AdminWorkspace({ adminEmail, onLogout }: { adminEmail: string; onLogout
       setProviders((current) => [...current, created]);
       setActiveProvider(created.id);
       setProviderForm({ name: '', adapter: 'openai-compatible', baseUrl: '', model: '', apiKey: '' });
-      setNotice(`${created.name} provider saved. Its API key is encrypted and will not be shown again.`);
+      setNotice(`${created.name} provider saved. Its API key is encrypted. Use Test connection to verify provider access.`);
     } catch (providerError) {
       setError(providerError instanceof Error ? providerError.message : 'Could not save this provider.');
     } finally {
@@ -342,7 +342,7 @@ function AdminWorkspace({ adminEmail, onLogout }: { adminEmail: string; onLogout
         : [...current, provider]);
       setActiveProvider(provider.id);
       setGoogleApiKey('');
-      setNotice('Google AI Studio is ready. The key was encrypted and cleared from the form.');
+      setNotice('Google AI Studio settings saved. Use Test connection to verify the key, model, and quota.');
     } catch (providerError) {
       setError(providerError instanceof Error ? providerError.message : 'Could not save the Google AI Studio key.');
     } finally {
@@ -448,6 +448,15 @@ function AdminWorkspace({ adminEmail, onLogout }: { adminEmail: string; onLogout
             {chatMessages.map((message, index) => <div key={`${index}-${message.role}`} className={`max-w-[85%] rounded-lg border px-4 py-3 text-sm leading-6 ${message.role === 'user' ? 'ml-auto border-primary/30 bg-primary/10' : 'mr-auto border-border bg-card'}`}><span className="mb-1 block font-mono text-[9px] uppercase tracking-[.12em] text-muted-foreground">{message.role === 'user' ? 'You' : 'Assistant'}</span>{message.content}</div>)}
             {chatBusy && <div className="mr-auto rounded-lg border border-border bg-card px-4 py-3 text-xs text-muted-foreground">Preparing a response…</div>}
           </div>
+          {activeProvider && <button type="button" disabled={chatBusy} className="m-4 border border-border px-3 py-2 text-xs" onClick={async () => {
+            setChatBusy(true); setChatError('');
+            try {
+              await adminRequest(`admin/llm-providers/${activeProvider}/test`, {}, 'POST');
+              setNotice('Provider connection verified successfully.');
+            } catch (error) { setChatError(error instanceof Error ? error.message : 'Provider connection failed.'); }
+            finally { setChatBusy(false); }
+          }}>Test connection</button>}
+          {!sectionLoading && !providers.some(provider => provider.configured) && <p role="status" className="mx-4 mt-3 border border-border p-3 text-xs">AI needs a connected provider. Open Settings and save your provider API key. A website subscription does not necessarily include API access.</p>}
           {chatError && <p role="alert" className="mx-4 mt-3 border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">{chatError}</p>}
           {chatDraft && <div className="mx-4 mt-3 flex flex-col justify-between gap-3 border border-primary/40 bg-primary/5 p-4 sm:flex-row sm:items-center"><div><div className="font-mono text-[9px] uppercase tracking-[.12em] text-primary">Private draft ready</div><p className="mt-1 text-sm font-medium">{chatDraft.name || 'New tool listing'}{chatDraft.websiteUrl && <span className="ml-2 text-xs font-normal text-muted-foreground">{chatDraft.websiteUrl}</span>}</p><p className="mt-1 text-xs text-muted-foreground">Review and edit every field. Saving now keeps it unpublished.</p></div><button type="button" onClick={applyChatDraft} className="shrink-0 bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground">Review draft</button></div>}
       <form onSubmit={sendChat} className="flex gap-2 border-t border-border p-3 sm:p-4"><label className="sr-only" htmlFor="admin-ai-chat">Message the assistant</label><input id="admin-ai-chat" value={chatInput} onChange={(e) => setChatInput(e.target.value)} maxLength={4000} placeholder="Ask a question or request a tool listing…" className={`${inputClass} min-w-0 flex-1`} disabled={!activeProvider || chatBusy} /><button disabled={!chatInput.trim() || !activeProvider || !providers.find((provider) => provider.id === activeProvider)?.configured || chatBusy} className="inline-flex h-10 items-center gap-2 bg-primary px-4 text-xs font-semibold text-primary-foreground disabled:opacity-40"><Send className="h-3.5 w-3.5" /> Send</button></form>

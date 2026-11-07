@@ -1,3 +1,4 @@
+import { transaction, lockInitialization } from "./lib/sqlite";
 import { provisionAdmin } from "./lib/provision-admin";
 import app from "./app";
 import { logger } from "./lib/logger";
@@ -12,11 +13,17 @@ if (Number.isNaN(port) || port <= 0) {
 }
 
 if (!process.env["PORT"]) {
-  logger.warn({ port }, "PORT not set — using fallback for local development. Set PORT in production.");
+  logger.warn(
+    { port },
+    "PORT not set — using fallback for local development. Set PORT in production.",
+  );
 }
 
-provisionAdmin();
-await seedDatabase();
+await transaction(async () => {
+  await lockInitialization();
+  await provisionAdmin();
+  await seedDatabase();
+});
 
 app.listen(port, (err) => {
   if (err) {

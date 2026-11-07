@@ -1,189 +1,137 @@
+// Shared asynchronous database API. SQLite is for local development only;
+// production uses a dedicated, non-public schema in Supabase PostgreSQL.
 import { DatabaseSync } from "node:sqlite";
 import fs from "node:fs";
 import path from "node:path";
+import { AsyncLocalStorage } from "node:async_hooks";
+import pg, { type PoolClient } from "pg";
+import { sqliteSchema } from "./sqlite-schema";
 
-const databasePath =
-  process.env.SQLITE_PATH ||
-  (process.env.VERCEL
-    ? "/tmp/toolstack.sqlite"
-    : path.join(process.cwd(), "data", "toolstack.sqlite"));
-
-fs.mkdirSync(path.dirname(databasePath), { recursive: true });
-
-export const sqlite = new DatabaseSync(databasePath);
-
-sqlite.exec(`
-  PRAGMA journal_mode = WAL;
-  PRAGMA foreign_keys = ON;
-  PRAGMA secure_delete = ON;
-
-  CREATE TABLE IF NOT EXISTS categories (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    slug TEXT NOT NULL UNIQUE,
-    description TEXT NOT NULL,
-    accent TEXT NOT NULL DEFAULT '#D8FF63'
+const databaseUrl = process.env.DATABASE_URL;
+if (process.env.VERCEL && !databaseUrl) {
+  throw new Error(
+    "DATABASE_URL is required on Vercel. Temporary SQLite storage is disabled.",
   );
-
-  CREATE TABLE IF NOT EXISTS tools (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    slug TEXT NOT NULL UNIQUE,
-    short_description TEXT NOT NULL,
-    description TEXT NOT NULL,
-    how_it_works TEXT NOT NULL,
-    best_for TEXT NOT NULL DEFAULT '',
-    website_url TEXT NOT NULL,
-    logo_url TEXT,
-    preview_url TEXT,
-    category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE RESTRICT,
-    pricing TEXT NOT NULL,
-    featured INTEGER NOT NULL DEFAULT 0,
-    status TEXT NOT NULL DEFAULT 'draft',
-    created_at TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS admins (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
-    password_salt TEXT NOT NULL,
-    created_at TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS sessions (
-    id TEXT PRIMARY KEY,
-    admin_id INTEGER NOT NULL REFERENCES admins(id) ON DELETE CASCADE,
-    expires_at TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT NOT NULL UNIQUE,
-    display_name TEXT NOT NULL,
-    profession TEXT NOT NULL DEFAULT '',
-    password_hash TEXT NOT NULL,
-    password_salt TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'active',
-    created_at TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS user_sessions (
-    id TEXT PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    expires_at TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS user_interests (
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
-    PRIMARY KEY (user_id, category_id)
-  );
-
-  CREATE TABLE IF NOT EXISTS tool_submissions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    short_description TEXT NOT NULL,
-    description TEXT NOT NULL,
-    how_it_works TEXT NOT NULL,
-    best_for TEXT NOT NULL DEFAULT '',
-    website_url TEXT NOT NULL,
-    logo_url TEXT,
-    preview_url TEXT,
-    pricing TEXT NOT NULL,
-    suggested_categories TEXT NOT NULL DEFAULT '[]',
-    status TEXT NOT NULL DEFAULT 'pending',
-    review_note TEXT,
-    published_tool_id INTEGER REFERENCES tools(id) ON DELETE SET NULL,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL,
-    reviewed_at TEXT,
-    reviewed_by INTEGER REFERENCES admins(id) ON DELETE SET NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS activity_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    actor_type TEXT NOT NULL,
-    actor_id INTEGER,
-    actor_email TEXT NOT NULL,
-    action TEXT NOT NULL,
-    target_type TEXT NOT NULL,
-    target_id INTEGER,
-    details TEXT NOT NULL DEFAULT '',
-    created_at TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS llm_providers (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    adapter TEXT NOT NULL,
-    base_url TEXT NOT NULL,
-    model TEXT NOT NULL,
-    api_key_secret_name TEXT NOT NULL,
-    api_key_encrypted TEXT,
-    created_at TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS user_favorites (
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    tool_id INTEGER NOT NULL REFERENCES tools(id) ON DELETE CASCADE,
-    created_at TEXT NOT NULL,
-    PRIMARY KEY (user_id, tool_id)
-  );
-
-  CREATE TABLE IF NOT EXISTS user_collections (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    description TEXT NOT NULL DEFAULT '',
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
-  );
-
-  CREATE TABLE IF NOT EXISTS collection_tools (
-    collection_id INTEGER NOT NULL REFERENCES user_collections(id) ON DELETE CASCADE,
-    tool_id INTEGER NOT NULL REFERENCES tools(id) ON DELETE CASCADE,
-    added_at TEXT NOT NULL,
-    PRIMARY KEY (collection_id, tool_id)
-  );
-`);
-
-const llmProviderColumns = sqlite
-  .prepare("PRAGMA table_info(llm_providers)")
-  .all() as Array<{ name: string }>;
-if (!llmProviderColumns.some((column) => column.name === "api_key_encrypted")) {
-  sqlite.exec("ALTER TABLE llm_providers ADD COLUMN api_key_encrypted TEXT");
 }
-
+const pool = databaseUrl
+  ? new pg.Pool({
+      connectionString: databaseUrl,
+      max: 3,
+      idleTimeoutMillis: 10_000,
+      connectionTimeoutMillis: 10_000,
+      ssl: { rejectUnauthorized: true },
+    })
+  : undefined;
+const connection = new AsyncLocalStorage<PoolClient>();
+const localTransaction = new AsyncLocalStorage<boolean>();
+let sqlite: DatabaseSync | undefined;
+if (!pool) {
+  const databasePath =
+    process.env.SQLITE_PATH ||
+    path.join(process.cwd(), "data", "toolstack.sqlite");
+  fs.mkdirSync(path.dirname(databasePath), { recursive: true });
+  sqlite = new DatabaseSync(databasePath);
+  sqlite.exec(
+    "PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA secure_delete = ON;",
+  );
+  sqlite.exec(sqliteSchema);
+  const columns = sqlite
+    .prepare("PRAGMA table_info(llm_providers)")
+    .all() as Array<{ name: string }>;
+  if (!columns.some((column) => column.name === "api_key_encrypted")) {
+    sqlite.exec("ALTER TABLE llm_providers ADD COLUMN api_key_encrypted TEXT");
+  }
+}
 export type SqliteRow = Record<string, unknown>;
 
-export function all<T extends SqliteRow = SqliteRow>(
+// SQL originates only in server source, never in an HTTP request.
+export function postgresQuery(query: string) {
+  let index = 0;
+  // Ignore quoted literals while converting positional parameters.
+  return query
+    .replace(/'(?:''|[^'])*'|\?/g, (token) =>
+      token === "?" ? `$${++index}` : token,
+    )
+    .replace(/\bAS\s+([a-z_]+[A-Z][a-zA-Z]*)/g, 'AS "$1"')
+    .replace(/count\(\*\)/gi, "count(*)::integer");
+}
+async function queryPg(query: string, params: unknown[]) {
+  const client = connection.getStore();
+  if (client) return client.query(query, params);
+  return transaction(() => connection.getStore()!.query(query, params));
+}
+export async function all<T extends SqliteRow = SqliteRow>(
   query: string,
   ...params: unknown[]
-): T[] {
-  return sqlite.prepare(query).all(...(params as never[])) as T[];
+): Promise<T[]> {
+  if (pool) return (await queryPg(postgresQuery(query), params)).rows as T[];
+  return sqlite!.prepare(query).all(...(params as never[])) as T[];
 }
-
-export function get<T extends SqliteRow = SqliteRow>(
+export async function get<T extends SqliteRow = SqliteRow>(
   query: string,
   ...params: unknown[]
-): T | undefined {
-  return sqlite.prepare(query).get(...(params as never[])) as T | undefined;
+): Promise<T | undefined> {
+  return (await all<T>(query, ...params))[0];
 }
-
-export function run(query: string, ...params: unknown[]) {
-  return sqlite.prepare(query).run(...(params as never[]));
-}
-
-export function transaction<T>(callback: () => T): T {
-  sqlite.exec("BEGIN");
-  try {
-    const result = callback();
-    sqlite.exec("COMMIT");
-    return result;
-  } catch (error) {
-    sqlite.exec("ROLLBACK");
-    throw error;
+export async function run(
+  query: string,
+  ...params: unknown[]
+): Promise<{ changes: number; lastInsertRowid: number | string }> {
+  if (!pool) {
+    const result = sqlite!.prepare(query).run(...(params as never[]));
+    return {
+      changes: Number(result.changes),
+      lastInsertRowid: Number(result.lastInsertRowid),
+    };
   }
+  let sql = postgresQuery(query);
+  if (/^INSERT OR IGNORE /i.test(sql))
+    sql =
+      sql.replace(/^INSERT OR IGNORE /i, "INSERT ") + " ON CONFLICT DO NOTHING";
+  if (/^INSERT INTO /i.test(sql)) sql += " RETURNING *";
+  const result = await queryPg(sql, params);
+  return {
+    changes: result.rowCount ?? 0,
+    lastInsertRowid: result.rows[0]?.id ?? 0,
+  };
+}
+let localQueue: Promise<unknown> = Promise.resolve();
+export async function transaction<T>(
+  callback: () => Promise<T> | T,
+): Promise<T> {
+  if (pool) {
+    if (connection.getStore()) return callback();
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query("SET LOCAL search_path = toolstack");
+      const result = await connection.run(client, callback);
+      await client.query("COMMIT");
+      return result;
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+  if (localTransaction.getStore()) return callback();
+  const execute = () =>
+    localTransaction.run(true, async () => {
+      sqlite!.exec("BEGIN");
+      try {
+        const result = await callback();
+        sqlite!.exec("COMMIT");
+        return result;
+      } catch (error) {
+        sqlite!.exec("ROLLBACK");
+        throw error;
+      }
+    });
+  const result = localQueue.then(execute, execute);
+  localQueue = result.catch(() => undefined);
+  return result;
+}
+export async function lockInitialization() {
+  if (pool) await queryPg("SELECT pg_advisory_xact_lock(71934612)", []);
 }

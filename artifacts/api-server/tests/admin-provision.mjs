@@ -17,6 +17,7 @@ process.env.ADMIN_BOOTSTRAP = Buffer.from(JSON.stringify({
 const { default: app } = await import('../dist/serverless.mjs');
 const server = app.listen(0, '127.0.0.1');
 await new Promise(resolve => server.once('listening', resolve));
+const nativeFetch = globalThis.fetch;
 const base = `http://127.0.0.1:${server.address().port}/api`;
 try {
   assert.equal((await (await fetch(`${base}/auth/status`)).json()).configured, true);
@@ -32,10 +33,53 @@ try {
   assert.equal(status.admin.email, 'owner@example.com');
   assert.equal((await fetch(`${base}/admin/users`, {headers: {cookie}})).status, 200);
   assert.equal((await fetch(`${base}/admin/users`)).status, 401);
+  const request = (route, body) => nativeFetch(`${base}${route}`, {
+    method: 'POST', headers: {cookie, 'content-type':'application/json'}, body: JSON.stringify(body),
+  });
+  assert.equal((await request('/ai/chat', {messages:[{role:'user',content:'Hello'}]})).status, 503);
+  let lastRequest;
+  globalThis.fetch = async (url, options) => {
+    if (String(url).startsWith('http://127.0.0.1:')) return nativeFetch(url, options);
+    lastRequest = {url:String(url), options, body:JSON.parse(options.body)};
+    return Response.json({candidates:[{content:{parts:[{text:'{"reply":"Connected","draft":null}'}]}}],
+      choices:[{message:{content:'{"reply":"Connected","draft":null}'}}],
+      content:[{type:'text',text:'{"reply":"Connected","draft":null}'}]});
+  };
+  for (const [adapter, baseUrl] of [
+    ['gemini','https://generativelanguage.googleapis.com/v1beta'],
+    ['openai-compatible','https://llm.example.com/v1'],
+    ['anthropic','https://api.anthropic.com/v1'],
+  ]) {
+    const created = await request('/admin/llm-providers', {
+      name:adapter, adapter, baseUrl, model:'test-model', apiKey:'test-only-not-a-real-key',
+    });
+    assert.equal(created.status,201);
+    const provider = await created.json();
+    assert.equal(provider.configured,true);
+    assert.equal(JSON.stringify(provider).includes('test-only-not-a-real-key'),false);
+    const response = await request('/ai/chat', {providerId:provider.id,messages:[{role:'user',content:'Hello'}]});
+    assert.equal(response.status,200);
+    assert.equal((await response.json()).reply,'Connected');
+    if (adapter === 'gemini') {
+      assert.equal(lastRequest.options.headers['x-goog-api-key'],'test-only-not-a-real-key');
+      assert.equal(lastRequest.url.includes('key='),false);
+    }
+    if (adapter === 'anthropic') assert.equal(lastRequest.url,'https://api.anthropic.com/v1/messages');
+    if (adapter === 'openai-compatible') assert.equal(lastRequest.body.response_format,undefined);
+    assert.equal((await request(`/admin/llm-providers/${provider.id}/test`,{})).status,200);
+  }
+  globalThis.fetch = async (url, options) => String(url).startsWith('http://127.0.0.1:')
+    ? nativeFetch(url,options) : Response.json({error:{}},{status:401});
+  const denied = await request('/ai/chat', {providerId:'gemini',messages:[{role:'user',content:'Hello'}]});
+  assert.equal(denied.status,502);
+  assert.match((await denied.json()).error,/Admin → Settings/);
+  globalThis.fetch = nativeFetch;
+  console.log('PASS: AI missing-provider handling, encrypted provider API, Gemini/Anthropic/compatible adapters, connection tests, rejected API key');
   await fetch(`${base}/auth/logout`, {method:'POST',headers:{cookie}});
   assert.equal((await (await fetch(`${base}/auth/status`, {headers:{cookie}})).json()).authenticated, false);
   console.log('PASS: provision, reject wrong password, login, protected dashboard, logout');
 } finally {
+  globalThis.fetch = nativeFetch;
   await new Promise(resolve => server.close(resolve));
   await rm(dir, {recursive:true, force:true});
 }
