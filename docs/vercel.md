@@ -81,3 +81,18 @@ The auth/AI tests use an isolated temporary SQLite database and mocked upstream
 providers. The production build preflight is the real Supabase integration check.
 Vercel READY status alone is not a browser test; deployment protection may still
 require Vercel sign-in, and sandbox outbound access to vercel.app is restricted.
+
+### Default Google AI configuration and model retirement
+
+A production-only encrypted GOOGLE_AI_API_KEY can configure the default
+`google-ai-studio` provider during deployment preflight. The key is encrypted into
+the database using SESSION_SECRET, never bundled into browser assets or committed.
+The preflight lists Google's currently supported text-generation models using that
+key, selects a stable Flash model where available, and tests a real response.
+Provider/API quota failures are reported without taking down the directory.
+
+For a Gemini model 404, the server discovers models available to the same key and
+retries once with a supported text model. It persists the replacement after a
+successful response. It does not retry authentication/quota failures. Model names
+with a `models/` prefix are normalized. When rotating the default key, replace the
+Vercel GOOGLE_AI_API_KEY too, since deployment setup deliberately reapplies it.

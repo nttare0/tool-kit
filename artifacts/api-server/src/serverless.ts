@@ -10,3 +10,5 @@ await transaction(async () => {
   await seedDatabase();
 });
 export default app;
+
+export { configureDefaultGemini } from "./lib/llm-provider";

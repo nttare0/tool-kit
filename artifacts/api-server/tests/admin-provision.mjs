@@ -68,6 +68,31 @@ try {
     if (adapter === 'openai-compatible') assert.equal(lastRequest.body.response_format,undefined);
     assert.equal((await request(`/admin/llm-providers/${provider.id}/test`,{})).status,200);
   }
+  let generated = 0;
+  let listed = 0;
+  globalThis.fetch = async (url, options) => {
+    if (String(url).startsWith('http://127.0.0.1:')) return nativeFetch(url,options);
+    assert.equal(options.headers['x-goog-api-key'],'test-only-not-a-real-key');
+    if (new URL(url).pathname.endsWith('/models')) {
+      listed++;
+      return Response.json({models:[
+        {name:'models/gemini-9.0-flash',supportedGenerationMethods:['generateContent']},
+        {name:'models/gemini-9.0-image',supportedGenerationMethods:['generateContent']},
+      ]});
+    }
+    generated++;
+    if (generated === 1) return Response.json({error:{}},{status:404});
+    assert.match(String(url),/models\/gemini-9.0-flash:generateContent/);
+    return Response.json({candidates:[{content:{parts:[{text:'{"reply":"Recovered","draft":null}'}]}}]});
+  };
+  const recovered = await request('/ai/chat', {providerId:'gemini',messages:[{role:'user',content:'Hello'}]});
+  assert.equal(recovered.status,200);
+  assert.equal((await recovered.json()).reply,'Recovered');
+  assert.equal(listed,1);
+  assert.equal(generated,2);
+  const providers = await (await nativeFetch(`${base}/admin/llm-providers`,{headers:{cookie}})).json();
+  assert.equal(providers.find(provider=>provider.id==='gemini').model,'gemini-9.0-flash');
+  console.log('PASS: retired Gemini model discovery, single retry, text-model filtering, persisted replacement');
   globalThis.fetch = async (url, options) => String(url).startsWith('http://127.0.0.1:')
     ? nativeFetch(url,options) : Response.json({error:{}},{status:401});
   const denied = await request('/ai/chat', {providerId:'gemini',messages:[{role:'user',content:'Hello'}]});

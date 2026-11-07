@@ -11,7 +11,8 @@ if (!process.env.DATABASE_URL) {
 } else {
   let server;
   try {
-    const { default: app } = await import("./dist/serverless.mjs");
+    const { default: app, configureDefaultGemini } =
+      await import("./dist/serverless.mjs");
     server = app.listen(0, "127.0.0.1");
     await new Promise((resolve) => server.once("listening", resolve));
     const base = `http://127.0.0.1:${server.address().port}/api`;
@@ -26,6 +27,24 @@ if (!process.env.DATABASE_URL) {
     console.log(
       "PASS: Supabase connection, schema, initialization, and public/auth API preflight.",
     );
+    if (process.env.GOOGLE_AI_API_KEY) {
+      try {
+        const model = await configureDefaultGemini();
+        console.log(
+          "PASS: Default Gemini model discovery and live generation:",
+          model,
+        );
+      } catch (error) {
+        // AI availability must not take down the directory or dashboard.
+        console.warn(
+          "Default Gemini verification failed:",
+          String(error?.message || "Unknown provider error").replaceAll(
+            process.env.GOOGLE_AI_API_KEY,
+            "[redacted]",
+          ),
+        );
+      }
+    }
     server.close();
     process.exit(0);
   } catch (error) {

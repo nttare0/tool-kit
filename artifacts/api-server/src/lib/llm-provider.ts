@@ -1,5 +1,5 @@
-import { all, get } from "./sqlite";
-import { decryptLlmApiKey } from "./llm-secret";
+import { all, get, run } from "./sqlite";
+import { decryptLlmApiKey, encryptLlmApiKey } from "./llm-secret";
 
 export type LlmAdapter =
   "openai-compatible" | "openai" | "anthropic" | "gemini";
@@ -66,7 +66,13 @@ async function getProvider(id?: string) {
         await all<ProviderRow>(
           "SELECT * FROM llm_providers ORDER BY created_at, name",
         )
-      ).find((row) => publicProvider(row).configured);
+      )
+        .filter((row) => publicProvider(row).configured)
+        .sort(
+          (a, b) =>
+            Number(b.id === "google-ai-studio") -
+            Number(a.id === "google-ai-studio"),
+        )[0];
   if (!row)
     throw new Error(
       "Configure an LLM provider with a working API key in Admin → Settings first.",
@@ -87,6 +93,15 @@ function withPath(baseUrl: string, suffix: string) {
   return `${baseUrl.replace(/\/+$/, "")}/${suffix.replace(/^\/+/, "")}`;
 }
 
+class ProviderHttpError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
 async function requestJson(url: string, options: RequestInit) {
   try {
     const response = await fetch(url, {
@@ -105,7 +120,7 @@ async function requestJson(url: string, options: RequestInit) {
               : response.status === 400
                 ? "The provider rejected the request. Check that the model supports this adapter and JSON/text output."
                 : `The provider returned an error (HTTP ${response.status}).`;
-      throw new Error(message);
+      throw new ProviderHttpError(response.status, message);
     }
     return data;
   } catch (error) {
@@ -175,13 +190,14 @@ export async function completeWithProvider(
       .filter((item) => item.role === "system")
       .map((item) => item.content)
       .join("\n\n");
-    const endpoint = new URL(
-      withPath(
-        row.base_url,
-        `models/${encodeURIComponent(row.model)}:generateContent`,
-      ),
-    );
-    const data = await requestJson(endpoint.toString(), {
+    const baseUrl = row.base_url
+      .replace(/\/models(?:\/.*)?$/, "")
+      .replace(/\/+$/, "");
+    const model =
+      row.model === "auto"
+        ? await discoverGeminiModel(baseUrl, key)
+        : row.model.replace(/^models\//, "");
+    const options = {
       method: "POST",
       headers: { "content-type": "application/json", "x-goog-api-key": key },
       body: JSON.stringify({
@@ -194,7 +210,37 @@ export async function completeWithProvider(
           responseMimeType: "application/json",
         },
       }),
-    });
+    };
+    let data;
+    try {
+      data = await requestJson(
+        withPath(
+          baseUrl,
+          `models/${encodeURIComponent(model)}:generateContent`,
+        ),
+        options,
+      );
+    } catch (error) {
+      // Retired/inaccessible model: ask Google which text-generation models this
+      // key can actually use, then retry once. Never retry auth/quota errors.
+      if (!(error instanceof ProviderHttpError) || error.status !== 404)
+        throw error;
+      const replacement = await discoverGeminiModel(baseUrl, key, model);
+      if (replacement === model) throw error;
+      data = await requestJson(
+        withPath(
+          baseUrl,
+          `models/${encodeURIComponent(replacement)}:generateContent`,
+        ),
+        options,
+      );
+      await run(
+        "UPDATE llm_providers SET model = ? WHERE id = ? AND model = ?",
+        replacement,
+        row.id,
+        row.model,
+      );
+    }
     return (
       data?.candidates?.[0]?.content?.parts
         ?.map((part: any) => part.text || "")
@@ -220,6 +266,94 @@ export async function completeWithProvider(
     }),
   });
   return data?.choices?.[0]?.message?.content?.trim() || "";
+}
+
+export async function discoverGeminiModel(
+  baseUrl: string,
+  key: string,
+  preferred?: string,
+): Promise<string> {
+  const models: Array<{ name: string; supportedGenerationMethods?: string[] }> =
+    [];
+  let pageToken = "";
+  for (let page = 0; page < 5; page++) {
+    const url = new URL(withPath(baseUrl, "models"));
+    url.searchParams.set("pageSize", "1000");
+    if (pageToken) url.searchParams.set("pageToken", pageToken);
+    const data = await requestJson(url.toString(), {
+      headers: { "x-goog-api-key": key },
+    });
+    if (Array.isArray(data?.models)) models.push(...data.models);
+    pageToken =
+      typeof data?.nextPageToken === "string" ? data.nextPageToken : "";
+    if (!pageToken) break;
+  }
+  const names = models
+    .filter(
+      (item) =>
+        typeof item.name === "string" &&
+        item.supportedGenerationMethods?.includes("generateContent"),
+    )
+    .map((item) => item.name.replace(/^models\//, ""))
+    .filter(
+      (name) =>
+        /^gemini-[a-z0-9.-]+$/i.test(name) &&
+        !/(image|tts|audio|robotics|computer-use)/i.test(name),
+    );
+  if (preferred && names.includes(preferred)) return preferred;
+  const stable = names.filter((name) => !/(preview|exp|latest)/i.test(name));
+  const candidates = stable.length ? stable : names;
+  candidates.sort(
+    (a, b) =>
+      Number(b.includes("flash")) - Number(a.includes("flash")) ||
+      b.localeCompare(a, undefined, { numeric: true }),
+  );
+  if (!candidates[0])
+    throw new Error(
+      "The provider lists no supported Gemini text models for this key. Check Google AI Studio project access.",
+    );
+  return candidates[0];
+}
+
+// Explicit deployment setup, not a per-request/key-overwriting bootstrap.
+export async function configureDefaultGemini() {
+  const key = process.env.GOOGLE_AI_API_KEY;
+  if (!key) return;
+  const id = "google-ai-studio";
+  const baseUrl = "https://generativelanguage.googleapis.com/v1beta";
+  const existing = await get<ProviderRow>(
+    "SELECT * FROM llm_providers WHERE id = ?",
+    id,
+  );
+  const model = existing?.model || "auto";
+  const encrypted = encryptLlmApiKey(key, id);
+  await run(
+    `INSERT INTO llm_providers (id, name, adapter, base_url, model, api_key_secret_name, api_key_encrypted, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT (id) DO UPDATE SET adapter = excluded.adapter, base_url = excluded.base_url,
+    model = excluded.model, api_key_encrypted = excluded.api_key_encrypted, api_key_secret_name = excluded.api_key_secret_name`,
+    id,
+    "Google AI Studio",
+    "gemini",
+    baseUrl,
+    model,
+    "GOOGLE_AI_API_KEY",
+    encrypted,
+    new Date().toISOString(),
+  );
+  const selected = await discoverGeminiModel(baseUrl, key);
+  await run("UPDATE llm_providers SET model = ? WHERE id = ?", selected, id);
+  const content = await completeWithProvider(id, [
+    {
+      role: "system",
+      content: 'Return only JSON: {"reply":"Connected","draft":null}.',
+    },
+    { role: "user", content: "Test the connection." },
+  ]);
+  if (!content)
+    throw new Error("The provider returned an empty test response.");
+  parseJsonResponse(content);
+  return selected;
 }
 
 export function parseJsonResponse<T>(content: string): T {
