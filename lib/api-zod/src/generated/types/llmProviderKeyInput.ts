@@ -5,11 +5,24 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { LlmProviderKeyInputAdapter } from './llmProviderKeyInputAdapter';
 
 export interface LlmProviderKeyInput {
   /**
      * @minLength 1
+     * @maxLength 80
+     */
+  name?: string;
+  adapter?: LlmProviderKeyInputAdapter;
+  baseUrl?: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  model?: string;
+  /**
+     * @minLength 1
      * @maxLength 4096
      */
-  apiKey: string;
+  apiKey?: string;
 }

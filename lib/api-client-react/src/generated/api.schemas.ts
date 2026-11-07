@@ -346,6 +346,7 @@ export type LlmProviderInputAdapter = typeof LlmProviderInputAdapter[keyof typeo
 export const LlmProviderInputAdapter = {
   'openai-compatible': 'openai-compatible',
   openai: 'openai',
+  'openai-responses': 'openai-responses',
   anthropic: 'anthropic',
   gemini: 'gemini',
 } as const;
@@ -370,12 +371,35 @@ export interface LlmProviderInput {
   apiKey: string;
 }
 
+export type LlmProviderKeyInputAdapter = typeof LlmProviderKeyInputAdapter[keyof typeof LlmProviderKeyInputAdapter];
+
+
+export const LlmProviderKeyInputAdapter = {
+  'openai-compatible': 'openai-compatible',
+  openai: 'openai',
+  'openai-responses': 'openai-responses',
+  anthropic: 'anthropic',
+  gemini: 'gemini',
+} as const;
+
 export interface LlmProviderKeyInput {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  name?: string;
+  adapter?: LlmProviderKeyInputAdapter;
+  baseUrl?: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  model?: string;
   /**
      * @minLength 1
      * @maxLength 4096
      */
-  apiKey: string;
+  apiKey?: string;
 }
 
 export type LlmProviderAdapter = typeof LlmProviderAdapter[keyof typeof LlmProviderAdapter];
@@ -384,6 +408,7 @@ export type LlmProviderAdapter = typeof LlmProviderAdapter[keyof typeof LlmProvi
 export const LlmProviderAdapter = {
   'openai-compatible': 'openai-compatible',
   openai: 'openai',
+  'openai-responses': 'openai-responses',
   anthropic: 'anthropic',
   gemini: 'gemini',
 } as const;
@@ -484,5 +509,14 @@ search?: string;
 category?: string;
 featured?: boolean;
 status?: string;
+};
+
+export type DiscoverLlmProviderModels200 = {
+  models: string[];
+};
+
+export type TestLlmProviderConnection200 = {
+  ok: boolean;
+  message: string;
 };
 

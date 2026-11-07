@@ -40,14 +40,17 @@ try {
   let lastRequest;
   globalThis.fetch = async (url, options) => {
     if (String(url).startsWith('http://127.0.0.1:')) return nativeFetch(url, options);
-    lastRequest = {url:String(url), options, body:JSON.parse(options.body)};
+    lastRequest = {url:String(url), options, body:options.body ? JSON.parse(options.body) : null};
+    if (new URL(url).pathname.endsWith('/models')) return Response.json({data:[{id:'test-model'},{id:'text-embedding-fixture'}]});
     return Response.json({candidates:[{content:{parts:[{text:'{"reply":"Connected","draft":null}'}]}}],
       choices:[{message:{content:'{"reply":"Connected","draft":null}'}}],
+      output:[{content:[{type:'output_text',text:'{"reply":"Connected","draft":null}'}]}],
       content:[{type:'text',text:'{"reply":"Connected","draft":null}'}]});
   };
   for (const [adapter, baseUrl] of [
     ['gemini','https://generativelanguage.googleapis.com/v1beta'],
     ['openai-compatible','https://llm.example.com/v1'],
+    ['openai-responses','https://api.openai.com/v1'],
     ['anthropic','https://api.anthropic.com/v1'],
   ]) {
     const created = await request('/admin/llm-providers', {
@@ -66,7 +69,26 @@ try {
     }
     if (adapter === 'anthropic') assert.equal(lastRequest.url,'https://api.anthropic.com/v1/messages');
     if (adapter === 'openai-compatible') assert.equal(lastRequest.body.response_format,undefined);
+    if (adapter === 'openai-responses') {
+      assert.match(lastRequest.url,/\/responses$/);
+      assert.equal(lastRequest.body.input[1].role,'user');
+      assert.equal(lastRequest.body.messages,undefined);
+    }
     assert.equal((await request(`/admin/llm-providers/${provider.id}/test`,{})).status,200);
+    if (adapter === 'openai-compatible') {
+      const models = await (await nativeFetch(`${base}/admin/llm-providers/${provider.id}/models`,{headers:{cookie}})).json();
+      assert.deepEqual(models.models,['test-model']);
+      assert.equal((await nativeFetch(`${base}/admin/llm-providers/${provider.id}/models`)).status,401);
+      const patch = body => nativeFetch(`${base}/admin/llm-providers/${provider.id}`,{method:'PATCH',headers:{cookie,'content-type':'application/json'},body:JSON.stringify(body)});
+      assert.equal((await patch({name:'Renamed compatible',model:'test-model'})).status,200);
+      assert.equal((await patch({baseUrl:'https://other.example.com/v1'})).status,400);
+      assert.equal((await patch({})).status,400);
+      assert.equal((await patch({model:'auto'})).status,200);
+      assert.equal((await request(`/admin/llm-providers/${provider.id}/test`,{})).status,200);
+      const meta = await (await nativeFetch(`${base}/admin/llm-providers`,{headers:{cookie}})).json();
+      assert.equal(meta.find(item=>item.id === provider.id).configured,true);
+    }
+
   }
   let generated = 0;
   let listed = 0;
@@ -99,7 +121,7 @@ try {
   assert.equal(denied.status,502);
   assert.match((await denied.json()).error,/Admin → Settings/);
   globalThis.fetch = nativeFetch;
-  console.log('PASS: AI missing-provider handling, encrypted provider API, Gemini/Anthropic/compatible adapters, connection tests, rejected API key');
+  console.log('PASS: AI missing-provider handling, encrypted provider API, Gemini/Anthropic/compatible/Responses adapters, model discovery, safe editing, connection tests, rejected API key');
   await fetch(`${base}/auth/logout`, {method:'POST',headers:{cookie}});
   assert.equal((await (await fetch(`${base}/auth/status`, {headers:{cookie}})).json()).authenticated, false);
   console.log('PASS: provision, reject wrong password, login, protected dashboard, logout');

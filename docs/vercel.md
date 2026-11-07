@@ -84,8 +84,8 @@ require Vercel sign-in, and sandbox outbound access to vercel.app is restricted.
 
 ### Default Google AI configuration and model retirement
 
-A production-only encrypted GOOGLE_AI_API_KEY can configure the default
-`google-ai-studio` provider during deployment preflight. The key is encrypted into
+A production-only encrypted GOOGLE_AI_API_KEY can initialize the first
+`google-ai-studio` provider during deployment preflight only when no provider exists. Existing provider settings and user-selected models are never overwritten on redeploy. The key is encrypted into
 the database using SESSION_SECRET, never bundled into browser assets or committed.
 The preflight lists Google's currently supported text-generation models using that
 key, selects a stable Flash model where available, and tests a real response.
@@ -94,5 +94,28 @@ Provider/API quota failures are reported without taking down the directory.
 For a Gemini model 404, the server discovers models available to the same key and
 retries once with a supported text model. It persists the replacement after a
 successful response. It does not retry authentication/quota failures. Model names
-with a `models/` prefix are normalized. When rotating the default key, replace the
-Vercel GOOGLE_AI_API_KEY too, since deployment setup deliberately reapplies it.
+with a `models/` prefix are normalized. When rotating a bootstrapped Google key, replace or remove Vercel GOOGLE_AI_API_KEY
+too so an empty database cannot restore an outdated credential.
+
+
+## Provider-neutral AI connections
+
+Admin Settings exposes presets for OpenAI (Chat Completions and Responses),
+Anthropic, Gemini, OpenRouter, Groq, DeepSeek, xAI, Mistral, Together, Fireworks,
+Perplexity, and a custom HTTPS endpoint. Presets configure public URLs and protocol
+only; they are not a guarantee of model access or a claim of live testing every vendor.
+A provider key works only with its issuing service. Custom services must implement
+one of the five supported API protocols; arbitrary proprietary APIs require adapters.
+
+Save a connection, then use Load models, Edit, Test, and Use provider. Selection
+is remembered in that browser and sent explicitly with assistant requests. Use an
+exact model ID when discovery isn't supported. `auto` asks the configured endpoint
+for models before the first generation; it may not pick the model you prefer, so
+manual selection is recommended. Non-text models are filtered heuristically.
+
+Keys remain encrypted. Editing name/model does not require the key again. Changing
+endpoint or protocol requires explicit re-entry of a key, so an existing secret
+cannot silently be redirected elsewhere. Model discovery uses only the configured
+endpoint and never probes different vendors with the same credential. Test sends
+a small potentially billable request. The app does not bypass provider quotas or
+silently fail over to another billable provider.

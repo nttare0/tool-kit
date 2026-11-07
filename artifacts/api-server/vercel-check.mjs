@@ -31,8 +31,9 @@ if (!process.env.DATABASE_URL) {
       try {
         const model = await configureDefaultGemini();
         console.log(
-          "PASS: Default Gemini model discovery and live generation:",
-          model,
+          model
+            ? `PASS: Default Gemini model discovery and live generation: ${model}`
+            : "AI bootstrap skipped: saved provider settings preserved.",
         );
       } catch (error) {
         // AI availability must not take down the directory or dashboard.

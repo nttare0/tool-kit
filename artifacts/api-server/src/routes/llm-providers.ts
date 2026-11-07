@@ -11,6 +11,7 @@ import { recordActivity } from "../lib/activity";
 import { get, run } from "../lib/sqlite";
 import {
   completeWithProvider,
+  discoverProviderModels,
   listLlmProviders,
   type LlmAdapter,
 } from "../lib/llm-provider";
@@ -21,13 +22,14 @@ const router: IRouter = Router();
 const adapters = new Set<LlmAdapter>([
   "openai-compatible",
   "openai",
+  "openai-responses",
   "anthropic",
   "gemini",
 ]);
 
 function validBaseUrl(value: string, adapter: LlmAdapter) {
   const fallback =
-    adapter === "openai"
+    adapter === "openai" || adapter === "openai-responses"
       ? "https://api.openai.com/v1"
       : adapter === "anthropic"
         ? "https://api.anthropic.com"
@@ -90,12 +92,10 @@ router.post("/admin/llm-providers", requireAdmin, async (req, res) => {
     model.length < 1 ||
     !baseUrl
   ) {
-    res
-      .status(400)
-      .json({
-        error:
-          "Enter a valid provider name, supported adapter, model, HTTPS endpoint, and API key.",
-      });
+    res.status(400).json({
+      error:
+        "Enter a valid provider name, supported adapter, model, HTTPS endpoint, and API key.",
+    });
     return;
   }
 
@@ -110,12 +110,10 @@ router.post("/admin/llm-providers", requireAdmin, async (req, res) => {
   try {
     encryptedApiKey = encryptLlmApiKey(apiKey, id);
   } catch {
-    res
-      .status(503)
-      .json({
-        error:
-          "Provider key encryption is unavailable. Check the server secret configuration.",
-      });
+    res.status(503).json({
+      error:
+        "Provider key encryption is unavailable. Check the server secret configuration.",
+    });
     return;
   }
 
@@ -154,41 +152,77 @@ router.post("/admin/llm-providers", requireAdmin, async (req, res) => {
 router.patch("/admin/llm-providers/:id", requireAdmin, async (req, res) => {
   const params = UpdateLlmProviderKeyParams.safeParse(req.params);
   const parsed = UpdateLlmProviderKeyBody.safeParse(req.body);
-  if (!params.success || !parsed.success || !parsed.data.apiKey.trim()) {
-    res.status(400).json({ error: "Enter a valid API key." });
+  if (!params.success || !parsed.success || !Object.keys(parsed.data).length) {
+    res
+      .status(400)
+      .json({ error: "Enter provider settings or a replacement key." });
     return;
   }
-
-  const provider = await get<{ id: string; name: string }>(
-    "SELECT id, name FROM llm_providers WHERE id = ?",
+  const provider = await get<{
+    id: string;
+    name: string;
+    adapter: LlmAdapter;
+    base_url: string;
+    model: string;
+  }>(
+    "SELECT id, name, adapter, base_url, model FROM llm_providers WHERE id = ?",
     params.data.id,
   );
   if (!provider) {
     res.status(404).json({ error: "LLM provider configuration not found." });
     return;
   }
-
-  let encryptedApiKey: string;
-  try {
-    encryptedApiKey = encryptLlmApiKey(
-      parsed.data.apiKey.trim(),
-      params.data.id,
-    );
-  } catch {
+  const adapter = parsed.data.adapter || provider.adapter;
+  const baseUrl = validBaseUrl(
+    parsed.data.baseUrl?.trim() || provider.base_url,
+    adapter,
+  );
+  const name = parsed.data.name?.trim() ?? provider.name;
+  const model = parsed.data.model?.trim() ?? provider.model;
+  if (
+    !adapters.has(adapter) ||
+    !baseUrl ||
+    !name ||
+    !model ||
+    (parsed.data.apiKey !== undefined && !parsed.data.apiKey.trim())
+  ) {
     res
-      .status(503)
+      .status(400)
       .json({
         error:
-          "Provider key encryption is unavailable. Check the server secret configuration.",
+          "Enter a valid provider, model, HTTPS endpoint, and nonempty key if replacing it.",
       });
     return;
   }
-
-  await run(
-    "UPDATE llm_providers SET api_key_secret_name = '', api_key_encrypted = ? WHERE id = ?",
-    encryptedApiKey,
-    provider.id,
-  );
+  if (parsed.data.apiKey) {
+    const encrypted = encryptLlmApiKey(parsed.data.apiKey.trim(), provider.id);
+    await run(
+      "UPDATE llm_providers SET name = ?, adapter = ?, base_url = ?, model = ?, api_key_secret_name = '', api_key_encrypted = ? WHERE id = ?",
+      name,
+      adapter,
+      baseUrl,
+      model,
+      encrypted,
+      provider.id,
+    );
+  } else {
+    // Never send a saved credential to a different endpoint without explicitly
+    // confirming a new key for that destination.
+    if (baseUrl !== provider.base_url || adapter !== provider.adapter) {
+      res
+        .status(400)
+        .json({
+          error: "Re-enter the API key when changing endpoint or protocol.",
+        });
+      return;
+    }
+    await run(
+      "UPDATE llm_providers SET name = ?, model = ? WHERE id = ?",
+      name,
+      model,
+      provider.id,
+    );
+  }
   const admin = (await currentAdmin(req))!;
   await recordActivity(
     "admin",
@@ -203,16 +237,36 @@ router.patch("/admin/llm-providers/:id", requireAdmin, async (req, res) => {
     (item) => item.id === provider.id,
   );
   if (!updated) {
-    res
-      .status(500)
-      .json({
-        error: "The provider was updated, but its status could not be loaded.",
-      });
+    res.status(500).json({
+      error: "The provider was updated, but its status could not be loaded.",
+    });
     return;
   }
   res.setHeader("Cache-Control", "no-store");
   res.json(UpdateLlmProviderKeyResponse.parse(updated));
 });
+
+router.get(
+  "/admin/llm-providers/:id/models",
+  requireAdmin,
+  async (req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    try {
+      res.json({
+        models: await discoverProviderModels(req.params.id as string),
+      });
+    } catch (error) {
+      res
+        .status(502)
+        .json({
+          error:
+            error instanceof Error
+              ? error.message
+              : "Model discovery failed. Enter a model manually.",
+        });
+    }
+  },
+);
 
 router.post("/admin/llm-providers/:id/test", requireAdmin, async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
@@ -227,14 +281,10 @@ router.post("/admin/llm-providers/:id/test", requireAdmin, async (req, res) => {
       );
     res.json({ ok: true, message: "Provider responded successfully." });
   } catch (error) {
-    res
-      .status(502)
-      .json({
-        error:
-          error instanceof Error
-            ? error.message
-            : "Provider connection failed.",
-      });
+    res.status(502).json({
+      error:
+        error instanceof Error ? error.message : "Provider connection failed.",
+    });
   }
 });
 

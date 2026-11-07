@@ -1,3 +1,4 @@
+import { aiPresets, type AiProtocol } from '@/lib/ai-presets';
 import { useEffect, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { Activity, Check, Edit3, ExternalLink, FolderPlus, LogOut, Plus, Save, Send, Sparkles, Star, Trash2, Users, X } from 'lucide-react';
@@ -11,7 +12,7 @@ type Submission = { id: number; userEmail: string; userName: string; name: strin
 type ManagedUser = { id: number; email: string; displayName: string; profession: string; status: string; createdAt: string; submissionCount: number; pendingCount: number };
 type ActivityItem = { id: number; actorType: string; actorEmail: string; action: string; targetType: string; targetId: number | null; details: string; createdAt: string };
 type Suggestion = { name: string; websiteUrl?: string; shortDescription: string; description: string; howItWorks: string; bestFor: string; pricing: string; categorySuggestions: Array<{ name: string; description: string }> };
-type Provider = { id: string; name: string; adapter: 'openai-compatible' | 'openai' | 'anthropic' | 'gemini'; baseUrl: string; model: string; configured: boolean; createdAt: string };
+type Provider = { id: string; name: string; adapter: AiProtocol; baseUrl: string; model: string; configured: boolean; createdAt: string };
 type ChatMessage = { role: 'user' | 'assistant'; content: string };
 type Tab = 'tools' | 'categories' | 'submissions' | 'users' | 'activity' | 'assistant' | 'settings';
 
@@ -106,8 +107,15 @@ function AdminWorkspace({ adminEmail, onLogout }: { adminEmail: string; onLogout
   const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '' });
   const [providers, setProviders] = useState<Provider[]>([]);
   const [providerForm, setProviderForm] = useState({ name: '', adapter: 'openai-compatible' as Provider['adapter'], baseUrl: '', model: '', apiKey: '' });
+  const [editingProvider, setEditingProvider] = useState('');
+  const [discoveredModels, setDiscoveredModels] = useState<string[]>([]);
+  const [providerActionBusy, setProviderActionBusy] = useState('');
   const [googleApiKey, setGoogleApiKey] = useState('');
-  const [activeProvider, setActiveProvider] = useState('');
+  const [activeProvider, setActiveProvider] = useState(() => window.localStorage.getItem('toolstack-ai-provider') || '');
+  useEffect(() => {
+    if (activeProvider) window.localStorage.setItem('toolstack-ai-provider', activeProvider);
+    else window.localStorage.removeItem('toolstack-ai-provider');
+  }, [activeProvider]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatBusy, setChatBusy] = useState(false);
@@ -135,10 +143,9 @@ function AdminWorkspace({ adminEmail, onLogout }: { adminEmail: string; onLogout
       try {
         const nextProviders = await adminRequest<Provider[]>('admin/llm-providers');
         setProviders(nextProviders);
-        setActiveProvider((current) => current && nextProviders.some((item) => item.id === current)
+        setActiveProvider((current) => current && nextProviders.some((item) => item.id === current && item.configured)
           ? current
-          : nextProviders.find((item) => item.name === 'Google AI Studio' && item.adapter === 'gemini' && item.configured)?.id
-            || nextProviders.find((item) => item.configured)?.id
+          : nextProviders.find((item) => item.configured)?.id
             || nextProviders[0]?.id
             || '');
       } catch (loadError) {
@@ -308,8 +315,10 @@ function AdminWorkspace({ adminEmail, onLogout }: { adminEmail: string; onLogout
     setBusy(true);
     setError('');
     try {
-      const created = await adminRequest<Provider>('admin/llm-providers', providerForm, 'POST');
-      setProviders((current) => [...current, created]);
+      const payload = { ...providerForm, apiKey: providerForm.apiKey.trim() || undefined };
+      const created = await adminRequest<Provider>(editingProvider ? `admin/llm-providers/${editingProvider}` : 'admin/llm-providers', payload, editingProvider ? 'PATCH' : 'POST');
+      setProviders((current) => editingProvider ? current.map(item => item.id === created.id ? created : item) : [...current, created]);
+      setEditingProvider(''); setDiscoveredModels([]);
       setActiveProvider(created.id);
       setProviderForm({ name: '', adapter: 'openai-compatible', baseUrl: '', model: '', apiKey: '' });
       setNotice(`${created.name} provider saved. Its API key is encrypted. Use Test connection to verify provider access.`);
@@ -334,7 +343,7 @@ function AdminWorkspace({ adminEmail, onLogout }: { adminEmail: string; onLogout
           name: 'Google AI Studio',
           adapter: 'gemini',
           baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
-          model: 'gemini-2.5-flash',
+          model: 'auto',
           apiKey,
         }, 'POST');
       setProviders((current) => existing
@@ -461,7 +470,7 @@ function AdminWorkspace({ adminEmail, onLogout }: { adminEmail: string; onLogout
           {chatDraft && <div className="mx-4 mt-3 flex flex-col justify-between gap-3 border border-primary/40 bg-primary/5 p-4 sm:flex-row sm:items-center"><div><div className="font-mono text-[9px] uppercase tracking-[.12em] text-primary">Private draft ready</div><p className="mt-1 text-sm font-medium">{chatDraft.name || 'New tool listing'}{chatDraft.websiteUrl && <span className="ml-2 text-xs font-normal text-muted-foreground">{chatDraft.websiteUrl}</span>}</p><p className="mt-1 text-xs text-muted-foreground">Review and edit every field. Saving now keeps it unpublished.</p></div><button type="button" onClick={applyChatDraft} className="shrink-0 bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground">Review draft</button></div>}
       <form onSubmit={sendChat} className="flex gap-2 border-t border-border p-3 sm:p-4"><label className="sr-only" htmlFor="admin-ai-chat">Message the assistant</label><input id="admin-ai-chat" value={chatInput} onChange={(e) => setChatInput(e.target.value)} maxLength={4000} placeholder="Ask a question or request a tool listing…" className={`${inputClass} min-w-0 flex-1`} disabled={!activeProvider || chatBusy} /><button disabled={!chatInput.trim() || !activeProvider || !providers.find((provider) => provider.id === activeProvider)?.configured || chatBusy} className="inline-flex h-10 items-center gap-2 bg-primary px-4 text-xs font-semibold text-primary-foreground disabled:opacity-40"><Send className="h-3.5 w-3.5" /> Send</button></form>
         </div>
-        <aside className="border border-border bg-secondary/40 p-5"><div className="font-mono text-[10px] uppercase tracking-[.15em] text-muted-foreground">What it can do</div><ul className="mt-4 space-y-4 text-sm leading-6"><li><strong className="font-medium">Prepare listings.</strong><span className="block text-xs text-muted-foreground">Give a name and website URL; the assistant fills a draft.</span></li><li><strong className="font-medium">Keep publishing manual.</strong><span className="block text-xs text-muted-foreground">Drafts stay hidden until you review and publish them.</span></li><li><strong className="font-medium">Google AI Studio by default.</strong><span className="block text-xs text-muted-foreground">Its API key is encrypted in Toolstack. Other providers are under Settings → Advanced.</span></li></ul>{!providers.some((provider) => provider.configured) && <button type="button" onClick={() => setTab('settings')} className="mt-5 w-full border border-border bg-background px-3 py-2 text-xs font-medium hover:border-primary">Connect Google AI Studio</button>}</aside>
+        <aside className="border border-border bg-secondary/40 p-5"><div className="font-mono text-[10px] uppercase tracking-[.15em] text-muted-foreground">What it can do</div><ul className="mt-4 space-y-4 text-sm leading-6"><li><strong className="font-medium">Prepare listings.</strong><span className="block text-xs text-muted-foreground">Give a name and website URL; the assistant fills a draft.</span></li><li><strong className="font-medium">Keep publishing manual.</strong><span className="block text-xs text-muted-foreground">Drafts stay hidden until you review and publish them.</span></li><li><strong className="font-medium">Choose your provider.</strong><span className="block text-xs text-muted-foreground">Connect a service in Settings, then select it here. Keys stay encrypted and are sent only to that service.</span></li></ul>{!providers.some((provider) => provider.configured) && <button type="button" onClick={() => setTab('settings')} className="mt-5 w-full border border-border bg-background px-3 py-2 text-xs font-medium hover:border-primary">Connect an AI provider</button>}</aside>
       </section>}
 
       {tab === 'settings' && <section className="mt-7 grid gap-6 xl:grid-cols-[1.2fr_.8fr]">
@@ -470,7 +479,7 @@ function AdminWorkspace({ adminEmail, onLogout }: { adminEmail: string; onLogout
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="flex items-start gap-3">
                 <img src="/toolstack-favicon.svg" alt="" className="h-10 w-10 rounded-md border border-border bg-white p-1" />
-                <div><div className="font-mono text-[10px] uppercase tracking-[.16em] text-muted-foreground">Default AI provider</div><h2 className="mt-1 text-2xl font-semibold">Google AI Studio</h2><p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">Paste your Gemini API key. The Google endpoint and model are filled in automatically.</p></div>
+                <div><div className="font-mono text-[10px] uppercase tracking-[.16em] text-muted-foreground">Optional quick connection</div><h2 className="mt-1 text-2xl font-semibold">Google AI Studio</h2><p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">Paste your Gemini API key. The Google endpoint and model are filled in automatically.</p></div>
               </div>
               <a href="https://aistudio.google.com/api-keys" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 border border-border px-3 py-2 text-xs font-medium hover:border-primary">Get an API key <ExternalLink className="h-3.5 w-3.5" /></a>
             </div>
@@ -480,24 +489,54 @@ function AdminWorkspace({ adminEmail, onLogout }: { adminEmail: string; onLogout
             </form>
             <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               {googleProvider && <span className={`rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase ${googleProvider.configured ? 'border-primary/40 text-primary' : 'border-amber-500/40 text-amber-700 dark:text-amber-300'}`}>{googleProvider.configured ? 'Key saved' : 'Key missing'}</span>}
-              <span>Model: gemini-2.5-flash</span><span aria-hidden="true">·</span><span>API key is encrypted before storage and never returned to the page.</span>
+              <span>Model: {googleProvider?.model || 'auto'}</span><span aria-hidden="true">·</span><span>API key is encrypted before storage and never returned to the page.</span>
             </div>
           </div>
-          <details className="border border-border bg-card">
-            <summary className="cursor-pointer list-none px-6 py-4 font-semibold marker:hidden">Advanced: connect another provider</summary>
+          <section className="border border-border bg-card">
+            <h3 className="px-6 py-4 font-semibold">Connect or edit an AI provider</h3>
             <div className="border-t border-border p-6">
               <p className="text-sm leading-6 text-muted-foreground">Connect OpenAI-compatible services or dedicated OpenAI, Anthropic, and Gemini APIs. Keys are encrypted before storage.</p>
               <form onSubmit={saveProvider} className="mt-5 grid gap-4 md:grid-cols-2">
+                <label className="block text-xs text-muted-foreground md:col-span-2">Service preset<select defaultValue="custom" onChange={(e) => {
+                  const preset = aiPresets.find(item => item.id === e.target.value)!;
+                  setProviderForm({name:preset.id === 'custom' ? '' : preset.name, adapter:preset.adapter, baseUrl:preset.baseUrl, model:'auto', apiKey:''});
+                  setEditingProvider(''); setDiscoveredModels([]);
+                }} className={`${inputClass} mt-1.5`}>{aiPresets.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select><span className="mt-2 block text-xs">Choose the service that issued your key. Custom services must support one of the listed API protocols. Quota and billing still apply.</span></label>
+                {editingProvider && <p className="text-xs md:col-span-2">Editing saved connection. Leave its key blank to keep it. Re-enter a key if changing endpoint or protocol.</p>}
+
                 <label className="block text-xs text-muted-foreground">Provider name<input required maxLength={80} value={providerForm.name} onChange={(e) => setProviderForm({ ...providerForm, name: e.target.value })} placeholder="My LLM" className={`${inputClass} mt-1.5`} /></label>
-                <label className="block text-xs text-muted-foreground">Provider type<select value={providerForm.adapter} onChange={(e) => setProviderForm({ ...providerForm, adapter: e.target.value as Provider['adapter'] })} className={`${inputClass} mt-1.5`}><option value="openai-compatible">OpenAI-compatible endpoint</option><option value="openai">OpenAI</option><option value="anthropic">Anthropic</option><option value="gemini">Google Gemini</option></select></label>
-                <label className="block text-xs text-muted-foreground">API base URL{providerForm.adapter !== 'openai-compatible' && <span className="ml-1 text-muted-foreground/70">(optional default)</span>}<input type="url" value={providerForm.baseUrl} onChange={(e) => setProviderForm({ ...providerForm, baseUrl: e.target.value })} placeholder={providerForm.adapter === 'openai' ? 'https://api.openai.com/v1' : providerForm.adapter === 'anthropic' ? 'https://api.anthropic.com' : providerForm.adapter === 'gemini' ? 'https://generativelanguage.googleapis.com/v1beta' : 'https://your-provider.example/v1'} required={providerForm.adapter === 'openai-compatible'} className={`${inputClass} mt-1.5`} /></label>
-                <label className="block text-xs text-muted-foreground">Model name<input required maxLength={120} value={providerForm.model} onChange={(e) => setProviderForm({ ...providerForm, model: e.target.value })} placeholder={providerForm.adapter === 'gemini' ? 'gemini-2.5-flash' : 'e.g. gpt-4.1-mini'} className={`${inputClass} mt-1.5`} /></label>
-                <label className="block text-xs text-muted-foreground md:col-span-2">API key<input required type="password" autoComplete="new-password" autoCapitalize="none" spellCheck={false} maxLength={4096} value={providerForm.apiKey} onChange={(e) => setProviderForm({ ...providerForm, apiKey: e.target.value })} className={`${inputClass} mt-1.5`} /><span className="mt-1.5 block text-[11px] leading-5 text-muted-foreground">Encrypted before storage. Toolstack never returns or displays the key.</span></label>
-                <button disabled={busy} className="inline-flex h-10 items-center justify-center gap-2 bg-primary px-4 text-xs font-semibold text-primary-foreground disabled:opacity-50"><Plus className="h-4 w-4" />{busy ? 'Saving…' : 'Add provider'}</button>
+                <label className="block text-xs text-muted-foreground">Provider type<select value={providerForm.adapter} onChange={(e) => setProviderForm({ ...providerForm, adapter: e.target.value as Provider['adapter'] })} className={`${inputClass} mt-1.5`}><option value="openai-compatible">OpenAI-compatible endpoint</option><option value="openai">OpenAI Chat Completions</option><option value="openai-responses">OpenAI Responses</option><option value="anthropic">Anthropic</option><option value="gemini">Google Gemini</option></select></label>
+                <label className="block text-xs text-muted-foreground">API base URL{providerForm.adapter !== 'openai-compatible' && <span className="ml-1 text-muted-foreground/70">(optional default)</span>}<input type="url" value={providerForm.baseUrl} onChange={(e) => setProviderForm({ ...providerForm, baseUrl: e.target.value })} placeholder={(providerForm.adapter === 'openai' || providerForm.adapter === 'openai-responses') ? 'https://api.openai.com/v1' : providerForm.adapter === 'anthropic' ? 'https://api.anthropic.com' : providerForm.adapter === 'gemini' ? 'https://generativelanguage.googleapis.com/v1beta' : 'https://your-provider.example/v1'} required={providerForm.adapter === 'openai-compatible'} className={`${inputClass} mt-1.5`} /></label>
+                <label className="block text-xs text-muted-foreground">Model name<input required maxLength={120} value={providerForm.model} onChange={(e) => setProviderForm({ ...providerForm, model: e.target.value })} list="ai-provider-models" placeholder="Exact model ID, or auto for discovery" className={`${inputClass} mt-1.5`} /></label>
+                <datalist id="ai-provider-models">{discoveredModels.map(model => <option key={model} value={model} />)}</datalist><label className="block text-xs text-muted-foreground md:col-span-2">API key<input required={!editingProvider} type="password" autoComplete="new-password" autoCapitalize="none" spellCheck={false} maxLength={4096} value={providerForm.apiKey} onChange={(e) => setProviderForm({ ...providerForm, apiKey: e.target.value })} className={`${inputClass} mt-1.5`} /><span className="mt-1.5 block text-[11px] leading-5 text-muted-foreground">Encrypted before storage. Toolstack never returns or displays the key.</span></label>
+                <button disabled={busy} className="inline-flex h-10 items-center justify-center gap-2 bg-primary px-4 text-xs font-semibold text-primary-foreground disabled:opacity-50"><Plus className="h-4 w-4" />{busy ? 'Saving…' : editingProvider ? 'Save changes' : 'Add provider'}</button>
+              {editingProvider && <button type="button" className="border border-border px-3 py-2 text-xs" onClick={() => {setEditingProvider('');setDiscoveredModels([]);setProviderForm({name:'',adapter:'openai-compatible',baseUrl:'',model:'auto',apiKey:''});}}>Cancel edit</button>}
               </form>
             </div>
-          </details>
-          <div className="border border-border bg-card"><div className="border-b border-border px-5 py-4"><h3 className="font-semibold">Configured providers</h3><p className="mt-1 text-xs text-muted-foreground">Provider details and whether an encrypted key is saved. Keys are never shown.</p></div><div className="divide-y divide-border">{providers.map((provider) => <article key={provider.id} className="flex flex-col justify-between gap-3 p-5 sm:flex-row sm:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h4 className="font-medium">{provider.name}</h4><span className={`rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase ${provider.configured ? 'border-primary/40 text-primary' : 'border-amber-500/40 text-amber-700 dark:text-amber-300'}`}>{provider.configured ? 'Key saved' : 'Key missing'}</span></div><p className="mt-1 break-all text-xs text-muted-foreground">{provider.adapter} · {provider.model}</p><p className="mt-1 break-all font-mono text-[10px] text-muted-foreground">{provider.baseUrl}</p></div><button type="button" onClick={() => void deleteProvider(provider)} aria-label={`Delete ${provider.name} provider`} className="inline-flex h-9 shrink-0 items-center gap-2 border border-border px-3 text-xs text-muted-foreground hover:border-destructive hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /> Remove</button></article>)}{!providers.length && <p className="p-6 text-sm text-muted-foreground">No model connections yet. Paste a Google AI Studio key above.</p>}</div></div>
+          </section>
+          <div className="border border-border bg-card"><div className="border-b border-border px-5 py-4"><h3 className="font-semibold">Configured providers</h3><p className="mt-1 text-xs text-muted-foreground">Provider details and whether an encrypted key is saved. Keys are never shown.</p></div><div className="divide-y divide-border">{providers.map((provider) => <article key={provider.id} className="flex flex-col justify-between gap-3 p-5 sm:flex-row sm:items-center"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h4 className="font-medium">{provider.name}</h4><span className={`rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase ${provider.configured ? 'border-primary/40 text-primary' : 'border-amber-500/40 text-amber-700 dark:text-amber-300'}`}>{provider.configured ? 'Key saved' : 'Key missing'}</span></div><p className="mt-1 break-all text-xs text-muted-foreground">{provider.adapter} · {provider.model}</p><p className="mt-1 break-all font-mono text-[10px] text-muted-foreground">{provider.baseUrl}</p></div><div className="flex flex-wrap gap-2">
+                <button type="button" className="border border-border px-3 py-2 text-xs" onClick={() => {
+                  setEditingProvider(provider.id); setDiscoveredModels([]);
+                  setProviderForm({name:provider.name,adapter:provider.adapter,baseUrl:provider.baseUrl,model:provider.model,apiKey:''});
+                }}>Edit</button>
+                <button type="button" disabled={!!providerActionBusy} className="border border-border px-3 py-2 text-xs" onClick={async () => {
+                  setProviderActionBusy(provider.id); setError('');
+                  try {
+                    const result = await adminRequest<{models:string[]}>(`admin/llm-providers/${provider.id}/models`);
+                    setEditingProvider(provider.id); setDiscoveredModels(result.models);
+                    setProviderForm({name:provider.name,adapter:provider.adapter,baseUrl:provider.baseUrl,model:provider.model,apiKey:''});
+                    setNotice(`${result.models.length} models found. Select a model in the edit form and save. If discovery is unsupported, use the provider's documented model ID.`);
+                  } catch(error) {setError(error instanceof Error ? error.message : 'Model discovery unavailable. Enter a model ID manually.');}
+                  finally {setProviderActionBusy('');}
+                }}>Load models</button>
+                <button type="button" disabled={!!providerActionBusy} className="border border-border px-3 py-2 text-xs" onClick={async () => {
+                  setProviderActionBusy(provider.id);setError('');
+                  try {await adminRequest(`admin/llm-providers/${provider.id}/test`,{},'POST');setNotice(`${provider.name} responded successfully.`);}
+                  catch(error) {setError(error instanceof Error ? error.message : 'Connection failed.');}
+                  finally {setProviderActionBusy('');}
+                }}>Test</button>
+                <button type="button" className="border border-border px-3 py-2 text-xs" onClick={() => {setActiveProvider(provider.id);setNotice(`${provider.name} selected for this browser.`);}}>Use provider</button>
+<button type="button" onClick={() => void deleteProvider(provider)} aria-label={`Delete ${provider.name} provider`} className="inline-flex h-9 shrink-0 items-center gap-2 border border-border px-3 text-xs text-muted-foreground hover:border-destructive hover:text-destructive"><Trash2 className="h-3.5 w-3.5" /> Remove</button></div></article>)}{!providers.length && <p className="p-6 text-sm text-muted-foreground">No model connections yet. Choose a service above and add its API key.</p>}</div></div>
         </div>
         <div className="space-y-6"><div className="border border-border bg-card p-6"><div className="font-mono text-[10px] uppercase tracking-[.16em] text-muted-foreground">Admin security</div><h2 className="mt-2 text-xl font-semibold">Change password</h2><form onSubmit={changePassword} className="mt-5 space-y-4"><label className="block text-xs text-muted-foreground">Current password<input required type="password" autoComplete="current-password" value={passwordForm.currentPassword} onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })} className={`${inputClass} mt-1.5`} /></label><label className="block text-xs text-muted-foreground">New password (8+ characters)<input required minLength={8} type="password" autoComplete="new-password" value={passwordForm.newPassword} onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })} className={`${inputClass} mt-1.5`} /></label><button disabled={busy} className="bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">{busy ? 'Saving…' : 'Update password'}</button></form></div><div className="border border-border bg-primary/5 p-6"><Users className="h-5 w-5 text-primary" /><h2 className="mt-4 text-xl font-semibold">Restricted admin workspace</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Member accounts remain separate from admin access. Only authenticated admins can review account details and publishing drafts.</p></div></div>
       </section>}

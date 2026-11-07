@@ -757,7 +757,7 @@ export const ChangeAdminPasswordResponse = zod.object({
 export const ListLlmProvidersResponseItem = zod.object({
   "id": zod.string(),
   "name": zod.string(),
-  "adapter": zod.enum(['openai-compatible', 'openai', 'anthropic', 'gemini']),
+  "adapter": zod.enum(['openai-compatible', 'openai', 'openai-responses', 'anthropic', 'gemini']),
   "baseUrl": zod.string().url(),
   "model": zod.string(),
   "configured": zod.boolean(),
@@ -779,7 +779,7 @@ export const createLlmProviderBodyApiKeyMax = 4096;
 
 export const CreateLlmProviderBody = zod.object({
   "name": zod.string().min(1).max(createLlmProviderBodyNameMax),
-  "adapter": zod.enum(['openai-compatible', 'openai', 'anthropic', 'gemini']),
+  "adapter": zod.enum(['openai-compatible', 'openai', 'openai-responses', 'anthropic', 'gemini']),
   "baseUrl": zod.string().url().optional(),
   "model": zod.string().min(1).max(createLlmProviderBodyModelMax),
   "apiKey": zod.string().min(1).max(createLlmProviderBodyApiKeyMax)
@@ -788,7 +788,7 @@ export const CreateLlmProviderBody = zod.object({
 export const CreateLlmProviderResponse = zod.object({
   "id": zod.string(),
   "name": zod.string(),
-  "adapter": zod.enum(['openai-compatible', 'openai', 'anthropic', 'gemini']),
+  "adapter": zod.enum(['openai-compatible', 'openai', 'openai-responses', 'anthropic', 'gemini']),
   "baseUrl": zod.string().url(),
   "model": zod.string(),
   "configured": zod.boolean(),
@@ -797,24 +797,32 @@ export const CreateLlmProviderResponse = zod.object({
 
 
 /**
- * @summary Replace an LLM provider API key
+ * @summary Edit provider settings or replace its API key
  */
 export const UpdateLlmProviderKeyParams = zod.object({
   "id": zod.coerce.string()
 })
+
+export const updateLlmProviderKeyBodyNameMax = 80;
+
+export const updateLlmProviderKeyBodyModelMax = 120;
 
 export const updateLlmProviderKeyBodyApiKeyMax = 4096;
 
 
 
 export const UpdateLlmProviderKeyBody = zod.object({
-  "apiKey": zod.string().min(1).max(updateLlmProviderKeyBodyApiKeyMax)
+  "name": zod.string().min(1).max(updateLlmProviderKeyBodyNameMax).optional(),
+  "adapter": zod.enum(['openai-compatible', 'openai', 'openai-responses', 'anthropic', 'gemini']).optional(),
+  "baseUrl": zod.string().url().optional(),
+  "model": zod.string().min(1).max(updateLlmProviderKeyBodyModelMax).optional(),
+  "apiKey": zod.string().min(1).max(updateLlmProviderKeyBodyApiKeyMax).optional()
 })
 
 export const UpdateLlmProviderKeyResponse = zod.object({
   "id": zod.string(),
   "name": zod.string(),
-  "adapter": zod.enum(['openai-compatible', 'openai', 'anthropic', 'gemini']),
+  "adapter": zod.enum(['openai-compatible', 'openai', 'openai-responses', 'anthropic', 'gemini']),
   "baseUrl": zod.string().url(),
   "model": zod.string(),
   "configured": zod.boolean(),
@@ -830,6 +838,31 @@ export const DeleteLlmProviderParams = zod.object({
 })
 
 export const DeleteLlmProviderResponse = zod.void()
+
+
+/**
+ * @summary List models from the configured provider without exposing its key
+ */
+export const DiscoverLlmProviderModelsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DiscoverLlmProviderModelsResponse = zod.object({
+  "models": zod.array(zod.string())
+})
+
+
+/**
+ * @summary Send a small billable generation request to test this connection
+ */
+export const TestLlmProviderConnectionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const TestLlmProviderConnectionResponse = zod.object({
+  "ok": zod.boolean(),
+  "message": zod.string()
+})
 
 
 /**

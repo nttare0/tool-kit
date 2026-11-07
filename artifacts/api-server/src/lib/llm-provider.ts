@@ -2,7 +2,7 @@ import { all, get, run } from "./sqlite";
 import { decryptLlmApiKey, encryptLlmApiKey } from "./llm-secret";
 
 export type LlmAdapter =
-  "openai-compatible" | "openai" | "anthropic" | "gemini";
+  "openai-compatible" | "openai" | "openai-responses" | "anthropic" | "gemini";
 export type LlmMessage = {
   role: "system" | "user" | "assistant";
   content: string;
@@ -66,13 +66,7 @@ async function getProvider(id?: string) {
         await all<ProviderRow>(
           "SELECT * FROM llm_providers ORDER BY created_at, name",
         )
-      )
-        .filter((row) => publicProvider(row).configured)
-        .sort(
-          (a, b) =>
-            Number(b.id === "google-ai-studio") -
-            Number(a.id === "google-ai-studio"),
-        )[0];
+      ).find((row) => publicProvider(row).configured);
   if (!row)
     throw new Error(
       "Configure an LLM provider with a working API key in Admin → Settings first.",
@@ -148,6 +142,42 @@ export async function completeWithProvider(
   messages: LlmMessage[],
 ) {
   const { row, key } = await getProvider(providerId);
+  if (row.model === "auto") {
+    const models = await discoverProviderModels(providerId);
+    if (!models[0])
+      throw new Error(
+        "The provider lists no text models. Enter an exact model ID in Settings.",
+      );
+    row.model = models[0];
+    await run(
+      "UPDATE llm_providers SET model = ? WHERE id = ? AND model = 'auto'",
+      row.model,
+      row.id,
+    );
+  }
+  if (row.adapter === "openai-responses") {
+    const data = await requestJson(withPath(row.base_url, "responses"), {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${key}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: row.model,
+        input: messages,
+        max_output_tokens: 4096,
+      }),
+    });
+    return (
+      typeof data?.output_text === "string"
+        ? data.output_text
+        : data?.output
+            ?.flatMap((item: any) => item.content || [])
+            .filter((item: any) => item.type === "output_text")
+            .map((item: any) => item.text || "")
+            .join("\n") || ""
+    ).trim();
+  }
   if (row.adapter === "anthropic") {
     const system = messages
       .filter((item) => item.role === "system")
@@ -268,11 +298,45 @@ export async function completeWithProvider(
   return data?.choices?.[0]?.message?.content?.trim() || "";
 }
 
-export async function discoverGeminiModel(
-  baseUrl: string,
-  key: string,
-  preferred?: string,
-): Promise<string> {
+/** Discovery sends a key only to the explicitly configured provider, never probes vendors. */
+export async function discoverProviderModels(
+  providerId?: string,
+): Promise<string[]> {
+  const { row, key } = await getProvider(providerId);
+  if (row.adapter === "gemini") {
+    const models = await geminiModels(row.base_url, key);
+    return models;
+  }
+  const anthropic = row.adapter === "anthropic";
+  const base = anthropic ? row.base_url.replace(/\/v1\/?$/, "") : row.base_url;
+  const data = await requestJson(
+    withPath(base, anthropic ? "v1/models" : "models"),
+    {
+      headers: anthropic
+        ? { "x-api-key": key, "anthropic-version": "2023-06-01" }
+        : { authorization: `Bearer ${key}` },
+    },
+  );
+  if (!Array.isArray(data?.data))
+    throw new Error(
+      "The provider does not support model discovery. Enter its exact model ID manually in Settings.",
+    );
+  return [
+    ...new Set<string>(
+      data.data
+        .map((item: any) => item.id)
+        .filter(
+          (id: unknown): id is string =>
+            typeof id === "string" &&
+            id.length > 0 &&
+            id.length <= 120 &&
+            !/(embed|whisper|dall-e|tts|moderation|image)/i.test(id),
+        ),
+    ),
+  ].sort();
+}
+
+async function geminiModels(baseUrl: string, key: string): Promise<string[]> {
   const models: Array<{ name: string; supportedGenerationMethods?: string[] }> =
     [];
   let pageToken = "";
@@ -300,6 +364,15 @@ export async function discoverGeminiModel(
         /^gemini-[a-z0-9.-]+$/i.test(name) &&
         !/(image|tts|audio|robotics|computer-use)/i.test(name),
     );
+  return [...new Set(names)].sort();
+}
+
+export async function discoverGeminiModel(
+  baseUrl: string,
+  key: string,
+  preferred?: string,
+): Promise<string> {
+  const names = await geminiModels(baseUrl, key);
   if (preferred && names.includes(preferred)) return preferred;
   const stable = names.filter((name) => !/(preview|exp|latest)/i.test(name));
   const candidates = stable.length ? stable : names;
@@ -319,6 +392,7 @@ export async function discoverGeminiModel(
 export async function configureDefaultGemini() {
   const key = process.env.GOOGLE_AI_API_KEY;
   if (!key) return;
+  if ((await all("SELECT id FROM llm_providers LIMIT 1")).length) return;
   const id = "google-ai-studio";
   const baseUrl = "https://generativelanguage.googleapis.com/v1beta";
   const existing = await get<ProviderRow>(
