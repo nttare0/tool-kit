@@ -9,10 +9,13 @@ import adminManagementRouter from "./admin-management";
 import aiSuggestionsRouter from "./ai-suggestions";
 import llmProvidersRouter from "./llm-providers";
 
+import repositoriesRouter from "./repositories";
+
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(toolsRouter);
+router.use(repositoriesRouter);
 router.use(categoriesRouter);
 router.use(authRouter);
 router.use(seoRouter);

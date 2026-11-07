@@ -31,11 +31,12 @@ export function ThemeToggle() {
 export function Shell({ children }: { children: ReactNode }) {
   return <div className="min-h-[100dvh] bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/95 backdrop-blur-xl">
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 md:px-8">
+      <div className="mx-auto flex min-h-14 max-w-7xl flex-wrap items-center justify-between gap-y-1 px-4 py-2 sm:flex-nowrap sm:py-0 md:px-8">
         <BrandMark />
-        <nav className="flex items-center gap-1 text-xs text-muted-foreground sm:gap-2">
+        <nav className="flex w-full items-center justify-between gap-0.5 text-[11px] text-muted-foreground sm:w-auto sm:justify-start sm:gap-2 sm:text-xs">
           <Link href="/" data-testid="link-discover" className="rounded px-2.5 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">Home</Link>
           <Link href="/directory" data-testid="link-directory" className="rounded px-2.5 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">Directory</Link>
+          <Link href="/repositories" data-testid="link-repositories" className="rounded px-2.5 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">Repositories</Link>
           <Link href="/account" data-testid="link-account" className="rounded px-2.5 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">Account</Link>
           <ThemeToggle />
         </nav>

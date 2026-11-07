@@ -11,6 +11,7 @@ import Admin from '@/pages/admin';
 import Account from '@/pages/account';
 import Legal from '@/pages/legal';
 import Credits from '@/pages/credits';
+import Repositories from '@/pages/repositories';
 import {
   Route,
   Switch,
@@ -28,12 +29,15 @@ function Router() {
     const pathname = location.split('?')[0];
     const isAdmin = pathname === '/admin';
     const isDirectory = pathname === '/directory';
+    const isRepositories = pathname === '/repositories';
     const isAccount = pathname === '/account';
     const isNotFound = pathname === '/404';
     const isLegal = pathname === '/terms' || pathname === '/privacy';
     const slug = pathname.startsWith('/tool/') ? decodeURIComponent(pathname.slice('/tool/'.length)) : '';
     const title = isAdmin
       ? 'Admin workspace — Toolstack'
+      : isRepositories
+        ? 'Repositories — Explore source code | Toolstack'
       : isDirectory
         ? 'Directory — Find useful software | Toolstack'
         : isAccount
@@ -47,6 +51,8 @@ function Router() {
           : 'Toolstack — Find the right tool for the work';
     const description = isAdmin
       ? 'Manage Toolstack tools, categories, publishing status, and featured discoveries.'
+      : isRepositories
+        ? 'Browse source-code repositories for tools in the directory. Search by project, category, host, or license.'
       : isDirectory
         ? 'Search and compare carefully edited tools for design, development, AI, productivity, and media.'
         : isAccount
@@ -98,6 +104,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/directory" component={Directory} />
+        <Route path="/repositories" component={Repositories} />
         <Route path="/account" component={Account} />
          <Route path="/tool/:slug" component={ToolDetail} />
          <Route path="/admin" component={Admin} />

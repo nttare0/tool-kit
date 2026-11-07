@@ -32,6 +32,7 @@ router.get("/sitemap.xml", async (req, res) => {
   }> = [
     { path: "/", priority: "1.0", changefreq: "weekly" },
     { path: "/directory", priority: "0.9", changefreq: "daily" },
+    { path: "/repositories", priority: "0.8", changefreq: "weekly" },
     { path: "/terms", priority: "0.2", changefreq: "yearly" },
     { path: "/privacy", priority: "0.2", changefreq: "yearly" },
     ...tools.map((tool) => ({
