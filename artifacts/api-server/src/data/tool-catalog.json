@@ -1,0 +1,1202 @@
+[
+  {
+    "name": "ChatGPT",
+    "websiteUrl": "https://chatgpt.com",
+    "shortDescription": "Conversational AI for drafting, coding, and exploring questions.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Claude",
+    "websiteUrl": "https://claude.ai",
+    "shortDescription": "AI assistant for writing, document analysis, and coding.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Gemini",
+    "websiteUrl": "https://gemini.google.com",
+    "shortDescription": "Google AI assistant for questions, writing, and research.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Microsoft Copilot",
+    "websiteUrl": "https://copilot.microsoft.com",
+    "shortDescription": "Microsoft AI assistant for web questions and content creation.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Perplexity",
+    "websiteUrl": "https://www.perplexity.ai",
+    "shortDescription": "AI-powered search with linked sources for exploring topics.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Poe",
+    "websiteUrl": "https://poe.com",
+    "shortDescription": "Platform for chatting with a selection of AI models and bots.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "You.com",
+    "websiteUrl": "https://you.com",
+    "shortDescription": "AI search and research tools for finding information.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Phind",
+    "websiteUrl": "https://www.phind.com",
+    "shortDescription": "AI search assistant focused on technical questions.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Hugging Face",
+    "websiteUrl": "https://huggingface.co",
+    "shortDescription": "Community platform for machine-learning models, datasets, and demos.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Ollama",
+    "websiteUrl": "https://ollama.com",
+    "shortDescription": "Run and manage language models on your own computer.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "LM Studio",
+    "websiteUrl": "https://lmstudio.ai",
+    "shortDescription": "Desktop application for downloading and running local language models.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Jan",
+    "websiteUrl": "https://jan.ai",
+    "shortDescription": "Open-source desktop interface for working with local AI models.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Open WebUI",
+    "websiteUrl": "https://openwebui.com",
+    "shortDescription": "Self-hosted interface for chatting with local and remote AI models.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "AnythingLLM",
+    "websiteUrl": "https://anythingllm.com",
+    "shortDescription": "Build AI workspaces that chat with your documents.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Dify",
+    "websiteUrl": "https://dify.ai",
+    "shortDescription": "Platform for building language-model applications and workflows.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Flowise",
+    "websiteUrl": "https://flowiseai.com",
+    "shortDescription": "Visual builder for language-model applications and agents.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Langflow",
+    "websiteUrl": "https://www.langflow.org",
+    "shortDescription": "Visual environment for building and testing AI workflows.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "LangChain",
+    "websiteUrl": "https://www.langchain.com",
+    "shortDescription": "Framework and tools for developing language-model applications.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "LlamaIndex",
+    "websiteUrl": "https://www.llamaindex.ai",
+    "shortDescription": "Framework for connecting data sources to AI applications.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "OpenRouter",
+    "websiteUrl": "https://openrouter.ai",
+    "shortDescription": "Unified API gateway for accessing models from multiple providers.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Replicate",
+    "websiteUrl": "https://replicate.com",
+    "shortDescription": "Run machine-learning models through hosted APIs.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Together AI",
+    "websiteUrl": "https://www.together.ai",
+    "shortDescription": "Infrastructure for running and customizing AI models.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Fireworks AI",
+    "websiteUrl": "https://fireworks.ai",
+    "shortDescription": "Platform for serving and tuning generative AI models.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "GroqCloud",
+    "websiteUrl": "https://console.groq.com",
+    "shortDescription": "Developer platform for fast language-model inference.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Mistral AI",
+    "websiteUrl": "https://mistral.ai",
+    "shortDescription": "Language models, developer APIs, and an AI chat assistant.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Cohere",
+    "websiteUrl": "https://cohere.com",
+    "shortDescription": "Enterprise language models for search, retrieval, and text generation.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "DeepSeek",
+    "websiteUrl": "https://www.deepseek.com",
+    "shortDescription": "AI chat and model APIs for reasoning and coding tasks.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Qwen Chat",
+    "websiteUrl": "https://chat.qwen.ai",
+    "shortDescription": "Chat interface for the Qwen family of language models.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "NotebookLM",
+    "websiteUrl": "https://notebooklm.google.com",
+    "shortDescription": "Research assistant for exploring and summarizing your source materials.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Elicit",
+    "websiteUrl": "https://elicit.com",
+    "shortDescription": "Research assistant for finding and reviewing academic papers.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Consensus",
+    "websiteUrl": "https://consensus.app",
+    "shortDescription": "Search scientific research using natural-language questions.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "SciSpace",
+    "websiteUrl": "https://scispace.com",
+    "shortDescription": "Tools for discovering and understanding research papers.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Scite",
+    "websiteUrl": "https://scite.ai",
+    "shortDescription": "Explore how research papers are cited by other publications.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Connected Papers",
+    "websiteUrl": "https://www.connectedpapers.com",
+    "shortDescription": "Visual maps of related academic papers.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "ResearchRabbit",
+    "websiteUrl": "https://www.researchrabbit.ai",
+    "shortDescription": "Discover research papers through collections and citation networks.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Jasper",
+    "websiteUrl": "https://www.jasper.ai",
+    "shortDescription": "AI-assisted content workflows for marketing teams.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Copy.ai",
+    "websiteUrl": "https://www.copy.ai",
+    "shortDescription": "AI workflows for sales and marketing content.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Writesonic",
+    "websiteUrl": "https://writesonic.com",
+    "shortDescription": "AI-assisted writing and marketing content tools.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Wordtune",
+    "websiteUrl": "https://www.wordtune.com",
+    "shortDescription": "Rewrite and refine text with AI writing assistance.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Grammarly",
+    "websiteUrl": "https://www.grammarly.com",
+    "shortDescription": "Writing assistance for grammar, clarity, and tone.",
+    "category": "AI & Assistants"
+  },
+  {
+    "name": "Figma",
+    "websiteUrl": "https://www.figma.com",
+    "shortDescription": "Collaborative interface design and interactive prototyping.",
+    "category": "Design"
+  },
+  {
+    "name": "Penpot",
+    "websiteUrl": "https://penpot.app",
+    "shortDescription": "Open-source interface design and prototyping for teams.",
+    "category": "Design"
+  },
+  {
+    "name": "Sketch",
+    "websiteUrl": "https://www.sketch.com",
+    "shortDescription": "Design and prototyping software for macOS.",
+    "category": "Design"
+  },
+  {
+    "name": "Canva",
+    "websiteUrl": "https://www.canva.com",
+    "shortDescription": "Create presentations, social graphics, and other visual content.",
+    "category": "Design"
+  },
+  {
+    "name": "Adobe Express",
+    "websiteUrl": "https://www.adobe.com/express",
+    "shortDescription": "Browser-based tools for creating graphics, videos, and documents.",
+    "category": "Design"
+  },
+  {
+    "name": "Adobe Photoshop",
+    "websiteUrl": "https://www.adobe.com/products/photoshop.html",
+    "shortDescription": "Image editing, compositing, and digital artwork software.",
+    "category": "Design"
+  },
+  {
+    "name": "Adobe Illustrator",
+    "websiteUrl": "https://www.adobe.com/products/illustrator.html",
+    "shortDescription": "Vector illustration and graphic design software.",
+    "category": "Design"
+  },
+  {
+    "name": "Adobe InDesign",
+    "websiteUrl": "https://www.adobe.com/products/indesign.html",
+    "shortDescription": "Page layout software for print and digital publishing.",
+    "category": "Design"
+  },
+  {
+    "name": "Inkscape",
+    "websiteUrl": "https://inkscape.org",
+    "shortDescription": "Open-source vector graphics editor.",
+    "category": "Design"
+  },
+  {
+    "name": "GIMP",
+    "websiteUrl": "https://www.gimp.org",
+    "shortDescription": "Open-source image editing and photo manipulation.",
+    "category": "Design"
+  },
+  {
+    "name": "Krita",
+    "websiteUrl": "https://krita.org",
+    "shortDescription": "Open-source digital painting and illustration software.",
+    "category": "Design"
+  },
+  {
+    "name": "Procreate",
+    "websiteUrl": "https://procreate.com",
+    "shortDescription": "Digital illustration and painting apps for iPad.",
+    "category": "Design"
+  },
+  {
+    "name": "Linearity Curve",
+    "websiteUrl": "https://www.linearity.io/curve",
+    "shortDescription": "Vector design and illustration tools.",
+    "category": "Design"
+  },
+  {
+    "name": "Lunacy",
+    "websiteUrl": "https://icons8.com/lunacy",
+    "shortDescription": "Interface design application with built-in design assets.",
+    "category": "Design"
+  },
+  {
+    "name": "Framer",
+    "websiteUrl": "https://www.framer.com",
+    "shortDescription": "Visual website design and publishing with interactive layouts.",
+    "category": "Design"
+  },
+  {
+    "name": "Webflow",
+    "websiteUrl": "https://webflow.com",
+    "shortDescription": "Visual website builder with content management and hosting.",
+    "category": "Design"
+  },
+  {
+    "name": "Readymag",
+    "websiteUrl": "https://readymag.com",
+    "shortDescription": "Visual website builder for editorial and portfolio projects.",
+    "category": "Design"
+  },
+  {
+    "name": "Tilda",
+    "websiteUrl": "https://tilda.cc",
+    "shortDescription": "Build websites and landing pages using visual content blocks.",
+    "category": "Design"
+  },
+  {
+    "name": "Carrd",
+    "websiteUrl": "https://carrd.co",
+    "shortDescription": "Create simple responsive one-page websites.",
+    "category": "Design"
+  },
+  {
+    "name": "Spline",
+    "websiteUrl": "https://spline.design",
+    "shortDescription": "Browser-based 3D design and interactive scenes.",
+    "category": "Design"
+  },
+  {
+    "name": "Rive",
+    "websiteUrl": "https://rive.app",
+    "shortDescription": "Create interactive animations for apps, games, and websites.",
+    "category": "Design"
+  },
+  {
+    "name": "LottieFiles",
+    "websiteUrl": "https://lottiefiles.com",
+    "shortDescription": "Find, edit, and share lightweight Lottie animations.",
+    "category": "Design"
+  },
+  {
+    "name": "ProtoPie",
+    "websiteUrl": "https://www.protopie.io",
+    "shortDescription": "Build interactive prototypes with advanced behaviors.",
+    "category": "Design"
+  },
+  {
+    "name": "Proto.io",
+    "websiteUrl": "https://proto.io",
+    "shortDescription": "Create interactive app prototypes without writing code.",
+    "category": "Design"
+  },
+  {
+    "name": "UXPin",
+    "websiteUrl": "https://www.uxpin.com",
+    "shortDescription": "Collaborative interface prototyping and design-system tools.",
+    "category": "Design"
+  },
+  {
+    "name": "Balsamiq",
+    "websiteUrl": "https://balsamiq.com",
+    "shortDescription": "Low-fidelity wireframing for planning interfaces.",
+    "category": "Design"
+  },
+  {
+    "name": "Moqups",
+    "websiteUrl": "https://moqups.com",
+    "shortDescription": "Online wireframes, diagrams, and visual collaboration.",
+    "category": "Design"
+  },
+  {
+    "name": "Whimsical",
+    "websiteUrl": "https://whimsical.com",
+    "shortDescription": "Collaborative flowcharts, wireframes, mind maps, and documents.",
+    "category": "Design"
+  },
+  {
+    "name": "Excalidraw",
+    "websiteUrl": "https://excalidraw.com",
+    "shortDescription": "Hand-drawn-style diagrams on a collaborative canvas.",
+    "category": "Design"
+  },
+  {
+    "name": "FigJam",
+    "websiteUrl": "https://www.figma.com/figjam",
+    "shortDescription": "Collaborative whiteboards for workshops and planning.",
+    "category": "Design"
+  },
+  {
+    "name": "Coolors",
+    "websiteUrl": "https://coolors.co",
+    "shortDescription": "Generate and explore color palettes.",
+    "category": "Design"
+  },
+  {
+    "name": "Realtime Colors",
+    "websiteUrl": "https://www.realtimecolors.com",
+    "shortDescription": "Preview color palettes and typography on sample interfaces.",
+    "category": "Design"
+  },
+  {
+    "name": "Adobe Color",
+    "websiteUrl": "https://color.adobe.com",
+    "shortDescription": "Create color themes and explore color harmonies.",
+    "category": "Design"
+  },
+  {
+    "name": "Google Fonts",
+    "websiteUrl": "https://fonts.google.com",
+    "shortDescription": "Browse and download fonts for websites and design projects.",
+    "category": "Design"
+  },
+  {
+    "name": "Fontshare",
+    "websiteUrl": "https://www.fontshare.com",
+    "shortDescription": "Browse fonts for personal and commercial design projects.",
+    "category": "Design"
+  },
+  {
+    "name": "Font Awesome",
+    "websiteUrl": "https://fontawesome.com",
+    "shortDescription": "Icon library and toolkit for digital interfaces.",
+    "category": "Design"
+  },
+  {
+    "name": "Lucide",
+    "websiteUrl": "https://lucide.dev",
+    "shortDescription": "Open-source icon library for websites and applications.",
+    "category": "Design"
+  },
+  {
+    "name": "Iconify",
+    "websiteUrl": "https://iconify.design",
+    "shortDescription": "Unified framework for using icons from multiple collections.",
+    "category": "Design"
+  },
+  {
+    "name": "Unsplash",
+    "websiteUrl": "https://unsplash.com",
+    "shortDescription": "Photography library for creative and editorial projects.",
+    "category": "Design"
+  },
+  {
+    "name": "Pexels",
+    "websiteUrl": "https://www.pexels.com",
+    "shortDescription": "Stock photos and videos for creative projects.",
+    "category": "Design"
+  },
+  {
+    "name": "GitHub",
+    "websiteUrl": "https://github.com",
+    "shortDescription": "Host Git repositories and collaborate on software projects.",
+    "category": "Development"
+  },
+  {
+    "name": "GitLab",
+    "websiteUrl": "https://gitlab.com",
+    "shortDescription": "Source control and software delivery platform.",
+    "category": "Development"
+  },
+  {
+    "name": "Bitbucket",
+    "websiteUrl": "https://bitbucket.org",
+    "shortDescription": "Git repository hosting and code collaboration.",
+    "category": "Development"
+  },
+  {
+    "name": "Visual Studio Code",
+    "websiteUrl": "https://code.visualstudio.com",
+    "shortDescription": "Extensible code editor with debugging and development tools.",
+    "category": "Development"
+  },
+  {
+    "name": "VSCodium",
+    "websiteUrl": "https://vscodium.com",
+    "shortDescription": "Community-built distribution of the VS Code editor.",
+    "category": "Development"
+  },
+  {
+    "name": "Cursor",
+    "websiteUrl": "https://cursor.com",
+    "shortDescription": "Code editor with integrated AI assistance.",
+    "category": "Development"
+  },
+  {
+    "name": "Zed",
+    "websiteUrl": "https://zed.dev",
+    "shortDescription": "Code editor built for responsive editing and collaboration.",
+    "category": "Development"
+  },
+  {
+    "name": "Neovim",
+    "websiteUrl": "https://neovim.io",
+    "shortDescription": "Extensible terminal-based code editor.",
+    "category": "Development"
+  },
+  {
+    "name": "JetBrains IntelliJ IDEA",
+    "websiteUrl": "https://www.jetbrains.com/idea",
+    "shortDescription": "Integrated development environment for Java and Kotlin.",
+    "category": "Development"
+  },
+  {
+    "name": "JetBrains WebStorm",
+    "websiteUrl": "https://www.jetbrains.com/webstorm",
+    "shortDescription": "Integrated development environment for JavaScript and TypeScript.",
+    "category": "Development"
+  },
+  {
+    "name": "Sublime Text",
+    "websiteUrl": "https://www.sublimetext.com",
+    "shortDescription": "Lightweight text editor for code and markup.",
+    "category": "Development"
+  },
+  {
+    "name": "Replit",
+    "websiteUrl": "https://replit.com",
+    "shortDescription": "Browser-based environment for building and deploying applications.",
+    "category": "Development"
+  },
+  {
+    "name": "StackBlitz",
+    "websiteUrl": "https://stackblitz.com",
+    "shortDescription": "Run web development projects in a browser-based environment.",
+    "category": "Development"
+  },
+  {
+    "name": "CodeSandbox",
+    "websiteUrl": "https://codesandbox.io",
+    "shortDescription": "Cloud development environments for software projects.",
+    "category": "Development"
+  },
+  {
+    "name": "CodePen",
+    "websiteUrl": "https://codepen.io",
+    "shortDescription": "Online editor for experimenting with front-end code.",
+    "category": "Development"
+  },
+  {
+    "name": "JSFiddle",
+    "websiteUrl": "https://jsfiddle.net",
+    "shortDescription": "Browser-based playground for HTML, CSS, and JavaScript.",
+    "category": "Development"
+  },
+  {
+    "name": "Vercel",
+    "websiteUrl": "https://vercel.com",
+    "shortDescription": "Build and deploy web applications with managed infrastructure.",
+    "category": "Development"
+  },
+  {
+    "name": "Netlify",
+    "websiteUrl": "https://www.netlify.com",
+    "shortDescription": "Deploy websites and web applications from source repositories.",
+    "category": "Development"
+  },
+  {
+    "name": "Cloudflare Workers",
+    "websiteUrl": "https://workers.cloudflare.com",
+    "shortDescription": "Run serverless applications on Cloudflare infrastructure.",
+    "category": "Development"
+  },
+  {
+    "name": "Render",
+    "websiteUrl": "https://render.com",
+    "shortDescription": "Managed hosting for web services, databases, and background workers.",
+    "category": "Development"
+  },
+  {
+    "name": "Railway",
+    "websiteUrl": "https://railway.com",
+    "shortDescription": "Deploy application services and databases from a project workspace.",
+    "category": "Development"
+  },
+  {
+    "name": "Fly.io",
+    "websiteUrl": "https://fly.io",
+    "shortDescription": "Deploy applications on distributed virtual machines.",
+    "category": "Development"
+  },
+  {
+    "name": "Supabase",
+    "websiteUrl": "https://supabase.com",
+    "shortDescription": "PostgreSQL backend platform with authentication and storage.",
+    "category": "Development"
+  },
+  {
+    "name": "Firebase",
+    "websiteUrl": "https://firebase.google.com",
+    "shortDescription": "Google application backend and development services.",
+    "category": "Development"
+  },
+  {
+    "name": "Appwrite",
+    "websiteUrl": "https://appwrite.io",
+    "shortDescription": "Backend services for authentication, databases, storage, and functions.",
+    "category": "Development"
+  },
+  {
+    "name": "PocketBase",
+    "websiteUrl": "https://pocketbase.io",
+    "shortDescription": "Open-source backend with an embedded database and authentication.",
+    "category": "Development"
+  },
+  {
+    "name": "Neon",
+    "websiteUrl": "https://neon.com",
+    "shortDescription": "Managed serverless PostgreSQL databases.",
+    "category": "Development"
+  },
+  {
+    "name": "PlanetScale",
+    "websiteUrl": "https://planetscale.com",
+    "shortDescription": "Managed database platform for application development.",
+    "category": "Development"
+  },
+  {
+    "name": "Turso",
+    "websiteUrl": "https://turso.tech",
+    "shortDescription": "Database platform built around SQLite-compatible storage.",
+    "category": "Development"
+  },
+  {
+    "name": "MongoDB Atlas",
+    "websiteUrl": "https://www.mongodb.com/atlas",
+    "shortDescription": "Managed cloud platform for MongoDB databases.",
+    "category": "Development"
+  },
+  {
+    "name": "Docker",
+    "websiteUrl": "https://www.docker.com",
+    "shortDescription": "Build, package, and run applications in containers.",
+    "category": "Development"
+  },
+  {
+    "name": "Podman",
+    "websiteUrl": "https://podman.io",
+    "shortDescription": "Open-source tools for building and running containers.",
+    "category": "Development"
+  },
+  {
+    "name": "Postman",
+    "websiteUrl": "https://www.postman.com",
+    "shortDescription": "Design, test, and collaborate on APIs.",
+    "category": "Development"
+  },
+  {
+    "name": "Insomnia",
+    "websiteUrl": "https://insomnia.rest",
+    "shortDescription": "Desktop client for designing and testing API requests.",
+    "category": "Development"
+  },
+  {
+    "name": "Bruno",
+    "websiteUrl": "https://www.usebruno.com",
+    "shortDescription": "API client that stores request collections in local files.",
+    "category": "Development"
+  },
+  {
+    "name": "Hoppscotch",
+    "websiteUrl": "https://hoppscotch.io",
+    "shortDescription": "Web-based client for testing APIs.",
+    "category": "Development"
+  },
+  {
+    "name": "DBeaver",
+    "websiteUrl": "https://dbeaver.io",
+    "shortDescription": "Database client for querying and managing multiple database systems.",
+    "category": "Development"
+  },
+  {
+    "name": "TablePlus",
+    "websiteUrl": "https://tableplus.com",
+    "shortDescription": "Desktop database client for working with relational databases.",
+    "category": "Development"
+  },
+  {
+    "name": "Sentry",
+    "websiteUrl": "https://sentry.io",
+    "shortDescription": "Application error monitoring and performance diagnostics.",
+    "category": "Development"
+  },
+  {
+    "name": "Grafana",
+    "websiteUrl": "https://grafana.com",
+    "shortDescription": "Dashboards and observability tools for metrics, logs, and traces.",
+    "category": "Development"
+  },
+  {
+    "name": "Notion",
+    "websiteUrl": "https://www.notion.com",
+    "shortDescription": "Connected documents, knowledge bases, and project workspaces.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Obsidian",
+    "websiteUrl": "https://obsidian.md",
+    "shortDescription": "Local Markdown notes linked into a personal knowledge base.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Logseq",
+    "websiteUrl": "https://logseq.com",
+    "shortDescription": "Outlining and linked notes for personal knowledge management.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Joplin",
+    "websiteUrl": "https://joplinapp.org",
+    "shortDescription": "Open-source note-taking with notebooks and synchronization.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Standard Notes",
+    "websiteUrl": "https://standardnotes.com",
+    "shortDescription": "Encrypted note-taking across devices.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Anytype",
+    "websiteUrl": "https://anytype.io",
+    "shortDescription": "Local-first workspace for connected notes and information.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Evernote",
+    "websiteUrl": "https://evernote.com",
+    "shortDescription": "Capture and organize notes, documents, and tasks.",
+    "category": "Productivity"
+  },
+  {
+    "name": "OneNote",
+    "websiteUrl": "https://www.onenote.com",
+    "shortDescription": "Digital notebooks for typed, handwritten, and clipped notes.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Google Keep",
+    "websiteUrl": "https://keep.google.com",
+    "shortDescription": "Quick notes, lists, and reminders across devices.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Todoist",
+    "websiteUrl": "https://todoist.com",
+    "shortDescription": "Task lists and project organization for individuals and teams.",
+    "category": "Productivity"
+  },
+  {
+    "name": "TickTick",
+    "websiteUrl": "https://ticktick.com",
+    "shortDescription": "Task management with calendars and focus tools.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Things",
+    "websiteUrl": "https://culturedcode.com/things",
+    "shortDescription": "Personal task management for Apple devices.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Microsoft To Do",
+    "websiteUrl": "https://to-do.office.com",
+    "shortDescription": "Task lists and reminders connected to a Microsoft account.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Trello",
+    "websiteUrl": "https://trello.com",
+    "shortDescription": "Organize projects using boards, lists, and cards.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Asana",
+    "websiteUrl": "https://asana.com",
+    "shortDescription": "Plan and track team projects and tasks.",
+    "category": "Productivity"
+  },
+  {
+    "name": "ClickUp",
+    "websiteUrl": "https://clickup.com",
+    "shortDescription": "Team workspace for tasks, documents, and project planning.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Linear",
+    "websiteUrl": "https://linear.app",
+    "shortDescription": "Issue tracking and product planning for software teams.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Basecamp",
+    "websiteUrl": "https://basecamp.com",
+    "shortDescription": "Team project management, messaging, and file organization.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Monday.com",
+    "websiteUrl": "https://monday.com",
+    "shortDescription": "Configurable work management boards and team workflows.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Airtable",
+    "websiteUrl": "https://airtable.com",
+    "shortDescription": "Build structured team workflows with spreadsheet-style databases.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Coda",
+    "websiteUrl": "https://coda.io",
+    "shortDescription": "Collaborative documents with tables and interactive workflows.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Slite",
+    "websiteUrl": "https://slite.com",
+    "shortDescription": "Shared knowledge base for team documentation.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Nuclino",
+    "websiteUrl": "https://www.nuclino.com",
+    "shortDescription": "Collaborative team wiki and knowledge workspace.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Outline",
+    "websiteUrl": "https://www.getoutline.com",
+    "shortDescription": "Team knowledge base with collaborative document editing.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Craft",
+    "websiteUrl": "https://www.craft.do",
+    "shortDescription": "Document editor for notes, planning, and shared writing.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Google Docs",
+    "websiteUrl": "https://docs.google.com",
+    "shortDescription": "Collaborative document writing and editing in the browser.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Google Sheets",
+    "websiteUrl": "https://sheets.google.com",
+    "shortDescription": "Collaborative spreadsheets for calculations and structured data.",
+    "category": "Productivity"
+  },
+  {
+    "name": "LibreOffice",
+    "websiteUrl": "https://www.libreoffice.org",
+    "shortDescription": "Open-source office suite for documents, spreadsheets, and presentations.",
+    "category": "Productivity"
+  },
+  {
+    "name": "ONLYOFFICE",
+    "websiteUrl": "https://www.onlyoffice.com",
+    "shortDescription": "Office document editing and collaboration tools.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Zoho Workplace",
+    "websiteUrl": "https://www.zoho.com/workplace",
+    "shortDescription": "Business email, document tools, and team collaboration.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Slack",
+    "websiteUrl": "https://slack.com",
+    "shortDescription": "Team messaging with channels and workflow integrations.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Discord",
+    "websiteUrl": "https://discord.com",
+    "shortDescription": "Community messaging with text, voice, and video channels.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Microsoft Teams",
+    "websiteUrl": "https://www.microsoft.com/microsoft-teams",
+    "shortDescription": "Team communication, meetings, and collaboration.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Zoom",
+    "websiteUrl": "https://www.zoom.com",
+    "shortDescription": "Video meetings, webinars, and workplace communication.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Google Meet",
+    "websiteUrl": "https://meet.google.com",
+    "shortDescription": "Browser-based video meetings and collaboration.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Calendly",
+    "websiteUrl": "https://calendly.com",
+    "shortDescription": "Share availability and let others book meetings.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Cal.com",
+    "websiteUrl": "https://cal.com",
+    "shortDescription": "Scheduling platform for individuals and teams.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Raycast",
+    "websiteUrl": "https://www.raycast.com",
+    "shortDescription": "Desktop launcher with search, commands, and workflow extensions.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Alfred",
+    "websiteUrl": "https://www.alfredapp.com",
+    "shortDescription": "macOS launcher for search, shortcuts, and automation.",
+    "category": "Productivity"
+  },
+  {
+    "name": "Zapier",
+    "websiteUrl": "https://zapier.com",
+    "shortDescription": "Connect applications through automated workflows.",
+    "category": "Productivity"
+  },
+  {
+    "name": "OBS Studio",
+    "websiteUrl": "https://obsproject.com",
+    "shortDescription": "Open-source screen recording and live streaming software.",
+    "category": "Media"
+  },
+  {
+    "name": "DaVinci Resolve",
+    "websiteUrl": "https://www.blackmagicdesign.com/products/davinciresolve",
+    "shortDescription": "Video editing, color grading, effects, and audio post-production.",
+    "category": "Media"
+  },
+  {
+    "name": "Blender",
+    "websiteUrl": "https://www.blender.org",
+    "shortDescription": "Open-source 3D modeling, animation, rendering, and video tools.",
+    "category": "Media"
+  },
+  {
+    "name": "Kdenlive",
+    "websiteUrl": "https://kdenlive.org",
+    "shortDescription": "Open-source nonlinear video editor.",
+    "category": "Media"
+  },
+  {
+    "name": "Shotcut",
+    "websiteUrl": "https://shotcut.org",
+    "shortDescription": "Cross-platform open-source video editor.",
+    "category": "Media"
+  },
+  {
+    "name": "OpenShot",
+    "websiteUrl": "https://www.openshot.org",
+    "shortDescription": "Open-source video editing with a timeline-based interface.",
+    "category": "Media"
+  },
+  {
+    "name": "CapCut",
+    "websiteUrl": "https://www.capcut.com",
+    "shortDescription": "Video editing tools for short-form and social content.",
+    "category": "Media"
+  },
+  {
+    "name": "Adobe Premiere Pro",
+    "websiteUrl": "https://www.adobe.com/products/premiere.html",
+    "shortDescription": "Professional timeline-based video editing software.",
+    "category": "Media"
+  },
+  {
+    "name": "Final Cut Pro",
+    "websiteUrl": "https://www.apple.com/final-cut-pro",
+    "shortDescription": "Apple video editing software for Mac and iPad.",
+    "category": "Media"
+  },
+  {
+    "name": "Adobe After Effects",
+    "websiteUrl": "https://www.adobe.com/products/aftereffects.html",
+    "shortDescription": "Motion graphics, compositing, and visual effects software.",
+    "category": "Media"
+  },
+  {
+    "name": "Apple Motion",
+    "websiteUrl": "https://www.apple.com/final-cut-pro/motion",
+    "shortDescription": "Motion graphics and effects creation for Mac.",
+    "category": "Media"
+  },
+  {
+    "name": "Cavalry",
+    "websiteUrl": "https://cavalry.scenegroup.co",
+    "shortDescription": "Procedural 2D motion design and animation software.",
+    "category": "Media"
+  },
+  {
+    "name": "Natron",
+    "websiteUrl": "https://natrongithub.github.io",
+    "shortDescription": "Open-source node-based compositing software.",
+    "category": "Media"
+  },
+  {
+    "name": "HandBrake",
+    "websiteUrl": "https://handbrake.fr",
+    "shortDescription": "Open-source video transcoding for common media formats.",
+    "category": "Media"
+  },
+  {
+    "name": "FFmpeg",
+    "websiteUrl": "https://ffmpeg.org",
+    "shortDescription": "Command-line tools for processing audio and video.",
+    "category": "Media"
+  },
+  {
+    "name": "VLC",
+    "websiteUrl": "https://www.videolan.org/vlc",
+    "shortDescription": "Open-source media player supporting many audio and video formats.",
+    "category": "Media"
+  },
+  {
+    "name": "mpv",
+    "websiteUrl": "https://mpv.io",
+    "shortDescription": "Scriptable open-source audio and video player.",
+    "category": "Media"
+  },
+  {
+    "name": "Audacity",
+    "websiteUrl": "https://www.audacityteam.org",
+    "shortDescription": "Open-source audio recording and editing software.",
+    "category": "Media"
+  },
+  {
+    "name": "Ardour",
+    "websiteUrl": "https://ardour.org",
+    "shortDescription": "Audio recording, editing, mixing, and production workstation.",
+    "category": "Media"
+  },
+  {
+    "name": "REAPER",
+    "websiteUrl": "https://www.reaper.fm",
+    "shortDescription": "Digital audio workstation for recording, editing, and mixing.",
+    "category": "Media"
+  },
+  {
+    "name": "Ableton Live",
+    "websiteUrl": "https://www.ableton.com/live",
+    "shortDescription": "Music creation and live performance software.",
+    "category": "Media"
+  },
+  {
+    "name": "FL Studio",
+    "websiteUrl": "https://www.image-line.com",
+    "shortDescription": "Digital audio workstation for composition and music production.",
+    "category": "Media"
+  },
+  {
+    "name": "Logic Pro",
+    "websiteUrl": "https://www.apple.com/logic-pro",
+    "shortDescription": "Apple digital audio workstation for music production.",
+    "category": "Media"
+  },
+  {
+    "name": "GarageBand",
+    "websiteUrl": "https://www.apple.com/mac/garageband",
+    "shortDescription": "Music recording and creation software for Apple devices.",
+    "category": "Media"
+  },
+  {
+    "name": "LMMS",
+    "websiteUrl": "https://lmms.io",
+    "shortDescription": "Open-source music production software with sequencing and synthesis.",
+    "category": "Media"
+  },
+  {
+    "name": "MuseScore",
+    "websiteUrl": "https://musescore.org",
+    "shortDescription": "Open-source music notation and score editing software.",
+    "category": "Media"
+  },
+  {
+    "name": "Descript",
+    "websiteUrl": "https://www.descript.com",
+    "shortDescription": "Audio and video editing through text-based workflows.",
+    "category": "Media"
+  },
+  {
+    "name": "Riverside",
+    "websiteUrl": "https://riverside.fm",
+    "shortDescription": "Remote recording tools for podcasts and video interviews.",
+    "category": "Media"
+  },
+  {
+    "name": "Zencastr",
+    "websiteUrl": "https://zencastr.com",
+    "shortDescription": "Remote podcast recording and production tools.",
+    "category": "Media"
+  },
+  {
+    "name": "SquadCast",
+    "websiteUrl": "https://squadcast.fm",
+    "shortDescription": "Remote audio and video recording for interviews and podcasts.",
+    "category": "Media"
+  },
+  {
+    "name": "Auphonic",
+    "websiteUrl": "https://auphonic.com",
+    "shortDescription": "Automated audio leveling and post-production tools.",
+    "category": "Media"
+  },
+  {
+    "name": "Adobe Podcast",
+    "websiteUrl": "https://podcast.adobe.com",
+    "shortDescription": "Browser-based audio recording and speech enhancement tools.",
+    "category": "Media"
+  },
+  {
+    "name": "ElevenLabs",
+    "websiteUrl": "https://elevenlabs.io",
+    "shortDescription": "AI speech generation and audio creation tools.",
+    "category": "Media"
+  },
+  {
+    "name": "Suno",
+    "websiteUrl": "https://suno.com",
+    "shortDescription": "Generate music from text prompts and creative inputs.",
+    "category": "Media"
+  },
+  {
+    "name": "Udio",
+    "websiteUrl": "https://www.udio.com",
+    "shortDescription": "AI-assisted music generation and song creation.",
+    "category": "Media"
+  },
+  {
+    "name": "Runway",
+    "websiteUrl": "https://runwayml.com",
+    "shortDescription": "Generative AI tools for video creation and editing.",
+    "category": "Media"
+  },
+  {
+    "name": "Pika",
+    "websiteUrl": "https://pika.art",
+    "shortDescription": "AI tools for generating and transforming video.",
+    "category": "Media"
+  },
+  {
+    "name": "Luma",
+    "websiteUrl": "https://lumalabs.ai",
+    "shortDescription": "Generative visual tools for video and creative projects.",
+    "category": "Media"
+  },
+  {
+    "name": "Midjourney",
+    "websiteUrl": "https://www.midjourney.com",
+    "shortDescription": "Generate images from text prompts and visual references.",
+    "category": "Media"
+  },
+  {
+    "name": "Ideogram",
+    "websiteUrl": "https://ideogram.ai",
+    "shortDescription": "AI image generation for illustrations, graphics, and typography.",
+    "category": "Media"
+  }
+]

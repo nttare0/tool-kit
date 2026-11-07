@@ -33,6 +33,7 @@ import type {
   Category,
   CategoryInput,
   CategoryUpdate,
+  DiscoverLlmProviderModels200,
   FavoriteStatus,
   HealthStatus,
   ListToolsParams,
@@ -49,6 +50,7 @@ import type {
   SubmissionListItem,
   SubmissionReview,
   SubmissionReviewResponse,
+  TestLlmProviderConnection200,
   Tool,
   ToolCollection,
   ToolCollectionDetail,
@@ -2823,7 +2825,7 @@ export const getUpdateLlmProviderKeyUrl = (id: string,) => {
 }
 
 /**
- * @summary Replace an LLM provider API key
+ * @summary Edit provider settings or replace its API key
  */
 export const updateLlmProviderKey = async (id: string,
     llmProviderKeyInput: LlmProviderKeyInput, options?: Parameters<typeof customFetch>[1]): Promise<LlmProvider> => {
@@ -2873,7 +2875,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateLlmProviderKeyMutationError = ErrorType<void>
 
     /**
- * @summary Replace an LLM provider API key
+ * @summary Edit provider settings or replace its API key
  */
 export const useUpdateLlmProviderKey = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateLlmProviderKey>>, TError,{id: string;data: BodyType<LlmProviderKeyInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -2955,6 +2957,154 @@ export const useDeleteLlmProvider = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteLlmProviderMutationOptions(options));
+    }
+
+export const getDiscoverLlmProviderModelsUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/llm-providers/${id}/models`
+}
+
+/**
+ * @summary List models from the configured provider without exposing its key
+ */
+export const discoverLlmProviderModels = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<DiscoverLlmProviderModels200> => {
+
+  return customFetch<DiscoverLlmProviderModels200>(getDiscoverLlmProviderModelsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDiscoverLlmProviderModelsQueryKey = (id: string,) => {
+    return [
+    `/api/admin/llm-providers/${id}/models`
+    ] as const;
+    }
+
+
+export const getDiscoverLlmProviderModelsQueryOptions = <TData = Awaited<ReturnType<typeof discoverLlmProviderModels>>, TError = ErrorType<unknown>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof discoverLlmProviderModels>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDiscoverLlmProviderModelsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof discoverLlmProviderModels>>> = ({ signal }) => discoverLlmProviderModels(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof discoverLlmProviderModels>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type DiscoverLlmProviderModelsQueryResult = NonNullable<Awaited<ReturnType<typeof discoverLlmProviderModels>>>
+export type DiscoverLlmProviderModelsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List models from the configured provider without exposing its key
+ */
+
+export function useDiscoverLlmProviderModels<TData = Awaited<ReturnType<typeof discoverLlmProviderModels>>, TError = ErrorType<unknown>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof discoverLlmProviderModels>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getDiscoverLlmProviderModelsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getTestLlmProviderConnectionUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/llm-providers/${id}/test`
+}
+
+/**
+ * @summary Send a small billable generation request to test this connection
+ */
+export const testLlmProviderConnection = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<TestLlmProviderConnection200> => {
+
+  return customFetch<TestLlmProviderConnection200>(getTestLlmProviderConnectionUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getTestLlmProviderConnectionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testLlmProviderConnection>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof testLlmProviderConnection>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['testLlmProviderConnection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof testLlmProviderConnection>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  testLlmProviderConnection(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TestLlmProviderConnectionMutationResult = NonNullable<Awaited<ReturnType<typeof testLlmProviderConnection>>>
+
+    export type TestLlmProviderConnectionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Send a small billable generation request to test this connection
+ */
+export const useTestLlmProviderConnection = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof testLlmProviderConnection>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof testLlmProviderConnection>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getTestLlmProviderConnectionMutationOptions(options));
     }
 
 export const getChatWithToolstackAssistantUrl = () => {

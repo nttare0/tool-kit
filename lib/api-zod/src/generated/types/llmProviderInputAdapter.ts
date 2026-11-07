@@ -12,6 +12,7 @@ export type LlmProviderInputAdapter = typeof LlmProviderInputAdapter[keyof typeo
 export const LlmProviderInputAdapter = {
   'openai-compatible': 'openai-compatible',
   openai: 'openai',
+  'openai-responses': 'openai-responses',
   anthropic: 'anthropic',
   gemini: 'gemini',
 } as const;

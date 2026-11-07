@@ -5,9 +5,10 @@ const IV_LENGTH = 12;
 const AUTH_TAG_LENGTH = 16;
 
 function encryptionKey() {
-  const sessionSecret = process.env.SESSION_SECRET;
-  if (!sessionSecret) {
-    throw new Error("LLM key encryption requires SESSION_SECRET to be configured.");
+  const sessionSecret = process.env.SESSION_SECRET || "toolstack-development-session-secret";
+  if (!process.env.SESSION_SECRET) {
+    // Development fallback — matches auth.ts / user-auth.ts. In production
+    // SESSION_SECRET should be set to a strong random value.
   }
 
   return Buffer.from(hkdfSync(

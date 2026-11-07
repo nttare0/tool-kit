@@ -1,6 +1,8 @@
+import { forgetPreview, loadFirstPreview } from '@/lib/preview-loader';
+import { previewSources } from '@/lib/tool-previews';
 import { ArrowUpRight, Check, ExternalLink, Moon, Search, Sparkles, Sun } from 'lucide-react';
 import { Link } from 'wouter';
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { Category, Tool } from '@workspace/api-client-react';
 
 export function BrandMark() {
@@ -30,14 +32,13 @@ export function ThemeToggle() {
 export function Shell({ children }: { children: ReactNode }) {
   return <div className="min-h-[100dvh] bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
     <header className="sticky top-0 z-40 border-b border-border/80 bg-background/95 backdrop-blur-xl">
-      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 md:px-8">
+      <div className="mx-auto flex min-h-14 max-w-7xl flex-wrap items-center justify-between gap-y-1 px-4 py-2 sm:flex-nowrap sm:py-0 md:px-8">
         <BrandMark />
-        <nav className="flex items-center gap-1 text-xs text-muted-foreground sm:gap-2">
-          <Link href="/" data-testid="link-discover" className="rounded px-2.5 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">About</Link>
+        <nav className="flex w-full items-center justify-between gap-0.5 text-[11px] text-muted-foreground sm:w-auto sm:justify-start sm:gap-2 sm:text-xs">
+          <Link href="/" data-testid="link-discover" className="rounded px-2.5 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">Home</Link>
           <Link href="/directory" data-testid="link-directory" className="rounded px-2.5 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">Directory</Link>
+          <Link href="/repositories" data-testid="link-repositories" className="rounded px-2.5 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">Repositories</Link>
           <Link href="/account" data-testid="link-account" className="rounded px-2.5 py-1.5 transition-colors hover:bg-secondary hover:text-foreground">Account</Link>
-          <span className="hidden font-mono text-[10px] text-border sm:block">/</span>
-          <span className="hidden px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[.12em] text-muted-foreground sm:block">Field guide for useful software</span>
           <ThemeToggle />
         </nav>
       </div>
@@ -45,21 +46,48 @@ export function Shell({ children }: { children: ReactNode }) {
     {children}
     <footer className="mx-auto mt-16 max-w-7xl border-t border-border px-4 py-8 text-xs text-muted-foreground md:px-8">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div><span className="font-mono text-[10px] uppercase tracking-[.16em]">Toolstack / a calm place to choose</span><p className="mt-2 text-muted-foreground/70">Useful things, carefully kept.</p></div>
-        <div className="flex flex-wrap items-center gap-4"><Link href="/terms" className="hover:text-foreground">Terms</Link><Link href="/privacy" className="hover:text-foreground">Privacy</Link><Link href="/admin" data-testid="link-admin-footer" className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground transition-colors hover:text-primary">Admin access <ArrowUpRight className="h-3 w-3" /></Link></div>
+        <div><span className="font-mono text-[10px] uppercase tracking-[.16em]">Toolstack</span></div>
+        <div className="flex flex-wrap items-center gap-4"><Link href="/credits" className="hover:text-foreground">Catalog credits</Link><Link href="/terms" className="hover:text-foreground">Terms</Link><Link href="/privacy" className="hover:text-foreground">Privacy</Link><Link href="/admin" data-testid="link-admin-footer" className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground transition-colors hover:text-primary">Admin <ArrowUpRight className="h-3 w-3" /></Link></div>
       </div>
     </footer>
   </div>;
 }
 
 function Preview({ tool, className = '' }: { tool: Tool; className?: string }) {
-  const [failed, setFailed] = useState(false);
-  useEffect(() => setFailed(false), [tool.previewUrl]);
-  return <div className={`relative h-full w-full overflow-hidden bg-[radial-gradient(circle_at_85%_15%,rgba(216,255,99,.28),transparent_30%),linear-gradient(135deg,#24271d,#11130f_65%)] ${className}`}>
-    {tool.previewUrl && !failed
-      ? <img src={tool.previewUrl} alt={`${tool.name} website screenshot`} width={1280} height={800} loading="lazy" className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.025]" onError={() => setFailed(true)} />
-      : <div className="flex h-full min-h-40 items-center justify-center p-6 text-center"><div><span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-white/15 bg-white/5 font-serif text-3xl text-primary">{tool.name.slice(0, 1).toUpperCase()}</span><span className="mt-4 block font-mono text-[10px] uppercase tracking-[.15em] text-white/65">{failed ? 'Screenshot not available' : 'Website preview'}</span></div></div>}
-    {tool.previewUrl && !failed && <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/45 to-transparent" />}
+  // Remount image state when an admin changes the website or saved screenshot.
+  return <ToolPreview key={`${tool.id}:${tool.previewUrl}:${tool.websiteUrl}`} tool={tool} className={className} />;
+}
+
+function ToolPreview({ tool, className }: { tool: Tool; className: string }) {
+  const [source, setSource] = useState<string | null>(null);
+  const [finished, setFinished] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const [visible, setVisible] = useState(false);
+  const container = useRef<HTMLDivElement>(null);
+  const cacheKey = `${tool.previewUrl || ''}:${tool.websiteUrl}`;
+  useEffect(() => {
+    if (!container.current) return;
+    if (!('IntersectionObserver' in window)) { setVisible(true); return; }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setVisible(true); observer.disconnect(); }
+    }, { rootMargin: '100px' });
+    observer.observe(container.current);
+    return () => observer.disconnect();
+  }, []);
+  useEffect(() => {
+    if (!visible) return;
+    let active = true;
+    setSource(null);
+    setFinished(false);
+    const request = loadFirstPreview(cacheKey, previewSources(tool.previewUrl, tool.websiteUrl));
+    void request.promise.then((winner) => {
+      if (active) { setSource(winner); setFinished(true); }
+    });
+    return () => { active = false; request.cancel(); };
+  }, [visible, attempt, cacheKey, tool.previewUrl, tool.websiteUrl]);
+  return <div ref={container} className={`relative h-full w-full overflow-hidden bg-[radial-gradient(circle_at_85%_15%,rgba(216,255,99,.28),transparent_30%),linear-gradient(135deg,#24271d,#11130f_65%)] ${className}`}>
+    {!source && <div className="flex h-full min-h-40 items-center justify-center p-6 text-center"><div><span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-white/15 bg-white/5 font-serif text-3xl text-[#d9ed92]">{tool.name.slice(0, 1).toUpperCase()}</span><span className="mt-3 block text-sm font-medium text-white">{tool.name}</span><span className="mt-1 block text-xs text-white/60">{tool.categoryName}</span><span role="status" className="mt-4 block text-xs text-white/75">{finished ? 'Website preview unavailable' : 'Finding a website preview…'}</span>{finished && <button type="button" onClick={(event) => { event.preventDefault(); event.stopPropagation(); forgetPreview(cacheKey); setAttempt((current) => current + 1); }} className="mt-3 rounded border border-white/30 px-3 py-1.5 text-xs text-white hover:bg-white/10">Retry preview</button>}</div></div>}
+    {source && <><img src={source} alt={`${tool.name} website screenshot`} width={1280} height={800} referrerPolicy="no-referrer" className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.025]" onError={() => { forgetPreview(cacheKey); setSource(null); setFinished(true); }} /><div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/45 to-transparent" /></>}
   </div>;
 }
 
@@ -80,7 +108,7 @@ export function ToolCard({ tool, featured = false, compareSelected = false, onCo
       <div className={`relative overflow-hidden bg-secondary ${featured ? 'aspect-[16/10] md:aspect-auto md:min-h-[360px]' : 'aspect-[16/10]'}`}><Preview tool={tool} /></div>
       <div className={`flex flex-col justify-between p-4 ${featured ? 'md:p-6' : ''}`}>
         <div><div className="flex items-center justify-between gap-3"><span className="font-mono text-[10px] uppercase tracking-[.12em] text-accent">{tool.categoryName}</span><span className="font-mono text-[10px] uppercase tracking-[.1em] text-muted-foreground">{tool.pricing}</span></div><h3 className={`${featured ? 'mt-8 text-2xl' : 'mt-5 text-lg'} font-semibold tracking-[-.05em]`}>{tool.name}</h3><p className="mt-2 max-w-[36ch] text-sm leading-6 text-muted-foreground">{tool.shortDescription}</p></div>
-        <div className="mt-8 flex items-center justify-between border-t border-border pt-3 text-[11px] text-muted-foreground"><span>{tool.featured ? 'Editor’s pick' : 'Open field note'}</span><ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" /></div>
+        <div className="mt-8 flex items-center justify-between border-t border-border pt-3 text-[11px] text-muted-foreground"><span>{tool.featured ? 'Editor’s pick' : 'View details'}</span><ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" /></div>
       </div>
     </Link>
     {onCompare && <button type="button" onClick={onCompare} aria-pressed={compareSelected} className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 border border-border bg-background/95 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[.1em] text-muted-foreground transition-colors hover:border-primary hover:text-foreground">{compareSelected ? <Check className="h-3 w-3 text-primary" /> : null}{compareSelected ? 'Added' : 'Compare'}</button>}
@@ -96,6 +124,6 @@ export function SearchBox({ value, onChange, compact = false }: { value: string;
 }
 
 export function LoadingGrid() { return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{[1, 2, 3, 4, 5, 6].map((item) => <div key={item} className="h-72 animate-pulse border border-border bg-card/70" />)}</div>; }
-export function QueryError({ retry }: { retry: () => void }) { return <div className="border border-destructive/40 bg-destructive/5 p-10 text-center"><Sparkles className="mx-auto h-7 w-7 text-destructive" /><h2 className="mt-4 text-xl font-semibold">The shelf is out of reach.</h2><p className="mt-2 text-sm text-muted-foreground">We could not load this field guide right now.</p><button type="button" data-testid="button-retry" onClick={retry} className="mt-5 bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Try again</button></div>; }
-export function EmptyState({ search }: { search?: string }) { return <div className="border border-dashed border-border bg-card/50 px-6 py-16 text-center"><span className="font-mono text-xs uppercase tracking-[.2em] text-primary">No match</span><h2 className="mt-3 text-2xl font-semibold tracking-[-.04em]">{search ? `Nothing found for “${search}”` : 'This shelf is still open.'}</h2><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">Try another phrase or explore a different category.</p></div>; }
+export function QueryError({ retry }: { retry: () => void }) { return <div className="border border-destructive/40 bg-destructive/5 p-10 text-center"><Sparkles className="mx-auto h-7 w-7 text-destructive" /><h2 className="mt-4 text-xl font-semibold">Unable to load tools</h2><p className="mt-2 text-sm text-muted-foreground">Check your connection and try again.</p><button type="button" data-testid="button-retry" onClick={retry} className="mt-5 bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Try again</button></div>; }
+export function EmptyState({ search }: { search?: string }) { return <div className="border border-dashed border-border bg-card/50 px-6 py-16 text-center"><span className="font-mono text-xs uppercase tracking-[.2em] text-primary">No match</span><h2 className="mt-3 text-2xl font-semibold tracking-[-.04em]">{search ? `Nothing found for “${search}”` : 'No tools in this category yet.'}</h2><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">Try another phrase or explore a different category.</p></div>; }
 export function VisitButton({ url }: { url: string }) { return <a href={url} target="_blank" rel="noreferrer" data-testid="link-visit-tool" className="inline-flex items-center justify-center gap-2 bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background">Visit website <ExternalLink className="h-4 w-4" /></a>; }

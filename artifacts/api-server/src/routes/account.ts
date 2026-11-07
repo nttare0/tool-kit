@@ -1,5 +1,12 @@
 import { Router, type IRouter, type Request } from "express";
-import { currentUser, requireUser, registerUser, loginUser, logoutUser, changeUserPassword } from "../lib/user-auth";
+import {
+  currentUser,
+  requireUser,
+  registerUser,
+  loginUser,
+  logoutUser,
+  changeUserPassword,
+} from "../lib/user-auth";
 import { recordActivity } from "../lib/activity";
 import { all, get, run, transaction } from "../lib/sqlite";
 
@@ -43,15 +50,28 @@ function isHttpUrl(value: string) {
   }
 }
 
-function safeUser(req: Request) {
-  return currentUser(req);
+async function safeUser(req: Request) {
+  return await currentUser(req);
 }
 
 type MemberToolRow = {
-  id: number; name: string; slug: string; short_description: string; description: string;
-  how_it_works: string; best_for: string; website_url: string; logo_url: string | null;
-  preview_url: string | null; category_id: number; category_name: string; category_slug: string;
-  pricing: string; featured: number; status: string; created_at: string;
+  id: number;
+  name: string;
+  slug: string;
+  short_description: string;
+  description: string;
+  how_it_works: string;
+  best_for: string;
+  website_url: string;
+  logo_url: string | null;
+  preview_url: string | null;
+  category_id: number;
+  category_name: string;
+  category_slug: string;
+  pricing: string;
+  featured: number;
+  status: string;
+  created_at: string;
 };
 
 const memberToolQuery = `
@@ -63,124 +83,256 @@ const memberToolQuery = `
 
 function presentMemberTool(row: MemberToolRow) {
   return {
-    id: row.id, name: row.name, slug: row.slug, shortDescription: row.short_description,
-    description: row.description, howItWorks: row.how_it_works, bestFor: row.best_for,
-    websiteUrl: row.website_url, logoUrl: row.logo_url, previewUrl: row.preview_url,
-    categoryId: row.category_id, categoryName: row.category_name, categorySlug: row.category_slug,
-    pricing: row.pricing, featured: Boolean(row.featured), status: row.status, createdAt: row.created_at,
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    shortDescription: row.short_description,
+    description: row.description,
+    howItWorks: row.how_it_works,
+    bestFor: row.best_for,
+    websiteUrl: row.website_url,
+    logoUrl: row.logo_url,
+    previewUrl: row.preview_url,
+    categoryId: row.category_id,
+    categoryName: row.category_name,
+    categorySlug: row.category_slug,
+    pricing: row.pricing,
+    featured: Boolean(row.featured),
+    status: row.status,
+    createdAt: row.created_at,
   };
 }
 
-function collectionForUser(collectionId: number, userId: number) {
-  return get<{ id: number }>("SELECT id FROM user_collections WHERE id = ? AND user_id = ?", collectionId, userId);
+async function collectionForUser(collectionId: number, userId: number) {
+  return await get<{ id: number }>(
+    "SELECT id FROM user_collections WHERE id = ? AND user_id = ?",
+    collectionId,
+    userId,
+  );
 }
 
-router.post("/auth/register", (req, res) => {
+router.post("/auth/register", async (req, res) => {
   const displayName = cleanText(req.body?.displayName, 100);
   const email = cleanText(req.body?.email, 254).toLowerCase();
-  const password = typeof req.body?.password === "string" ? req.body.password.slice(0, 256) : "";
+  const password =
+    typeof req.body?.password === "string"
+      ? req.body.password.slice(0, 256)
+      : "";
   const profession = cleanText(req.body?.profession, 100);
-  if (displayName.length < 2 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password.length < 8) {
-    res.status(400).json({ error: "Enter your name, a valid email, and a password with at least 8 characters." });
+  if (
+    displayName.length < 2 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+    password.length < 8
+  ) {
+    res
+      .status(400)
+      .json({
+        error:
+          "Enter your name, a valid email, and a password with at least 8 characters.",
+      });
     return;
   }
-  const id = registerUser(displayName, email, password, profession);
+  const id = await registerUser(displayName, email, password, profession);
   if (!id) {
-    res.status(409).json({ error: "An account with this email already exists." });
+    res
+      .status(409)
+      .json({ error: "An account with this email already exists." });
     return;
   }
-  const user = loginUser(email, password, res);
-  recordActivity("user", id, email, "account_created", "user", id);
+  const user = await loginUser(email, password, res);
+  await recordActivity("user", id, email, "account_created", "user", id);
   res.status(201).json({ user });
 });
 
-router.get("/auth/user/status", (req, res) => {
-  const user = safeUser(req);
-  res.json({ user: user ? { id: user.id, email: user.email, displayName: user.displayName, profession: user.profession } : null });
+router.get("/auth/user/status", async (req, res) => {
+  const user = await safeUser(req);
+  res.json({
+    user: user
+      ? {
+          id: user.id,
+          email: user.email,
+          displayName: user.displayName,
+          profession: user.profession,
+        }
+      : null,
+  });
 });
 
-router.post("/auth/user/login", (req, res) => {
+router.post("/auth/user/login", async (req, res) => {
   const key = loginKey(req);
   if (isRateLimited(key)) {
-    res.setHeader("Retry-After", String(Math.ceil((failedLogins.get(key)!.resetAt - Date.now()) / 1000)));
-    res.status(429).json({ error: "Too many login attempts. Try again later." });
+    res.setHeader(
+      "Retry-After",
+      String(Math.ceil((failedLogins.get(key)!.resetAt - Date.now()) / 1000)),
+    );
+    res
+      .status(429)
+      .json({ error: "Too many login attempts. Try again later." });
     return;
   }
   const email = cleanText(req.body?.email, 254);
-  const password = typeof req.body?.password === "string" ? req.body.password.slice(0, 256) : "";
-  const user = loginUser(email, password, res);
+  const password =
+    typeof req.body?.password === "string"
+      ? req.body.password.slice(0, 256)
+      : "";
+  const user = await loginUser(email, password, res);
   if (!user) {
     recordFailedLogin(key);
-    res.status(401).json({ error: "Email or password is incorrect, or this account is unavailable." });
+    res
+      .status(401)
+      .json({
+        error:
+          "Email or password is incorrect, or this account is unavailable.",
+      });
     return;
   }
   failedLogins.delete(key);
-  recordActivity("user", user.id, user.email, "signed_in", "user", user.id);
+  await recordActivity(
+    "user",
+    user.id,
+    user.email,
+    "signed_in",
+    "user",
+    user.id,
+  );
   res.json({ user });
 });
 
-router.post("/auth/user/logout", (req, res) => {
-  const user = currentUser(req);
-  if (user) recordActivity("user", user.id, user.email, "signed_out", "user", user.id);
-  logoutUser(req, res);
+router.post("/auth/user/logout", async (req, res) => {
+  const user = await currentUser(req);
+  if (user)
+    await recordActivity(
+      "user",
+      user.id,
+      user.email,
+      "signed_out",
+      "user",
+      user.id,
+    );
+  await logoutUser(req, res);
   res.sendStatus(204);
 });
 
-router.patch("/account/profile", requireUser, (req, res) => {
-  const user = currentUser(req)!;
+router.patch("/account/profile", requireUser, async (req, res) => {
+  const user = (await currentUser(req))!;
   const displayName = cleanText(req.body?.displayName, 100);
   const profession = cleanText(req.body?.profession, 100);
   const categoryIds = Array.isArray(req.body?.categoryIds)
-    ? [...new Set(req.body.categoryIds.map(Number).filter((value: number) => Number.isInteger(value) && value > 0))].slice(0, 12)
+    ? [
+        ...new Set(
+          req.body.categoryIds
+            .map(Number)
+            .filter((value: number) => Number.isInteger(value) && value > 0),
+        ),
+      ].slice(0, 12)
     : [];
   if (displayName.length < 2) {
-    res.status(400).json({ error: "Your name must contain at least 2 characters." });
+    res
+      .status(400)
+      .json({ error: "Your name must contain at least 2 characters." });
     return;
   }
   const existingCategories = categoryIds.length
-    ? all<{ id: number }>(`SELECT id FROM categories WHERE id IN (${categoryIds.map(() => "?").join(",")})`, ...categoryIds)
+    ? await all<{ id: number }>(
+        `SELECT id FROM categories WHERE id IN (${categoryIds.map(() => "?").join(",")})`,
+        ...categoryIds,
+      )
     : [];
   if (existingCategories.length !== categoryIds.length) {
-    res.status(400).json({ error: "One or more selected interests are not available." });
+    res
+      .status(400)
+      .json({ error: "One or more selected interests are not available." });
     return;
   }
-  transaction(() => {
-    run("UPDATE users SET display_name = ?, profession = ? WHERE id = ?", displayName, profession, user.id);
-    run("DELETE FROM user_interests WHERE user_id = ?", user.id);
-    for (const categoryId of categoryIds) run("INSERT INTO user_interests (user_id, category_id) VALUES (?, ?)", user.id, categoryId);
+  await transaction(async () => {
+    await run(
+      "UPDATE users SET display_name = ?, profession = ? WHERE id = ?",
+      displayName,
+      profession,
+      user.id,
+    );
+    await run("DELETE FROM user_interests WHERE user_id = ?", user.id);
+    for (const categoryId of categoryIds)
+      await run(
+        "INSERT INTO user_interests (user_id, category_id) VALUES (?, ?)",
+        user.id,
+        categoryId,
+      );
   });
-  recordActivity("user", user.id, user.email, "profile_updated", "user", user.id);
+  await recordActivity(
+    "user",
+    user.id,
+    user.email,
+    "profile_updated",
+    "user",
+    user.id,
+  );
   res.json({
     user: { id: user.id, email: user.email, displayName, profession },
     categoryIds,
   });
 });
 
-router.get("/account/profile", requireUser, (req, res) => {
-  const user = currentUser(req)!;
-  const categoryIds = all<{ category_id: number }>("SELECT category_id FROM user_interests WHERE user_id = ? ORDER BY category_id", user.id).map((item) => item.category_id);
-  res.json({ user: { id: user.id, email: user.email, displayName: user.displayName, profession: user.profession }, categoryIds });
+router.get("/account/profile", requireUser, async (req, res) => {
+  const user = (await currentUser(req))!;
+  const categoryIds = (
+    await all<{ category_id: number }>(
+      "SELECT category_id FROM user_interests WHERE user_id = ? ORDER BY category_id",
+      user.id,
+    )
+  ).map((item) => item.category_id);
+  res.json({
+    user: {
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      profession: user.profession,
+    },
+    categoryIds,
+  });
 });
 
-router.post("/account/password", requireUser, (req, res) => {
-  const user = currentUser(req)!;
-  const currentPassword = typeof req.body?.currentPassword === "string" ? req.body.currentPassword.slice(0, 256) : "";
-  const newPassword = typeof req.body?.newPassword === "string" ? req.body.newPassword.slice(0, 256) : "";
+router.post("/account/password", requireUser, async (req, res) => {
+  const user = (await currentUser(req))!;
+  const currentPassword =
+    typeof req.body?.currentPassword === "string"
+      ? req.body.currentPassword.slice(0, 256)
+      : "";
+  const newPassword =
+    typeof req.body?.newPassword === "string"
+      ? req.body.newPassword.slice(0, 256)
+      : "";
   if (newPassword.length < 8) {
-    res.status(400).json({ error: "Use a new password with at least 8 characters." });
+    res
+      .status(400)
+      .json({ error: "Use a new password with at least 8 characters." });
     return;
   }
-  if (!changeUserPassword(user.id, currentPassword, newPassword, user.sessionId)) {
+  if (
+    !(await changeUserPassword(
+      user.id,
+      currentPassword,
+      newPassword,
+      user.sessionId,
+    ))
+  ) {
     res.status(400).json({ error: "The current password is incorrect." });
     return;
   }
-  recordActivity("user", user.id, user.email, "password_changed", "user", user.id);
+  await recordActivity(
+    "user",
+    user.id,
+    user.email,
+    "password_changed",
+    "user",
+    user.id,
+  );
   res.json({ changed: true });
 });
 
-router.get("/account/favorites", requireUser, (req, res) => {
-  const user = currentUser(req)!;
-  const rows = all<MemberToolRow>(
+router.get("/account/favorites", requireUser, async (req, res) => {
+  const user = (await currentUser(req))!;
+  const rows = await all<MemberToolRow>(
     `${memberToolQuery} JOIN user_favorites f ON f.tool_id = t.id
      WHERE f.user_id = ? AND t.status = 'published' ORDER BY f.created_at DESC`,
     user.id,
@@ -188,40 +340,56 @@ router.get("/account/favorites", requireUser, (req, res) => {
   res.json(rows.map(presentMemberTool));
 });
 
-router.put("/account/favorites/:toolId", requireUser, (req, res) => {
-  const user = currentUser(req)!;
+router.put("/account/favorites/:toolId", requireUser, async (req, res) => {
+  const user = (await currentUser(req))!;
   const toolId = Number(req.params.toolId);
-  const tool = Number.isInteger(toolId) && toolId > 0
-    ? get<{ id: number; name: string }>("SELECT id, name FROM tools WHERE id = ? AND status = 'published'", toolId)
-    : undefined;
+  const tool =
+    Number.isInteger(toolId) && toolId > 0
+      ? await get<{ id: number; name: string }>(
+          "SELECT id, name FROM tools WHERE id = ? AND status = 'published'",
+          toolId,
+        )
+      : undefined;
   if (!tool) {
     res.status(404).json({ error: "Published tool not found." });
     return;
   }
-  run("INSERT OR IGNORE INTO user_favorites (user_id, tool_id, created_at) VALUES (?, ?, ?)", user.id, toolId, new Date().toISOString());
+  await run(
+    "INSERT OR IGNORE INTO user_favorites (user_id, tool_id, created_at) VALUES (?, ?, ?)",
+    user.id,
+    toolId,
+    new Date().toISOString(),
+  );
   res.json({ saved: true });
 });
 
-router.delete("/account/favorites/:toolId", requireUser, (req, res) => {
-  const user = currentUser(req)!;
+router.delete("/account/favorites/:toolId", requireUser, async (req, res) => {
+  const user = (await currentUser(req))!;
   const toolId = Number(req.params.toolId);
-  if (Number.isInteger(toolId) && toolId > 0) run("DELETE FROM user_favorites WHERE user_id = ? AND tool_id = ?", user.id, toolId);
+  if (Number.isInteger(toolId) && toolId > 0)
+    await run(
+      "DELETE FROM user_favorites WHERE user_id = ? AND tool_id = ?",
+      user.id,
+      toolId,
+    );
   res.sendStatus(204);
 });
 
-router.get("/account/collections", requireUser, (req, res) => {
-  const user = currentUser(req)!;
-  res.json(all(
-    `SELECT c.id, c.name, c.description, c.created_at AS createdAt, c.updated_at AS updatedAt,
+router.get("/account/collections", requireUser, async (req, res) => {
+  const user = (await currentUser(req))!;
+  res.json(
+    await all(
+      `SELECT c.id, c.name, c.description, c.created_at AS createdAt, c.updated_at AS updatedAt,
             (SELECT COUNT(*) FROM collection_tools ct JOIN tools t ON t.id = ct.tool_id
              WHERE ct.collection_id = c.id AND t.status = 'published') AS toolCount
      FROM user_collections c WHERE c.user_id = ? ORDER BY c.updated_at DESC, c.id DESC`,
-    user.id,
-  ));
+      user.id,
+    ),
+  );
 });
 
-router.post("/account/collections", requireUser, (req, res) => {
-  const user = currentUser(req)!;
+router.post("/account/collections", requireUser, async (req, res) => {
+  const user = (await currentUser(req))!;
   const name = cleanText(req.body?.name, 100);
   const description = cleanText(req.body?.description, 500);
   if (!name) {
@@ -229,43 +397,71 @@ router.post("/account/collections", requireUser, (req, res) => {
     return;
   }
   const now = new Date().toISOString();
-  const result = run(
+  const result = await run(
     "INSERT INTO user_collections (user_id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
-    user.id, name, description, now, now,
+    user.id,
+    name,
+    description,
+    now,
+    now,
   );
-  res.status(201).json({ id: Number(result.lastInsertRowid), name, description, createdAt: now, updatedAt: now, toolCount: 0 });
+  res
+    .status(201)
+    .json({
+      id: Number(result.lastInsertRowid),
+      name,
+      description,
+      createdAt: now,
+      updatedAt: now,
+      toolCount: 0,
+    });
 });
 
-router.get("/account/collections/:id", requireUser, (req, res) => {
-  const user = currentUser(req)!;
+router.get("/account/collections/:id", requireUser, async (req, res) => {
+  const user = (await currentUser(req))!;
   const id = Number(req.params.id);
-  const collection = Number.isInteger(id) && id > 0
-    ? get<{ id: number; name: string; description: string; createdAt: string; updatedAt: string; toolCount: number }>(
-      `SELECT c.id, c.name, c.description, c.created_at AS createdAt, c.updated_at AS updatedAt,
+  const collection =
+    Number.isInteger(id) && id > 0
+      ? await get<{
+          id: number;
+          name: string;
+          description: string;
+          createdAt: string;
+          updatedAt: string;
+          toolCount: number;
+        }>(
+          `SELECT c.id, c.name, c.description, c.created_at AS createdAt, c.updated_at AS updatedAt,
               (SELECT COUNT(*) FROM collection_tools ct JOIN tools t ON t.id = ct.tool_id
                WHERE ct.collection_id = c.id AND t.status = 'published') AS toolCount
        FROM user_collections c WHERE c.id = ? AND c.user_id = ?`,
-      id, user.id,
-    )
-    : undefined;
+          id,
+          user.id,
+        )
+      : undefined;
   if (!collection) {
     res.status(404).json({ error: "Collection not found." });
     return;
   }
-  const tools = all<MemberToolRow>(
-    `${memberToolQuery} JOIN collection_tools ct ON ct.tool_id = t.id
+  const tools = (
+    await all<MemberToolRow>(
+      `${memberToolQuery} JOIN collection_tools ct ON ct.tool_id = t.id
      WHERE ct.collection_id = ? AND t.status = 'published' ORDER BY ct.added_at DESC`,
-    id,
+      id,
+    )
   ).map(presentMemberTool);
   res.json({ ...collection, tools });
 });
 
-router.patch("/account/collections/:id", requireUser, (req, res) => {
-  const user = currentUser(req)!;
+router.patch("/account/collections/:id", requireUser, async (req, res) => {
+  const user = (await currentUser(req))!;
   const id = Number(req.params.id);
   const name = cleanText(req.body?.name, 100);
   const description = cleanText(req.body?.description, 500);
-  if (!Number.isInteger(id) || id < 1 || !collectionForUser(id, user.id)) {
+  if (
+    !Number.isInteger(id) ||
+    id < 1 ||
+    !(await collectionForUser(id, user.id))
+  ) {
     res.status(404).json({ error: "Collection not found." });
     return;
   }
@@ -274,58 +470,108 @@ router.patch("/account/collections/:id", requireUser, (req, res) => {
     return;
   }
   const updatedAt = new Date().toISOString();
-  run("UPDATE user_collections SET name = ?, description = ?, updated_at = ? WHERE id = ? AND user_id = ?", name, description, updatedAt, id, user.id);
-  const collection = get(
+  await run(
+    "UPDATE user_collections SET name = ?, description = ?, updated_at = ? WHERE id = ? AND user_id = ?",
+    name,
+    description,
+    updatedAt,
+    id,
+    user.id,
+  );
+  const collection = await get(
     `SELECT c.id, c.name, c.description, c.created_at AS createdAt, c.updated_at AS updatedAt,
             (SELECT COUNT(*) FROM collection_tools ct JOIN tools t ON t.id = ct.tool_id
              WHERE ct.collection_id = c.id AND t.status = 'published') AS toolCount
      FROM user_collections c WHERE c.id = ? AND c.user_id = ?`,
-    id, user.id,
+    id,
+    user.id,
   );
   res.json(collection);
 });
 
-router.delete("/account/collections/:id", requireUser, (req, res) => {
-  const user = currentUser(req)!;
+router.delete("/account/collections/:id", requireUser, async (req, res) => {
+  const user = (await currentUser(req))!;
   const id = Number(req.params.id);
-  if (Number.isInteger(id) && id > 0) run("DELETE FROM user_collections WHERE id = ? AND user_id = ?", id, user.id);
+  if (Number.isInteger(id) && id > 0)
+    await run(
+      "DELETE FROM user_collections WHERE id = ? AND user_id = ?",
+      id,
+      user.id,
+    );
   res.sendStatus(204);
 });
 
-router.put("/account/collections/:id/tools/:toolId", requireUser, (req, res) => {
-  const user = currentUser(req)!;
-  const id = Number(req.params.id);
-  const toolId = Number(req.params.toolId);
-  if (!Number.isInteger(id) || id < 1 || !collectionForUser(id, user.id)) {
-    res.status(404).json({ error: "Collection not found." });
-    return;
-  }
-  const tool = Number.isInteger(toolId) && toolId > 0
-    ? get<{ id: number }>("SELECT id FROM tools WHERE id = ? AND status = 'published'", toolId)
-    : undefined;
-  if (!tool) {
-    res.status(404).json({ error: "Published tool not found." });
-    return;
-  }
-  run("INSERT OR IGNORE INTO collection_tools (collection_id, tool_id, added_at) VALUES (?, ?, ?)", id, toolId, new Date().toISOString());
-  run("UPDATE user_collections SET updated_at = ? WHERE id = ?", new Date().toISOString(), id);
-  res.json({ saved: true });
-});
+router.put(
+  "/account/collections/:id/tools/:toolId",
+  requireUser,
+  async (req, res) => {
+    const user = (await currentUser(req))!;
+    const id = Number(req.params.id);
+    const toolId = Number(req.params.toolId);
+    if (
+      !Number.isInteger(id) ||
+      id < 1 ||
+      !(await collectionForUser(id, user.id))
+    ) {
+      res.status(404).json({ error: "Collection not found." });
+      return;
+    }
+    const tool =
+      Number.isInteger(toolId) && toolId > 0
+        ? await get<{ id: number }>(
+            "SELECT id FROM tools WHERE id = ? AND status = 'published'",
+            toolId,
+          )
+        : undefined;
+    if (!tool) {
+      res.status(404).json({ error: "Published tool not found." });
+      return;
+    }
+    await run(
+      "INSERT OR IGNORE INTO collection_tools (collection_id, tool_id, added_at) VALUES (?, ?, ?)",
+      id,
+      toolId,
+      new Date().toISOString(),
+    );
+    await run(
+      "UPDATE user_collections SET updated_at = ? WHERE id = ?",
+      new Date().toISOString(),
+      id,
+    );
+    res.json({ saved: true });
+  },
+);
 
-router.delete("/account/collections/:id/tools/:toolId", requireUser, (req, res) => {
-  const user = currentUser(req)!;
-  const id = Number(req.params.id);
-  const toolId = Number(req.params.toolId);
-  if (Number.isInteger(id) && id > 0 && collectionForUser(id, user.id)) {
-    run("DELETE FROM collection_tools WHERE collection_id = ? AND tool_id = ?", id, toolId);
-    run("UPDATE user_collections SET updated_at = ? WHERE id = ?", new Date().toISOString(), id);
-  }
-  res.sendStatus(204);
-});
+router.delete(
+  "/account/collections/:id/tools/:toolId",
+  requireUser,
+  async (req, res) => {
+    const user = (await currentUser(req))!;
+    const id = Number(req.params.id);
+    const toolId = Number(req.params.toolId);
+    if (
+      Number.isInteger(id) &&
+      id > 0 &&
+      (await collectionForUser(id, user.id))
+    ) {
+      await run(
+        "DELETE FROM collection_tools WHERE collection_id = ? AND tool_id = ?",
+        id,
+        toolId,
+      );
+      await run(
+        "UPDATE user_collections SET updated_at = ? WHERE id = ?",
+        new Date().toISOString(),
+        id,
+      );
+    }
+    res.sendStatus(204);
+  },
+);
 
-router.get("/account/submissions", requireUser, (req, res) => {
-  const user = currentUser(req)!;
-  const submissions = all(
+router.get("/account/submissions", requireUser, async (req, res) => {
+  const user = (await currentUser(req))!;
+  const submissions = await all(
     `SELECT id, name, website_url AS websiteUrl, status, review_note AS reviewNote, created_at AS createdAt,
             updated_at AS updatedAt, preview_url AS previewUrl
      FROM tool_submissions WHERE user_id = ? ORDER BY created_at DESC`,
@@ -334,8 +580,8 @@ router.get("/account/submissions", requireUser, (req, res) => {
   res.json(submissions);
 });
 
-router.post("/submissions", requireUser, (req, res) => {
-  const user = currentUser(req)!;
+router.post("/submissions", requireUser, async (req, res) => {
+  const user = (await currentUser(req))!;
   const name = cleanText(req.body?.name, 120);
   const websiteUrl = cleanText(req.body?.websiteUrl, 2000);
   const shortDescription = cleanText(req.body?.shortDescription, 300);
@@ -344,33 +590,89 @@ router.post("/submissions", requireUser, (req, res) => {
   const bestFor = cleanText(req.body?.bestFor, 1000);
   const pricing = cleanText(req.body?.pricing, 100);
   const logoUrl = cleanText(req.body?.logoUrl, 2000);
-  if (!name || !isHttpUrl(websiteUrl) || !shortDescription || !description || !howItWorks || !pricing) {
-    res.status(400).json({ error: "Complete the required fields and enter a valid http(s) website URL." });
+  if (
+    !name ||
+    !isHttpUrl(websiteUrl) ||
+    !shortDescription ||
+    !description ||
+    !howItWorks ||
+    !pricing
+  ) {
+    res
+      .status(400)
+      .json({
+        error:
+          "Complete the required fields and enter a valid http(s) website URL.",
+      });
     return;
   }
   if (logoUrl && !isHttpUrl(logoUrl) && !logoUrl.startsWith("data:image/")) {
-    res.status(400).json({ error: "Logo URL must use http(s) or be an image upload." });
+    res
+      .status(400)
+      .json({ error: "Logo URL must use http(s) or be an image upload." });
     return;
   }
   const now = new Date().toISOString();
   const previewUrl = `https://api.microlink.io/?url=${encodeURIComponent(websiteUrl)}&screenshot=true&meta=false&embed=screenshot.url`;
   try {
-    const result = run(
+    const result = await run(
       `INSERT INTO tool_submissions
        (user_id, name, short_description, description, how_it_works, best_for, website_url, logo_url, preview_url, pricing, status, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
-      user.id, name, shortDescription, description, howItWorks, bestFor, websiteUrl, logoUrl || null, previewUrl, pricing, now, now,
+      user.id,
+      name,
+      shortDescription,
+      description,
+      howItWorks,
+      bestFor,
+      websiteUrl,
+      logoUrl || null,
+      previewUrl,
+      pricing,
+      now,
+      now,
     );
     const submissionId = Number(result.lastInsertRowid);
-    recordActivity("user", user.id, user.email, "tool_submitted", "submission", submissionId, name);
-    res.status(201).json({ id: submissionId, name, websiteUrl, status: "pending", createdAt: now, previewUrl });
+    await recordActivity(
+      "user",
+      user.id,
+      user.email,
+      "tool_submitted",
+      "submission",
+      submissionId,
+      name,
+    );
+    res
+      .status(201)
+      .json({
+        id: submissionId,
+        name,
+        websiteUrl,
+        status: "pending",
+        createdAt: now,
+        previewUrl,
+      });
   } catch (error) {
-    res.status(400).json({ error: error instanceof Error ? error.message : "Could not submit this tool." });
+    res
+      .status(400)
+      .json({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Could not submit this tool.",
+      });
   }
 });
 
-router.get("/tools/:slug/related", (req, res) => {
-  const source = get<{ id: number; category_id: number; name: string; short_description: string; best_for: string; how_it_works: string }>(
+router.get("/tools/:slug/related", async (req, res) => {
+  const source = await get<{
+    id: number;
+    category_id: number;
+    name: string;
+    short_description: string;
+    best_for: string;
+    how_it_works: string;
+  }>(
     `SELECT id, category_id, name, short_description, best_for, how_it_works FROM tools WHERE slug = ? AND status = 'published'`,
     req.params.slug,
   );
@@ -378,25 +680,71 @@ router.get("/tools/:slug/related", (req, res) => {
     res.status(404).json({ error: "Tool not found." });
     return;
   }
-  const sourceWords = new Set(`${source.name} ${source.short_description} ${source.best_for} ${source.how_it_works}`.toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length > 3));
-  const candidates = all<{ id: number; slug: string; name: string; short_description: string; category_id: number; category_name: string; pricing: string; preview_url: string | null; website_url: string; featured: number; created_at: string; best_for: string; how_it_works: string }>(
+  const sourceWords = new Set(
+    `${source.name} ${source.short_description} ${source.best_for} ${source.how_it_works}`
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter((word) => word.length > 3),
+  );
+  const candidates = await all<{
+    id: number;
+    slug: string;
+    name: string;
+    short_description: string;
+    category_id: number;
+    category_name: string;
+    pricing: string;
+    preview_url: string | null;
+    website_url: string;
+    featured: number;
+    created_at: string;
+    best_for: string;
+    how_it_works: string;
+  }>(
     `SELECT t.id, t.slug, t.name, t.short_description, t.category_id, c.name AS category_name, t.pricing,
             t.preview_url, t.website_url, t.featured, t.created_at, t.best_for, t.how_it_works
      FROM tools t JOIN categories c ON c.id = t.category_id
      WHERE t.status = 'published' AND t.id != ?`,
     source.id,
   );
-  const ranked = candidates.map((tool) => {
-    const words = `${tool.name} ${tool.short_description} ${tool.best_for} ${tool.how_it_works}`.toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length > 3);
-    const overlap = words.reduce((score, word) => score + (sourceWords.has(word) ? 1 : 0), 0);
-    return { ...tool, score: overlap + (tool.category_id === source.category_id ? 3 : 0) };
-  }).sort((a, b) => b.score - a.score || b.featured - a.featured || b.created_at.localeCompare(a.created_at)).slice(0, 4);
-  res.json(ranked.map((tool) => ({
-    id: tool.id, slug: tool.slug, name: tool.name, shortDescription: tool.short_description,
-    categoryName: tool.category_name, pricing: tool.pricing, previewUrl: tool.preview_url,
-    websiteUrl: tool.website_url, featured: Boolean(tool.featured), createdAt: tool.created_at,
-    score: tool.score,
-  })));
+  const ranked = candidates
+    .map((tool) => {
+      const words =
+        `${tool.name} ${tool.short_description} ${tool.best_for} ${tool.how_it_works}`
+          .toLowerCase()
+          .split(/[^a-z0-9]+/)
+          .filter((word) => word.length > 3);
+      const overlap = words.reduce(
+        (score, word) => score + (sourceWords.has(word) ? 1 : 0),
+        0,
+      );
+      return {
+        ...tool,
+        score: overlap + (tool.category_id === source.category_id ? 3 : 0),
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        b.featured - a.featured ||
+        b.created_at.localeCompare(a.created_at),
+    )
+    .slice(0, 4);
+  res.json(
+    ranked.map((tool) => ({
+      id: tool.id,
+      slug: tool.slug,
+      name: tool.name,
+      shortDescription: tool.short_description,
+      categoryName: tool.category_name,
+      pricing: tool.pricing,
+      previewUrl: tool.preview_url,
+      websiteUrl: tool.website_url,
+      featured: Boolean(tool.featured),
+      createdAt: tool.created_at,
+      score: tool.score,
+    })),
+  );
 });
 
 export default router;

@@ -41,12 +41,12 @@ function hashPassword(password: string, salt: string) {
   return crypto.scryptSync(password, salt, 64).toString("hex");
 }
 
-function setSessionCookie(response: Response, adminId: number) {
+async function setSessionCookie(response: Response, adminId: number) {
   const id = crypto.randomBytes(32).toString("hex");
   const expiresAt = new Date(
     Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000,
   ).toISOString();
-  run(
+  await run(
     "INSERT INTO sessions (id, admin_id, expires_at) VALUES (?, ?, ?)",
     id,
     adminId,
@@ -61,10 +61,10 @@ function setSessionCookie(response: Response, adminId: number) {
   });
 }
 
-export function currentAdmin(request: Request) {
+export async function currentAdmin(request: Request) {
   const sessionId = decodeSession(request.cookies?.[SESSION_COOKIE]);
   if (!sessionId) return null;
-  const row = get<{ email: string; admin_id: number }>(
+  const row = await get<{ email: string; admin_id: number }>(
     `SELECT a.id AS admin_id, a.email
      FROM sessions s
      INNER JOIN admins a ON a.id = s.admin_id
@@ -75,12 +75,12 @@ export function currentAdmin(request: Request) {
   return row ? { id: row.admin_id, email: row.email, sessionId } : null;
 }
 
-export function requireAdmin(
+export async function requireAdmin(
   request: Request,
   response: Response,
   next: NextFunction,
 ) {
-  const admin = currentAdmin(request);
+  const admin = await currentAdmin(request);
   if (!admin) {
     response.status(401).json({ error: "Admin login required" });
     return;
@@ -88,8 +88,12 @@ export function requireAdmin(
   next();
 }
 
-export function loginAdmin(email: string, password: string, response: Response) {
-  const admin = get<AdminRow>(
+export async function loginAdmin(
+  email: string,
+  password: string,
+  response: Response,
+) {
+  const admin = await get<AdminRow>(
     "SELECT id, email, password_hash, password_salt FROM admins WHERE email = ?",
     email.trim().toLowerCase(),
   );
@@ -97,16 +101,23 @@ export function loginAdmin(email: string, password: string, response: Response) 
   const actual = hashPassword(password, admin.password_salt);
   if (
     actual.length !== admin.password_hash.length ||
-    !crypto.timingSafeEqual(Buffer.from(actual), Buffer.from(admin.password_hash))
+    !crypto.timingSafeEqual(
+      Buffer.from(actual),
+      Buffer.from(admin.password_hash),
+    )
   ) {
     return false;
   }
-  setSessionCookie(response, admin.id);
+  await setSessionCookie(response, admin.id);
   return true;
 }
 
-export function changeAdminPassword(adminId: number, currentPassword: string, newPassword: string) {
-  const admin = get<AdminRow>(
+export async function changeAdminPassword(
+  adminId: number,
+  currentPassword: string,
+  newPassword: string,
+) {
+  const admin = await get<AdminRow>(
     "SELECT id, email, password_hash, password_salt FROM admins WHERE id = ?",
     adminId,
   );
@@ -114,12 +125,15 @@ export function changeAdminPassword(adminId: number, currentPassword: string, ne
   const actual = hashPassword(currentPassword, admin.password_salt);
   if (
     actual.length !== admin.password_hash.length ||
-    !crypto.timingSafeEqual(Buffer.from(actual), Buffer.from(admin.password_hash))
+    !crypto.timingSafeEqual(
+      Buffer.from(actual),
+      Buffer.from(admin.password_hash),
+    )
   ) {
     return false;
   }
   const salt = crypto.randomBytes(16).toString("hex");
-  run(
+  await run(
     "UPDATE admins SET password_hash = ?, password_salt = ? WHERE id = ?",
     hashPassword(newPassword, salt),
     salt,
@@ -128,12 +142,12 @@ export function changeAdminPassword(adminId: number, currentPassword: string, ne
   return true;
 }
 
-export function logoutAdmin(request: Request, response: Response) {
-  const admin = currentAdmin(request);
-  if (admin) run("DELETE FROM sessions WHERE id = ?", admin.sessionId);
+export async function logoutAdmin(request: Request, response: Response) {
+  const admin = await currentAdmin(request);
+  if (admin) await run("DELETE FROM sessions WHERE id = ?", admin.sessionId);
   response.clearCookie(SESSION_COOKIE, { path: "/" });
 }
 
-export function hasAdmin() {
-  return Boolean(get<{ id: number }>("SELECT id FROM admins LIMIT 1"));
+export async function hasAdmin() {
+  return Boolean(await get<{ id: number }>("SELECT id FROM admins LIMIT 1"));
 }

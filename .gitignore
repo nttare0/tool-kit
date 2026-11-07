@@ -50,3 +50,7 @@ Thumbs.db
 
 # Toolstack runtime data
 /artifacts/api-server/data/
+
+# Generated Vercel assets
+/artifacts/api-server/public/
+.vercel/

@@ -670,7 +670,7 @@ paths:
     patch:
       operationId: updateLlmProviderKey
       tags: [admin]
-      summary: Replace an LLM provider API key
+      summary: Edit provider settings or replace its API key
       security: [{ adminSession: [] }]
       parameters:
         - name: id
@@ -685,7 +685,7 @@ paths:
               $ref: "#/components/schemas/LlmProviderKeyInput"
       responses:
         "200":
-          description: Provider key replaced
+          description: Provider settings updated
           content:
             application/json:
               schema:
@@ -705,6 +705,51 @@ paths:
       responses:
         "204":
           description: Provider configuration removed
+  /admin/llm-providers/{id}/models:
+    get:
+      operationId: discoverLlmProviderModels
+      tags: [admin]
+      summary: List models from the configured provider without exposing its key
+      security: [{ adminSession: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Available model IDs; some providers require manual model entry
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [models]
+                properties:
+                  models:
+                    type: array
+                    items: { type: string }
+  /admin/llm-providers/{id}/test:
+    post:
+      operationId: testLlmProviderConnection
+      tags: [admin]
+      summary: Send a small billable generation request to test this connection
+      security: [{ adminSession: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Provider returned nonempty text
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, message]
+                properties:
+                  ok: { type: boolean }
+                  message: { type: string }
   /ai/chat:
     post:
       operationId: chatWithToolstackAssistant
@@ -1024,14 +1069,18 @@ components:
       required: [name, adapter, model, apiKey]
       properties:
         name: { type: string, minLength: 1, maxLength: 80 }
-        adapter: { type: string, enum: [openai-compatible, openai, anthropic, gemini] }
+        adapter: { type: string, enum: [openai-compatible, openai, openai-responses, anthropic, gemini] }
         baseUrl: { type: string, format: uri }
         model: { type: string, minLength: 1, maxLength: 120 }
         apiKey: { type: string, minLength: 1, maxLength: 4096, writeOnly: true }
     LlmProviderKeyInput:
       type: object
-      required: [apiKey]
+      minProperties: 1
       properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        adapter: { type: string, enum: [openai-compatible, openai, openai-responses, anthropic, gemini] }
+        baseUrl: { type: string, format: uri }
+        model: { type: string, minLength: 1, maxLength: 120 }
         apiKey: { type: string, minLength: 1, maxLength: 4096, writeOnly: true }
     LlmProvider:
       type: object
@@ -1039,7 +1088,7 @@ components:
       properties:
         id: { type: string }
         name: { type: string }
-        adapter: { type: string, enum: [openai-compatible, openai, anthropic, gemini] }
+        adapter: { type: string, enum: [openai-compatible, openai, openai-responses, anthropic, gemini] }
         baseUrl: { type: string, format: uri }
         model: { type: string }
         configured: { type: boolean }

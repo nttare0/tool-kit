@@ -1,10 +1,5 @@
 import { Router, type IRouter, type Request } from "express";
-import {
-  currentAdmin,
-  hasAdmin,
-  loginAdmin,
-  logoutAdmin,
-} from "../lib/auth";
+import { currentAdmin, hasAdmin, loginAdmin, logoutAdmin } from "../lib/auth";
 
 const router: IRouter = Router();
 const failedLogins = new Map<string, { count: number; resetAt: number }>();
@@ -33,26 +28,31 @@ function recordFailedLogin(key: string) {
   current.count += 1;
 }
 
-router.get("/auth/status", (req, res) => {
-  const admin = currentAdmin(req);
+router.get("/auth/status", async (req, res) => {
+  const admin = await currentAdmin(req);
   res.json({
-    configured: hasAdmin(),
+    configured: await hasAdmin(),
     authenticated: Boolean(admin),
     admin: admin ? { email: admin.email } : null,
   });
 });
 
-router.post("/auth/login", (req, res) => {
+router.post("/auth/login", async (req, res) => {
   const key = loginKey(req);
   if (isRateLimited(key)) {
-    res.setHeader("Retry-After", String(Math.ceil((failedLogins.get(key)!.resetAt - Date.now()) / 1000)));
-    res.status(429).json({ error: "Too many login attempts. Try again later." });
+    res.setHeader(
+      "Retry-After",
+      String(Math.ceil((failedLogins.get(key)!.resetAt - Date.now()) / 1000)),
+    );
+    res
+      .status(429)
+      .json({ error: "Too many login attempts. Try again later." });
     return;
   }
   const email = typeof req.body?.email === "string" ? req.body.email : "";
   const password =
     typeof req.body?.password === "string" ? req.body.password : "";
-  if (!loginAdmin(email, password, res)) {
+  if (!(await loginAdmin(email, password, res))) {
     recordFailedLogin(key);
     res.status(401).json({ error: "Email or password is incorrect." });
     return;
@@ -61,8 +61,8 @@ router.post("/auth/login", (req, res) => {
   res.json({ authenticated: true });
 });
 
-router.post("/auth/logout", (req, res) => {
-  logoutAdmin(req, res);
+router.post("/auth/logout", async (req, res) => {
+  await logoutAdmin(req, res);
   res.status(204).end();
 });
 
