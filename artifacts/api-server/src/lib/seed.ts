@@ -1,3 +1,4 @@
+import { importAdditionalCatalog } from "./import-additional-catalog";
 import { importToolCatalog } from "./import-tool-catalog";
 import { logger } from "./logger";
 import { all, run, transaction } from "./sqlite";
@@ -113,6 +114,7 @@ export async function seedDatabase() {
   }
   if ((await all("SELECT id FROM categories LIMIT 1")).length > 0) {
     await importToolCatalog();
+    await importAdditionalCatalog();
     return;
   }
   await transaction(async () => {
@@ -150,6 +152,7 @@ export async function seedDatabase() {
     }
   });
   await importToolCatalog();
+  await importAdditionalCatalog();
   logger.info(
     { categoryCount: seedCategories.length, toolCount: seedTools.length },
     "Seeded Toolstack content",

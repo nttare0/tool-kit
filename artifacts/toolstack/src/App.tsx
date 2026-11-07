@@ -10,6 +10,7 @@ import ToolDetail from '@/pages/tool-detail';
 import Admin from '@/pages/admin';
 import Account from '@/pages/account';
 import Legal from '@/pages/legal';
+import Credits from '@/pages/credits';
 import {
   Route,
   Switch,
@@ -100,6 +101,7 @@ function Router() {
         <Route path="/account" component={Account} />
          <Route path="/tool/:slug" component={ToolDetail} />
          <Route path="/admin" component={Admin} />
+         <Route path="/credits" component={Credits} />
          <Route path="/terms" component={() => <Legal kind="terms" />} />
          <Route path="/privacy" component={() => <Legal kind="privacy" />} />
          <Route path="/404" component={NotFound} />

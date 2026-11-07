@@ -45,7 +45,7 @@ export function Shell({ children }: { children: ReactNode }) {
     <footer className="mx-auto mt-16 max-w-7xl border-t border-border px-4 py-8 text-xs text-muted-foreground md:px-8">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div><span className="font-mono text-[10px] uppercase tracking-[.16em]">Toolstack</span></div>
-        <div className="flex flex-wrap items-center gap-4"><Link href="/terms" className="hover:text-foreground">Terms</Link><Link href="/privacy" className="hover:text-foreground">Privacy</Link><Link href="/admin" data-testid="link-admin-footer" className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground transition-colors hover:text-primary">Admin <ArrowUpRight className="h-3 w-3" /></Link></div>
+        <div className="flex flex-wrap items-center gap-4"><Link href="/credits" className="hover:text-foreground">Catalog credits</Link><Link href="/terms" className="hover:text-foreground">Terms</Link><Link href="/privacy" className="hover:text-foreground">Privacy</Link><Link href="/admin" data-testid="link-admin-footer" className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[.14em] text-muted-foreground transition-colors hover:text-primary">Admin <ArrowUpRight className="h-3 w-3" /></Link></div>
       </div>
     </footer>
   </div>;
