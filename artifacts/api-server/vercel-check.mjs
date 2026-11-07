@@ -1,5 +1,7 @@
 // Fail the build before promotion if the real production database cannot serve
 // the app. No credentials or database rows are printed in deployment logs.
+process.env.NODE_ENV ||= "production";
+
 if (!process.env.DATABASE_URL) {
   if (process.env.VERCEL_ENV === "production")
     throw new Error("Production DATABASE_URL is missing");

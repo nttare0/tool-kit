@@ -27,7 +27,11 @@ isolated database. Never point untrusted previews at production data. On Vercel,
 missing DATABASE_URL fails closed rather than silently using /tmp SQLite.
 Local development without DATABASE_URL still uses the existing SQLite file.
 
-Apply the SQL files in supabase/migrations before deploying. Provision the login
+Apply the SQL files in supabase/migrations before deploying, and run
+`supabase/verify.sql` to confirm the tables and RLS exist (migration-history
+entries alone are not sufficient verification).
+The verified project pooler cluster is `aws-1-eu-central-1.pooler.supabase.com`,
+transaction port 6543; the application username is `toolstack_app.jnuxrrmphbklatukaxgc`. Provision the login
 password privately; never put it in Git. Vercel's build runs a real database
 preflight before promotion: initialize under an advisory transaction lock, verify
 schema access, and check public/auth API responses. A failed connection/schema
