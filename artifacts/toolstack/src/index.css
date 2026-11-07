@@ -376,3 +376,15 @@
     inset: -1px;
   }
 }
+
+/* Homepage: a quiet editorial grid, not a decorative image dependency. */
+.home-hero-grid {
+  background-image: linear-gradient(#c5d5be15 1px, transparent 1px), linear-gradient(90deg, #c5d5be15 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(90deg, transparent, #000);
+}
+.home-category:nth-child(3n + 1) { background-image: linear-gradient(145deg, #95ab6920, transparent); }
+.home-category:nth-child(3n + 2) { background-image: linear-gradient(145deg, #c8997420, transparent); }
+.home-category:nth-child(3n) { background-image: linear-gradient(145deg, #7a9fb920, transparent); }
+@media (min-width: 1024px) { .home-spotlight { transform: rotate(2deg); } .home-spotlight:hover { transform: rotate(0deg) translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .home-spotlight, .home-category { transition: none; transform: none; } }
