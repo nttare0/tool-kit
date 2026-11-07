@@ -19,7 +19,14 @@ const pool = databaseUrl
       max: 3,
       idleTimeoutMillis: 10_000,
       connectionTimeoutMillis: 10_000,
-      ssl: { rejectUnauthorized: true },
+      ssl: {
+        rejectUnauthorized: true,
+        ...(process.env.DATABASE_SSL_CA
+          ? { ca: process.env.DATABASE_SSL_CA }
+          : /\.supabase\.(com|co)$/.test(new URL(databaseUrl).hostname)
+            ? { ca: fs.readFileSync(new URL("./certs/supabase-ca.crt", import.meta.url), "utf8") }
+            : {}),
+      },
     })
   : undefined;
 const connection = new AsyncLocalStorage<PoolClient>();

@@ -9,12 +9,14 @@ static assets into public, and routes API requests to a serverless function.
 Supabase project: `jnuxrrmphbklatukaxgc` (existing “tool kit” project).
 All application tables live in the private `toolstack` PostgreSQL schema, not
 Supabase's exposed public schema. RLS is enabled. The server connects over verified
-TLS using a restricted `toolstack_app` login with CRUD and sequence grants only
+TLS using the official Supabase CA certificate and a restricted `toolstack_app` login with CRUD and sequence grants only
 for this schema. Anonymous/browser clients have no application-table access.
 The application enforces member/admin authorization in Express.
 
 Required server-only encrypted Vercel variables:
 - DATABASE_URL: Supabase PostgreSQL pooler URI, with the app role and password.
+- DATABASE_SSL_CA: optional PEM CA override; by default the build downloads the
+  public official Supabase CA certificate into the bundled dist/certs directory.
 - SESSION_SECRET: stable random secret used for signed cookies and provider-key
   encryption. Do not rotate casually; rotation invalidates sessions and requires
   re-entering saved AI keys.
