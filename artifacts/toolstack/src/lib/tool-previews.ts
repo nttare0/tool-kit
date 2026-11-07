@@ -18,6 +18,7 @@ export function previewSources(previewUrl?: string | null, websiteUrl?: string |
         const publicUrl = url.toString();
         sources.push(`https://api.microlink.io/?url=${encodeURIComponent(publicUrl)}&screenshot=true&meta=false&embed=screenshot.url`);
         sources.push(`https://image.thum.io/get/width/1280/crop/800/noanimate/${publicUrl}`);
+        sources.push(`https://s.wordpress.com/mshots/v1/${encodeURIComponent(publicUrl)}?w=1280&h=800`);
       }
     } catch { /* A missing website must not break the card. */ }
   }

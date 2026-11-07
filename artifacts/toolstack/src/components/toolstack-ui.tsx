@@ -1,3 +1,4 @@
+import { forgetPreview, loadFirstPreview } from '@/lib/preview-loader';
 import { previewSources } from '@/lib/tool-previews';
 import { ArrowUpRight, Check, ExternalLink, Moon, Search, Sparkles, Sun } from 'lucide-react';
 import { Link } from 'wouter';
@@ -58,31 +59,35 @@ function Preview({ tool, className = '' }: { tool: Tool; className?: string }) {
 }
 
 function ToolPreview({ tool, className }: { tool: Tool; className: string }) {
-  const sources = previewSources(tool.previewUrl, tool.websiteUrl);
-  const [index, setIndex] = useState(0);
-  const [loaded, setLoaded] = useState(false);
+  const [source, setSource] = useState<string | null>(null);
+  const [finished, setFinished] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [visible, setVisible] = useState(false);
   const container = useRef<HTMLDivElement>(null);
-  const source = sources[index];
+  const cacheKey = `${tool.previewUrl || ''}:${tool.websiteUrl}`;
   useEffect(() => {
     if (!container.current) return;
     if (!('IntersectionObserver' in window)) { setVisible(true); return; }
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) { setVisible(true); observer.disconnect(); }
-    }, { rootMargin: '200px' });
+    }, { rootMargin: '100px' });
     observer.observe(container.current);
     return () => observer.disconnect();
   }, []);
   useEffect(() => {
-    if (!visible || loaded || !source) return;
-    const timeout = window.setTimeout(() => { setLoaded(false); setIndex((current) => current + 1); }, 20000);
-    return () => window.clearTimeout(timeout);
-  }, [visible, loaded, source]);
-  const nextSource = () => { setLoaded(false); setIndex((current) => current + 1); };
+    if (!visible) return;
+    let active = true;
+    setSource(null);
+    setFinished(false);
+    const request = loadFirstPreview(cacheKey, previewSources(tool.previewUrl, tool.websiteUrl));
+    void request.promise.then((winner) => {
+      if (active) { setSource(winner); setFinished(true); }
+    });
+    return () => { active = false; request.cancel(); };
+  }, [visible, attempt, cacheKey, tool.previewUrl, tool.websiteUrl]);
   return <div ref={container} className={`relative h-full w-full overflow-hidden bg-[radial-gradient(circle_at_85%_15%,rgba(216,255,99,.28),transparent_30%),linear-gradient(135deg,#24271d,#11130f_65%)] ${className}`}>
-    {!loaded && <div className="flex h-full min-h-40 items-center justify-center p-6 text-center"><div><span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-white/15 bg-white/5 font-serif text-3xl text-[#d9ed92]">{tool.name.slice(0, 1).toUpperCase()}</span><span role="status" className="mt-4 block text-xs text-white/75">{source ? 'Loading website preview…' : 'Website preview unavailable'}</span>{!source && <><span className="mt-2 block text-xs text-white/60">Open the listing to visit the website.</span><button type="button" onClick={(event) => { event.preventDefault(); event.stopPropagation(); setLoaded(false); setIndex(0); }} className="mt-3 rounded border border-white/30 px-3 py-1.5 text-xs text-white hover:bg-white/10">Retry preview</button></>}</div></div>}
-    {source && visible && <img key={source} src={source} alt={`${tool.name} website screenshot`} width={1280} height={800} referrerPolicy="no-referrer" className={`absolute inset-0 h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.025] ${loaded ? '' : 'opacity-0'}`} onLoad={() => setLoaded(true)} onError={nextSource} />}
-    {loaded && <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/45 to-transparent" />}
+    {!source && <div className="flex h-full min-h-40 items-center justify-center p-6 text-center"><div><span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-white/15 bg-white/5 font-serif text-3xl text-[#d9ed92]">{tool.name.slice(0, 1).toUpperCase()}</span><span className="mt-3 block text-sm font-medium text-white">{tool.name}</span><span className="mt-1 block text-xs text-white/60">{tool.categoryName}</span><span role="status" className="mt-4 block text-xs text-white/75">{finished ? 'Website preview unavailable' : 'Finding a website preview…'}</span>{finished && <button type="button" onClick={(event) => { event.preventDefault(); event.stopPropagation(); forgetPreview(cacheKey); setAttempt((current) => current + 1); }} className="mt-3 rounded border border-white/30 px-3 py-1.5 text-xs text-white hover:bg-white/10">Retry preview</button>}</div></div>}
+    {source && <><img src={source} alt={`${tool.name} website screenshot`} width={1280} height={800} referrerPolicy="no-referrer" className="absolute inset-0 h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.025]" onError={() => { forgetPreview(cacheKey); setSource(null); setFinished(true); }} /><div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/45 to-transparent" /></>}
   </div>;
 }
 
