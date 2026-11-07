@@ -3,7 +3,10 @@ import fs from "node:fs";
 import path from "node:path";
 
 const databasePath =
-  process.env.SQLITE_PATH || path.join(process.cwd(), "data", "toolstack.sqlite");
+  process.env.SQLITE_PATH ||
+  (process.env.VERCEL
+    ? "/tmp/toolstack.sqlite"
+    : path.join(process.cwd(), "data", "toolstack.sqlite"));
 
 fs.mkdirSync(path.dirname(databasePath), { recursive: true });
 
