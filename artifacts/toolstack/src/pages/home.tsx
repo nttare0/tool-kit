@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowRight, ArrowUpRight, Layers3, Search, Sparkles } from 'lucide-react';
+import { ArrowRight, Layers3, Search, Sparkles } from 'lucide-react';
 import { Link } from 'wouter';
 import { Shell } from '@/components/toolstack-ui';
 
@@ -26,23 +26,15 @@ function ToolMap() {
 
 export default function Home() {
   return <Shell><main className="mx-auto max-w-7xl px-4 pb-8 md:px-8">
-    <section className="relative grid min-h-[min(760px,calc(100dvh-56px))] items-center gap-8 overflow-hidden border-b border-border py-14 lg:grid-cols-[1.08fr_.92fr] lg:py-16">
+    <section className="relative grid min-h-[520px] items-center gap-8 overflow-hidden border-b border-border py-14 lg:grid-cols-[1.08fr_.92fr] lg:py-16">
       <div className="pointer-events-none absolute -left-48 top-1/3 h-96 w-96 rounded-full bg-primary/10 blur-[110px]" />
       <div className="relative z-10">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1.5 font-mono text-[9px] uppercase tracking-[.16em] text-muted-foreground"><span className="h-1.5 w-1.5 rounded-full bg-primary" /> A clearer way to choose software</div>
-        <h1 className="max-w-3xl text-5xl font-semibold leading-[.97] tracking-[-.075em] sm:text-6xl lg:text-[5.6rem]">Too many tools.<br /><span className="text-muted-foreground">Not enough clarity.</span></h1>
-        <p className="mt-7 max-w-xl text-base leading-7 text-muted-foreground md:text-lg md:leading-8">Finding the right software can mean hours of tabs, sales pages, and guesswork. Toolstack brings useful tools into one small, visual directory—with the context you need to choose.</p>
-        <div className="mt-8 flex flex-wrap items-center gap-3"><Link href="/directory" className="inline-flex h-11 items-center gap-2 rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5">Explore the directory <ArrowRight className="h-4 w-4" /></Link><a href="#approach" className="inline-flex h-11 items-center gap-2 rounded-md border border-border bg-background/60 px-4 text-sm font-medium transition-colors hover:bg-secondary">How it helps <ArrowDown className="h-3.5 w-3.5" /></a></div>
-        <div className="mt-12 flex flex-wrap gap-x-7 gap-y-3 border-t border-border pt-5 font-mono text-[9px] uppercase tracking-[.14em] text-muted-foreground"><span>Compare with context</span><span>Find by the work</span><span>Go to the source</span></div>
+        <h1 className="max-w-3xl text-5xl font-semibold leading-[.97] tracking-[-.075em] sm:text-6xl lg:text-[5.6rem]">Find software.<br /><span className="text-muted-foreground">Build your stack.</span></h1>
+        <p className="mt-7 max-w-xl text-base leading-7 text-muted-foreground md:text-lg md:leading-8">Browse tools by category, compare features and pricing, and save your favorites.</p>
+        <div className="mt-8 flex flex-wrap items-center gap-3"><Link href="/directory" className="inline-flex h-11 items-center gap-2 rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5">Explore the directory <ArrowRight className="h-4 w-4" /></Link></div>
+
       </div>
-      <div className="relative"><div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(216,255,99,.09),transparent_65%)]" /><ToolMap /><div className="absolute bottom-[8%] left-[8%] max-w-[190px] border border-border bg-background/85 p-3 backdrop-blur"><div className="font-mono text-[9px] uppercase tracking-[.13em] text-primary">Less noise</div><p className="mt-1 text-xs leading-5 text-muted-foreground">A focused index, organized around what you need to do.</p></div></div>
+      <div className="relative"><div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(216,255,99,.09),transparent_65%)]" /><ToolMap /></div>
     </section>
-    <section id="approach" className="grid gap-8 py-12 md:grid-cols-[.72fr_1.28fr] md:py-16">
-      <div><div className="font-mono text-[10px] uppercase tracking-[.16em] text-primary">The idea</div><h2 className="mt-3 max-w-sm text-3xl font-semibold leading-tight tracking-[-.06em] md:text-4xl">A useful shortlist, not another endless feed.</h2></div>
-      <div className="grid gap-px border border-border bg-border sm:grid-cols-3">
-        {[['01', 'Start with the work', 'Browse by the kind of job you need to get done.'], ['02', 'See the useful details', 'Understand what a tool does, who it helps, and what it costs.'], ['03', 'Make your call', 'Compare options, save favorites, and follow the official link.']].map(([number, title, copy]) => <article key={number} className="bg-background p-5 md:p-6"><span className="font-mono text-[10px] text-primary">{number}</span><h3 className="mt-7 text-base font-semibold tracking-[-.03em]">{title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{copy}</p></article>)}
-      </div>
-    </section>
-    <div className="flex flex-col justify-between gap-4 border-t border-border py-6 sm:flex-row sm:items-center"><p className="text-sm text-muted-foreground">A calm starting point for better software decisions.</p><Link href="/directory" className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary">Browse the tools <ArrowUpRight className="h-4 w-4" /></Link></div>
   </main></Shell>;
 }

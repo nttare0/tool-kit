@@ -4,8 +4,8 @@ import { Shell } from '@/components/toolstack-ui';
 
 const copy = {
   terms: {
-    eyebrow: 'Terms / field notes',
-    title: 'Use Toolstack as a guide, not a guarantee.',
+    eyebrow: 'Terms',
+    title: 'Terms of use',
     intro: 'Toolstack is an editorial directory of third-party software. Listings are provided to help you compare options; they are not endorsements, warranties, or professional advice.',
     sections: [
       ['Third-party services', 'Every external tool belongs to its own operator. Their pricing, availability, privacy practices, licenses, and terms can change without notice. Review the linked service before creating an account, uploading content, or paying for a plan.'],
