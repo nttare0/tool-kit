@@ -29,7 +29,10 @@ if (!process.env.DATABASE_URL) {
   } catch (error) {
     console.error(
       "Database preflight failed:",
-      error?.code || error?.message || "Unknown database error",
+      error?.code || "UNKNOWN",
+      String(error?.message || "Unknown database error")
+        .replaceAll(process.env.DATABASE_URL, "[redacted]")
+        .replaceAll(new URL(process.env.DATABASE_URL).password, "[redacted]"),
     );
     server?.close();
     process.exit(1);
